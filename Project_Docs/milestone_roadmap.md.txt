@@ -1,0 +1,168 @@
+# Milestone Roadmap
+# EvidenceOS
+
+**Purpose:**  
+Break the MVP build into clear phases with deliverables and acceptance criteria. Follow this when planning work and when using AI code prompts.
+
+---
+
+## Phase 0: Project Setup + Environment + Auth
+
+**Goal:**  
+Get a working project skeleton, environment, and authentication.
+
+**Deliverables:**
+- Next.js + TypeScript + Tailwind + shadcn/ui frontend.
+- FastAPI backend.
+- Supabase project configured (DB + Storage).
+- Environment setup (`.env`, config).
+- Auth flow (signup, login, workspace creation).
+- Basic workspace selector and protected routes.
+
+**Acceptance Criteria:**
+- User can create account and first organization.
+- User can create first workspace.
+- User can log in and see dashboard.
+- No auth bypass on protected routes.
+
+---
+
+## Phase 1: Document Upload + Pipeline Model
+
+**Goal:**  
+Implement document upload, storage, and pipeline run model.
+
+**Deliverables:**
+- Document repository UI.
+- Upload zone with drag & drop.
+- Document + document_version tables.
+- Pipeline run + pipeline_run_documents tables.
+- “Start pipeline” button.
+- Basic pipeline status view.
+
+**Acceptance Criteria:**
+- User can upload PDF, DOCX, XLSX, CSV.
+- Documents are stored in Supabase Storage.
+- Pipeline run is created and status is tracked.
+- Document list shows status (pending, processed, failed).
+
+---
+
+## Phase 2: OCR/Parsing + Extraction + Normalization
+
+**Goal:**  
+Implement OCR/parsing, extraction, and normalization logic and data.
+
+**Deliverables:**
+- OCR worker (using chosen provider).
+- Parsing worker for DOCX/XLSX/CSV.
+- Extraction worker (LLM-based).
+- Normalization logic for vendors (fuzzy matching + merge suggestions).
+- Tables:
+  - parsed_artifacts.
+  - evidence_fragments.
+  - extracted_entities.
+  - field_candidates.
+  - vendors, vendor_aliases.
+  - contracts.
+
+**Acceptance Criteria:**
+- Uploaded documents produce parsed artifacts.
+- Extracted entities are created with field candidates.
+- Vendor aliases are linked to canonical vendors.
+- Merge suggestions are surfaced for review.
+
+---
+
+## Phase 3: Validation Engine + Review UI
+
+**Goal:**  
+Implement deterministic validation and review UI for validations.
+
+**Deliverables:**
+- Validation rule engine (mandatory fields, formats, relationships).
+- Validation results table and detail panel.
+- Tables:
+  - validation_results.
+- UI:
+  - Validation report page.
+  - Evidence panel.
+
+**Acceptance Criteria:**
+- Validation rules run and produce errors/warnings.
+- User can see validation details and evidence.
+- User can mark validations as fixed or ignored.
+
+---
+
+## Phase 4: Recommendations + Review Actions
+
+**Goal:**  
+Implement AI recommendations and review actions.
+
+**Deliverables:**
+- Recommendation worker (LLM-based).
+- Tables:
+  - recommendations.
+  - recommendation_versions.
+  - review_actions.
+  - evidence_links.
+- UI:
+  - Recommendation review queue.
+  - Detail panel with reason, evidence, confidence.
+  - Approve/reject/modify actions.
+
+**Acceptance Criteria:**
+- Recommendations are generated with confidence and reason.
+- Users can approve, reject, or modify recommendations.
+- Review actions are recorded with before/after state.
+
+---
+
+## Phase 5: Export + Audit + Observability
+
+**Goal:**  
+Implement export generation, audit logging, and basic observability.
+
+**Deliverables:**
+- Export worker (generates RoI draft + reports).
+- Tables:
+  - exports.
+  - export_files.
+  - audit_events.
+- UI:
+  - Export center.
+  - Audit history page.
+- Basic metrics and logging.
+
+**Acceptance Criteria:**
+- User can create export and see generated files.
+- Audit events are logged for uploads, validations, recommendations, exports.
+- Basic observability (logs, error tracking).
+
+---
+
+## Phase 6: Polish + Integration Tests + Deployment Prep
+
+**Goal:**  
+Polish UI, add integration tests, and prepare for deployment.
+
+**Deliverables:**
+- UI polish (consistent styling, error states, loading states).
+- Integration tests for key flows.
+- Deployment configuration (Vercel, backend, workers).
+- Documentation for running and deploying.
+
+**Acceptance Criteria:**
+- MVP can be deployed to staging and production.
+- Core flows work end-to-end.
+- Documentation is sufficient for another developer.
+
+---
+
+## Total Plan
+
+- 6 phases.
+- Start with Phase 0, then 1, 2, 3, 4, 5, 6.
+- Use `prompt_pack.md` to drive each phase.
+- After each phase, update status and plan next phase.

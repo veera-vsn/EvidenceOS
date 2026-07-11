@@ -1,0 +1,246 @@
+# Prompt Pack
+# EvidenceOS – Step-by-Step Build Prompts
+
+**Purpose:**  
+Use these prompts one by one with your AI code assistant. Each prompt builds one phase of the MVP.
+
+Before each prompt:
+- Load `project_runbook.md`, `evidenceos_prd_v2_...`, `evidenceos_sdd_v1.md`, `evidenceos_domain_model_v1.md`, and the relevant spec files.
+
+---
+
+## Phase 0: Project Scaffolding + Environment + Auth
+
+**Prompt:**
+
+```text
+You are an expert full-stack developer.
+
+Context:
+- Product: EvidenceOS (AI-powered DORA RoI evidence & validation copilot).
+- Docs: project_runbook.md, evidenceos_prd_v2_investor_execution_grade.md, evidenceos_sdd_v1.md, evidenceos_domain_model_v1.md, env_guide.md, milestone_roadmap.md.
+
+Goal:
+- Implement Phase 0: project scaffolding, environment, and auth.
+
+Constraints:
+- Frontend: Next.js + TypeScript + Tailwind + shadcn/ui.
+- Backend: FastAPI + Python.
+- Database + Storage: Supabase (EU region).
+- Use environment variables for all secrets.
+
+Tasks:
+1. Create project structure:
+   - /frontend (Next.js).
+   - /backend (FastAPI).
+   - /workers.
+   - /config.
+2. Set up environment files and example .env.
+3. Implement basic auth:
+   - Signup endpoint.
+   - Login endpoint.
+   - Auth middleware.
+   - Protected routes in frontend.
+4. Implement basic organization and workspace creation flow.
+
+Output:
+- Generate all necessary files.
+- Show file structure.
+- Explain how to run locally.
+```
+
+---
+
+## Phase 1: Document Upload + Pipeline Model
+
+**Prompt:**
+
+```text
+You are an expert full-stack developer.
+
+Context:
+- Docs: project_runbook.md, evidenceos_prd_v2_..., evidenceos_sdd_v1.md, evidenceos_domain_model_v1.md, api_spec.md, db_schema.md, milestone_roadmap.md.
+
+Goal:
+- Implement Phase 1: document upload + pipeline model.
+
+Constraints:
+- Use Supabase Storage for documents.
+- Use FastAPI endpoints from api_spec.md.
+- Use db_schema tables for documents, document_versions, pipeline_runs, pipeline_run_documents.
+
+Tasks:
+1. Implement document upload endpoint and storage logic.
+2. Implement document list and detail endpoints.
+3. Implement pipeline start and status endpoints.
+4. Implement document repository UI with upload zone and document table.
+5. Implement “Start pipeline” button and basic pipeline status view.
+
+Output:
+- Generate all necessary backend and frontend code.
+- Show how to run migrations.
+- Explain how to test uploads and pipelines locally.
+```
+
+---
+
+## Phase 2: OCR/Parsing + Extraction + Normalization
+
+**Prompt:**
+
+```text
+You are an expert full-stack developer.
+
+Context:
+- Docs: project_runbook.md, evidenceos_prd_v2_..., evidenceos_sdd_v1.md, evidenceos_domain_model_v1.md, api_spec.md, db_schema.md, milestone_roadmap.md.
+
+Goal:
+- Implement Phase 2: OCR/parsing, extraction, and normalization.
+
+Constraints:
+- Use OCR provider and LLM API as configured in env.
+- Use workers for heavy processing.
+- Use tables: parsed_artifacts, evidence_fragments, extracted_entities, field_candidates, vendors, vendor_aliases, contracts.
+
+Tasks:
+1. Implement OCR worker.
+2. Implement parsing worker for DOCX/XLSX/CSV.
+3. Implement extraction worker (LLM-based).
+4. Implement normalization logic for vendors (fuzzy matching + merge suggestions).
+5. Expose endpoints to list extracted entities and vendors.
+6. Add UI to view extracted entities and vendor merge suggestions.
+
+Output:
+- Generate worker code, backend endpoints, and frontend components.
+- Explain how to run workers locally.
+```
+
+---
+
+## Phase 3: Validation Engine + Review UI
+
+**Prompt:**
+
+```text
+You are an expert full-stack developer.
+
+Context:
+- Docs: project_runbook.md, evidenceos_prd_v2_..., evidenceos_sdd_v1.md, evidenceos_domain_model_v1.md, api_spec.md, db_schema.md, milestone_roadmap.md, ui_spec.md.
+
+Goal:
+- Implement Phase 3: validation engine + review UI.
+
+Constraints:
+- Use deterministic validation rules.
+- Use table: validation_results.
+- Implement validation endpoints and UI.
+
+Tasks:
+1. Implement validation rule engine.
+2. Implement validation run as part of pipeline.
+3. Implement validation results endpoints.
+4. Implement validation report page and detail panel.
+5. Implement ability to mark validations as fixed or ignored with rationale.
+
+Output:
+- Generate backend and frontend code.
+- Show example validation rules.
+```
+
+---
+
+## Phase 4: Recommendations + Review Actions
+
+**Prompt:**
+
+```text
+You are an expert full-stack developer.
+
+Context:
+- Docs: project_runbook.md, evidenceos_prd_v2_..., evidenceos_sdd_v1.md, evidenceos_domain_model_v1.md, api_spec.md, db_schema.md, milestone_roadmap.md, ui_spec.md.
+
+Goal:
+- Implement Phase 4: recommendations + review actions.
+
+Constraints:
+- Use LLM for recommendation generation.
+- Use tables: recommendations, recommendation_versions, review_actions, evidence_links.
+- Implement recommendation endpoints and review UI.
+
+Tasks:
+1. Implement recommendation worker.
+2. Implement recommendation endpoints.
+3. Implement recommendation review queue UI.
+4. Implement approve/reject/modify actions.
+5. Record review actions and evidence links.
+
+Output:
+- Generate backend, workers, and frontend code.
+- Show example recommendation logic.
+```
+
+---
+
+## Phase 5: Export + Audit + Observability
+
+**Prompt:**
+
+```text
+You are an expert full-stack developer.
+
+Context:
+- Docs: project_runbook.md, evidenceos_prd_v2_..., evidenceos_sdd_v1.md, evidenceos_domain_model_v1.md, api_spec.md, db_schema.md, milestone_roadmap.md, ui_spec.md.
+
+Goal:
+- Implement Phase 5: export + audit + observability.
+
+Constraints:
+- Use tables: exports, export_files, audit_events.
+- Implement export worker and audit logging.
+
+Tasks:
+1. Implement export worker.
+2. Implement export endpoints.
+3. Implement export center UI.
+4. Implement audit event logging for key actions.
+5. Implement audit history page.
+6. Add basic logging and metrics.
+
+Output:
+- Generate backend, workers, and frontend code.
+- Show example audit event structure.
+```
+
+---
+
+## Phase 6: Polish + Integration Tests + Deployment Prep
+
+**Prompt:**
+
+```text
+You are an expert full-stack developer.
+
+Context:
+- Docs: project_runbook.md, evidenceos_prd_v2_..., evidenceos_sdd_v1.md, evidenceos_domain_model_v1.md, api_spec.md, db_schema.md, milestone_roadmap.md, ui_spec.md, env_guide.md.
+
+Goal:
+- Implement Phase 6: polish + integration tests + deployment prep.
+
+Constraints:
+- Keep code modular and testable.
+- Use environment variables for all secrets.
+
+Tasks:
+1. Add integration tests for key flows (auth, upload, pipeline, validation, recommendations, export).
+2. Polish UI (error states, loading states, consistent styling).
+3. Prepare deployment configuration (Vercel, backend, workers).
+4. Write basic documentation for running and deploying.
+
+Output:
+- Generate test files, deployment configs, and documentation.
+- Explain how to run tests and deploy.
+```
+
+---
+
+Use these prompts in order. After each phase, verify acceptance criteria before moving to the next.

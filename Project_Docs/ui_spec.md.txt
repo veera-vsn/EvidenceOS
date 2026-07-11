@@ -1,0 +1,291 @@
+# UI Specification
+# EvidenceOS
+
+**Purpose:**  
+Define pages, components, behaviors, and layout for the EvidenceOS frontend. This is your guide for generating UI code.
+
+---
+
+## Tech & Style
+
+- Framework: Next.js (App Router).
+- Language: TypeScript.
+- Styling: Tailwind CSS + shadcn/ui.
+- Design principles:
+  - Clean, professional, enterprise-friendly.
+  - Neutral colors (blue, gray, white).
+  - Clear hierarchy, minimal clutter.
+  - Pipeline-first navigation.
+
+---
+
+## Global Layout
+
+### Navigation Sidebar (Left)
+
+Sections:
+- Workspace selector dropdown.
+- Main navigation:
+  - Dashboard
+  - Documents
+  - Review Queue
+  - Exports
+  - Audit
+- User profile / settings at bottom.
+
+### Top Bar
+
+- Workspace name.
+- Quick actions:
+  - Upload new documents.
+  - Start pipeline.
+  - Create export.
+- User avatar + menu.
+
+---
+
+## Pages
+
+### 1. Login / Onboarding
+
+**Path:** `/login`
+
+**Layout:**
+- Centered login card.
+- “Sign in with email” or OAuth provider.
+- “Create account” link.
+- On first login:
+  - Prompt to create first organization and workspace.
+
+**Components:**
+- `LoginForm`
+- `SignupForm`
+- `CreateOrganizationForm`
+- `CreateWorkspaceForm`
+
+**Behaviors:**
+- Validate email/password.
+- Redirect to dashboard after login.
+- Show error messages on failure.
+
+---
+
+### 2. Workspace Dashboard
+
+**Path:** `/workspace/:workspaceId`
+
+**Layout:**
+- Sidebar + top bar.
+- Main area:
+  - Overview cards:
+    - Documents uploaded.
+    - Pipeline status.
+    - Pending validations.
+    - Pending recommendations.
+  - Recent pipeline runs list.
+  - Recent exports list.
+
+**Components:**
+- `OverviewCards`
+- `PipelineRunList`
+- `ExportList`
+- `StartPipelineButton`
+
+**Behaviors:**
+- Show summary data from DB.
+- “Start pipeline” triggers pipeline run.
+- Clicking a pipeline run goes to pipeline detail.
+
+---
+
+### 3. Document Repository
+
+**Path:** `/workspace/:workspaceId/documents`
+
+**Layout:**
+- Document list table:
+  - Name.
+  - Type.
+  - Upload date.
+  - Status (pending, processed, failed).
+  - Actions (view, delete, rerun pipeline).
+- Upload area:
+  - Drag & drop zone.
+  - File type labels.
+
+**Components:**
+- `DocumentTable`
+- `UploadZone`
+- `DocumentDetailModal`
+- `StatusBadge`
+
+**Behaviors:**
+- Show upload progress.
+- On upload complete, create document + version.
+- Allow viewing document metadata and linked evidence.
+
+---
+
+### 4. Validation Report Page
+
+**Path:** `/workspace/:workspaceId/validations`
+
+**Layout:**
+- Summary:
+  - Total validations.
+  - Pas/s Warning/ Error counts.
+- Filter by severity.
+- Validation list:
+  - Rule name.
+  - Target entity (vendor, contract, etc.).
+  - Severity.
+  - Explanation.
+  - Evidence link.
+  - Status (pending, fixed, ignored).
+
+**Components:**
+- `ValidationSummary`
+- `ValidationTable`
+- `ValidationDetailPanel`
+- `SeverityFilter`
+
+**Behaviors:**
+- Click validation shows detailed explanation and evidence.
+- Allow marking as fixed or ignored (with rationale).
+
+---
+
+### 5. Recommendation Review Queue
+
+**Path:** `/workspace/:workspaceId/recommendations`
+
+**Layout:**
+- Summary:
+  - Total recommendations.
+  - By type (missing vendor, missing clause, critical vendor, etc.).
+  - By confidence band.
+- Queue table:
+  - Recommendation type.
+  - Target entity.
+  - Confidence.
+  - Status (pending, approved, rejected, modified).
+  - Actions.
+
+**Components:**
+- `RecommendationSummary`
+- `RecommendationTable`
+- `RecommendationDetailPanel`
+- `ActionButtons` (approve/reject/modifier)
+
+**Behaviors:**
+- Click recommendation shows:
+  - Reason.
+  - Evidence.
+  - Confidence.
+- User can approve, reject, or modify.
+- Actions are recorded as review actions.
+
+---
+
+### 6. Evidence Panel
+
+**Layout/Usage:**
+- Not a standalone page.
+- Appears as a side panel or modal when viewing:
+  - Document details.
+  - Validation details.
+  - Recommendation details.
+
+**Components:**
+- `EvidencePanel`
+- `EvidenceList`
+- `EvidenceSnippet` (with page/row reference).
+
+**Behaviors:**
+- Show source document name.
+- Show page/row/paragraph.
+- Show text snippet or table cell.
+- Link back to document.
+
+---
+
+### 7. Export Center
+
+**Path:** `/workspace/:workspaceId/exports`
+
+**Layout:**
+- Export list:
+  - Export name / version.
+  - Created date.
+  - Components (RoI, validation, evidence, review).
+  - Status (generated, failed).
+- Export creation area:
+  - “Create export” button.
+  - Optional filters (only approved items, etc.).
+
+**Components:**
+- `ExportList`
+- `CreateExportDialog`
+- `ExportDetailModal`
+
+**Behaviors:**
+- Create export triggers export worker.
+- Show generation status.
+- Allow downloading files.
+
+---
+
+### 8. Audit History
+
+**Path:** `/workspace/:workspaceId/audit`
+
+**Layout:**
+- Audit event table:
+  - Timestamp.
+  - Actor.
+  - Event type (upload, pipeline run, review action, export).
+  - Target entity.
+  - Details.
+
+**Components:**
+- `AuditTable`
+- `EventDetailPanel`
+- `FilterControls` (by type, actor, date).
+
+**Behaviors:**
+- Filter and search.
+- Click event shows details.
+
+---
+
+## UX Principles
+
+- Pipeline-first navigation:
+  - Documents → Pipeline → Validations → Recommendations → Exports.
+- Minimal reviewer friction:
+  - One-click actions (approve/reject) with optional rationale.
+- Evidence always visible:
+  - Near every decision point.
+- Clear state:
+  - Colors and badges for status (pending, approved, failed).
+- Consistent layout:
+  - Sidebar + top bar + content area on all logged-in pages.
+
+---
+
+## Component Library (shadcn/ui)
+
+Use these components where appropriate:
+- `Button`
+- `Card`
+- `Dialog`
+- `DropdownMenu`
+- `Input`
+- `Label`
+- `Select`
+- `Table`
+- `Tabs`
+- `Textarea`
+- `Toast`
+
+Style them with Tailwind for enterprise look.

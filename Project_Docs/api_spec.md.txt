@@ -1,0 +1,459 @@
+# API Specification
+# EvidenceOS
+
+**Purpose:**  
+Define all backend endpoints, request/response shapes, and auth rules. This is your guide for generating the FastAPI backend.
+
+---
+
+## Base
+
+- Base path: `/api`
+- Auth:
+  - API header: `Authorization: Bearer <token>`
+  - Token from Supabase Auth or similar.
+- Tenant context:
+  - All requests include `workspace_id` in path or body.
+  - Backend validates user has access to workspace.
+
+---
+
+## Auth
+
+### 1. Sign Up
+
+- Method: `POST`
+- Path: `/auth/signup`
+- Body:
+  ```json
+  {
+    "email": "string",
+    "password": "string",
+    "organization_name": "string"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "user_id": "string",
+    "organization_id": "string",
+    "workspace_id": "string"
+  }
+  ```
+
+### 2. Login
+
+- Method: `POST`
+- Path: `/auth/login`
+- Body:
+  ```json
+  {
+    "email": "string",
+    "password": "string"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "token": "string",
+    "user": {
+      "id": "string",
+      "email": "string"
+    }
+  }
+  ```
+
+### 3. List Users in Workspace
+
+- Method: `GET`
+- Path: `/auth/workspaces/{workspace_id}/users`
+- Response:
+  ```json
+  [
+    {
+      "id": "string",
+      "email": "string",
+      "role": "string"
+    }
+  ]
+  ```
+
+---
+
+## Documents
+
+### 1. List Documents
+
+- Method: `GET`
+- Path: `/documents/workspaces/{workspace_id}`
+- Query params:
+  - `status` (optional): `pending|processed|failed`
+- Response:
+  ```json
+  [
+    {
+      "id": "string",
+      "name": "string",
+      "type": "pdf|docx|xlsx|csv",
+      "created_at": "datetime",
+      "status": "string",
+      "pipeline_run_id": "string|null"
+    }
+  ]
+  ```
+
+### 2. Upload Document
+
+- Method: `POST`
+- Path: `/documents/workspaces/{workspace_id}/upload`
+- Body:
+  - multipart form:
+    - `file`: binary file.
+- Response:
+  ```json
+  {
+    "document_id": "string",
+    "version_id": "string",
+    "upload_status": "success"
+  }
+  ```
+
+### 3. Get Document Detail
+
+- Method: `GET`
+- Path: `/documents/workspaces/{workspace_id}/documents/{document_id}`
+- Response:
+  ```json
+  {
+    "id": "string",
+    "name": "string",
+    "type": "string",
+    "versions": [
+      {
+        "id": "string",
+        "uploaded_by": "string",
+        "created_at": "datetime",
+        "status": "string"
+      }
+    ]
+  }
+  ```
+
+### 4. Delete Document
+
+- Method: `DELETE`
+- Path: `/documents/workspaces/{workspace_id}/documents/{document_id}`
+
+---
+
+## Pipeline
+
+### 1. Start Pipeline
+
+- Method: `POST`
+- Path: `/pipeline/workspaces/{workspace_id}/runs`
+- Body:
+  ```json
+  {
+    "document_ids": ["string", "string"]
+  }
+  ```
+- Response:
+  ```json
+  {
+    "pipeline_run_id": "string",
+    "status": "queued"
+  }
+  ```
+
+### 2. Get Pipeline Status
+
+- Method: `GET`
+- Path: `/pipeline/workspaces/{workspace_id}/runs/{pipeline_run_id}`
+- Response:
+  ```json
+  {
+    "id": "string",
+    "status": "queued|running|completed|failed",
+    "stage_status": {
+      "ocr": "string",
+      "extraction": "string",
+      "normalization": "string",
+      "validation": "string",
+      "recommendation": "string",
+      "export": "string"
+    }
+  }
+  ```
+
+### 3. Rerun Stage
+
+- Method: `POST`
+- Path: `/pipeline/workspaces/{workspace_id}/runs/{pipeline_run_id}/rerun`
+- Body:
+  ```json
+  {
+    "stage": "extraction"
+  }
+  ```
+
+---
+
+## Extracted Entities
+
+### 1. List Extracted Entities
+
+- Method: `GET`
+- Path: `/extracted/workspaces/{workspace_id}/pipeline-runs/{pipeline_run_id}`
+- Query:
+  - `entity_type` (optional).
+- Response:
+  ```json
+  [
+    {
+      "id": "string",
+      "entity_type": "vendor|contract|business_function",
+      "field_candidates": [
+        {
+          "name": "string",
+          "value": "string",
+          "confidence": "number"
+        }
+      ]
+    }
+  ]
+  ```
+
+---
+
+## Vendors & Contracts
+
+### 1. List Vendors
+
+- Method: `GET`
+- Path: `/vendors/workspaces/{workspace_id}`
+- Response:
+  ```json
+  [
+    {
+      "id": "string",
+      "canonical_name": "string",
+      "aliases": ["string"],
+      "contracts_count": "number"
+    }
+  ]
+  ```
+
+### 2. Get Vendor
+
+- Method: `GET`
+- Path: `/vendors/workspaces/{workspace_id}/vendors/{vendor_id}`
+- Response:
+  ```json
+  {
+    "id": "string",
+    "canonical_name": "string",
+    "aliases": ["string"],
+    "contracts": [
+      {
+        "id": "string",
+        "name": "string"
+      }
+    ]
+  }
+  ```
+
+### 3. Merge Vendors (Suggestion Approval)
+
+- Method: `POST`
+- Path: `/vendors/workspaces/{workspace_id}/vendors/merge`
+- Body:
+  ```json
+  {
+    "target_vendor_id": "string",
+    "alias_vendor_ids": ["string"]
+  }
+  ```
+
+---
+
+## Validations
+
+### 1. List Validations
+
+- Method: `GET`
+- Path: `/validations/workspaces/{workspace_id}/pipeline-runs/{pipeline_run_id}`
+- Query:
+  - `severity` (optional): `error|warning|pass`
+- Response:
+  ```json
+  [
+    {
+      "id": "string",
+      "rule_id": "string",
+      "severity": "string",
+      "target_entity_type": "vendor|contract",
+      "target_entity_id": "string",
+      "explanation": "string",
+      "status": "pending|fixed|ignored"
+    }
+  ]
+  ```
+
+### 2. Update Validation Status
+
+- Method: `POST`
+- Path: `/validations/workspaces/{workspace_id}/validations/{validation_id}`
+- Body:
+  ```json
+  {
+    "status": "fixed|ignored",
+    "rationale": "string|null"
+  }
+  ```
+
+---
+
+## Recommendations
+
+### 1. List Recommendations
+
+- Method: `GET`
+- Path: `/recommendations/workspaces/{workspace_id}/pipeline-runs/{pipeline_run_id}`
+- Query:
+  - `status` (optional): `pending|approved|rejected|modified`
+  - `type` (optional): `missing_vendor|missing_clause|critical_vendor|...`
+- Response:
+  ```json
+  [
+    {
+      "id": "string",
+      "type": "string",
+      "target_entity_type": "vendor|contract",
+      "target_entity_id": "string|null",
+      "confidence": "number",
+      "reason": "string",
+      "status": "string",
+      "evidence_ids": ["string"]
+    }
+  ]
+  ```
+
+### 2. Approve Recommendation
+
+- Method: `POST`
+- Path: `/recommendations/workspaces/{workspace_id}/recommendations/{recommendation_id}/approve`
+- Body:
+  ```json
+  {
+    "rationale": "string|null"
+  }
+  ```
+
+### 3. Reject Recommendation
+
+- Method: `POST`
+- Path: `/recommendations/workspaces/{workspace_id}/recommendations/{recommendation_id}/reject`
+
+### 4. Modify Recommendation
+
+- Method: `POST`
+- Path: `/recommendations/workspaces/{workspace_id}/recommendations/{recommendation_id}/modify`
+- Body:
+  ```json
+  {
+    "new_value": "string",
+    "rationale": "string"
+  }
+  ```
+
+---
+
+## Exports
+
+### 1. Create Export
+
+- Method: `POST`
+- Path: `/exports/workspaces/{workspace_id}/exports`
+- Body:
+  ```json
+  {
+    "pipeline_run_id": "string",
+    "name": "string",
+    "include": {
+      "roi": true,
+      "validation_report": true,
+      "evidence_report": true,
+      "review_summary": true
+    }
+  }
+  ```
+- Response:
+  ```json
+  {
+    "export_id": "string",
+    "status": "queued"
+  }
+  ```
+
+### 2. List Exports
+
+- Method: `GET`
+- Path: `/exports/workspaces/{workspace_id}/exports`
+- Response:
+  ```json
+  [
+    {
+      "id": "string",
+      "name": "string",
+      "created_at": "datetime",
+      "status": "queued|generated|failed"
+    }
+  ]
+  ```
+
+### 3. Get Export
+
+- Method: `GET`
+- Path: `/exports/workspaces/{workspace_id}/exports/{export_id}`
+- Response:
+  ```json
+  {
+    "id": "string",
+    "name": "string",
+    "status": "string",
+    "files": [
+      {
+        "name": "string",
+        "url": "string"
+      }
+    ]
+  }
+  ```
+
+---
+
+## Audit
+
+### 1. List Audit Events
+
+- Method: `GET`
+- Path: `/audit/workspaces/{workspace_id}/events`
+- Query:
+  - `event_type` (optional).
+  - `actor_id` (optional).
+  - `from`, `to` (date range).
+- Response:
+  ```json
+  [
+    {
+      "id": "string",
+      "timestamp": "datetime",
+      "actor_id": "string",
+      "event_type": "string",
+      "target_entity_type": "string",
+      "target_entity_id": "string",
+      "details": "object"
+    }
+  ]
+  ```

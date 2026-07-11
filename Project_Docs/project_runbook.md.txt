@@ -1,0 +1,198 @@
+# Project Runbook
+# EvidenceOS – AI-Powered DORA RoI Evidence & Validation Copilot
+
+**Purpose:**  
+This document is your single “start here” guide for building EvidenceOS with an AI code assistant (e.g. Claude Code, Cursor). It explains:
+- what EvidenceOS is.
+- what stack you’re using.
+- what docs exist.
+- how to talk to the AI.
+- how to structure prompts so it doesn’t lose context.
+
+Read this before you start any coding prompts.
+
+---
+
+## What EvidenceOS Is
+
+EvidenceOS is an AI-powered copilot that helps EU financial entities prepare a submission-ready DORA Register of Information (RoI) draft from fragmented contracts, spreadsheets, and vendor inventories.
+
+Core value:
+- Ingest raw evidence (PDF, DOCX, XLSX, CSV).
+- Extract structured entities (vendors, contracts, clauses, business functions).
+- Normalize duplicates and aliases.
+- Validate mandatory fields, formats, and relationships.
+- Provide explainable AI recommendations (missing vendors, missing clauses, operational importance signals).
+- Allow human review and approval.
+- Export a versioned, submission-ready draft package (RoI, validation report, evidence report, audit summary).
+
+Key constraints:
+- AI assists; humans decide.
+- Every recommendation must be explainable (evidence, reason, confidence).
+- Every exported field must be traceable to source evidence where possible.
+- EU-only data residency.
+- Modular monolith with async workers (not microservices).
+
+---
+
+## Tech Stack
+
+- Frontend:
+  - Next.js
+  - TypeScript
+  - Tailwind CSS
+  - shadcn/ui
+- Backend:
+  - FastAPI (Python)
+  - Modular monolith with internal modules.
+- Database:
+  - PostgreSQL via Supabase (EU region).
+  - JSONB for semi-structured payloads.
+  - Vector support for retrieval.
+- Storage:
+  - Supabase Storage (EU).
+- Workers:
+  - Background job workers for:
+    - OCR
+    - parsing
+    - extraction
+    - normalization
+    - validation
+    - recommendation
+    - export
+- AI:
+  - LLM API (e.g. GPT-5 or equivalent) for extraction reasoning and recommendation generation.
+  - Embedding model for retrieval.
+- Deployment:
+  - Frontend: Vercel (EU region).
+  - Backend: EU-hosted container (or similar).
+  - Workers: EU-hosted container or queue-backed worker.
+
+---
+
+## Existing Docs
+
+You must reference these files whenever generating code:
+
+1. `evidenceos_prd_v2_investor_execution_grade.md`  
+   Product requirements, goals, personas, pipeline, requirements, risks, roadmap.
+
+2. `evidenceos_sdd_v1.md`  
+   System design: architecture, components, pipeline, modules, security, observability, deployment.
+
+3. `evidenceos_domain_model_v1.md`  
+   Domain model: entities, relationships, lifecycle, trust model.
+
+4. `ui_spec.md`  
+   UI pages, components, behavior, layout, UX principles.
+
+5. `api_spec.md`  
+   API endpoints, request/response schemas, auth rules.
+
+6. `db_schema.md`  
+   Database tables, columns, constraints, indexes, relationships.
+
+7. `milestone_roadmap.md`  
+   Phased build plan with deliverables and acceptance criteria.
+
+8. `env_guide.md`  
+   Environment variables, local dev, deployment setup.
+
+9. `prompt_pack.md`  
+   Step-by-step prompts to build the product in phases.
+
+Never assume you know the requirements. Always check these docs.
+
+---
+
+## How to Use This with an AI Code Assistant
+
+### General Rules
+
+- Work in phases, not “build everything at once”.
+- Each prompt should:
+  - State the phase and goal.
+  - Reference which docs to use for context.
+  - Specify constraints (e.g. “no external services except X”, “use Supabase”).
+  - Ask for all generated files.
+- When you finish a phase:
+  - Summarize what was built.
+  - List what remains from the roadmap.
+  - Ask for the next phase prompt.
+
+### Prompt Structure (Template)
+
+Use this pattern:
+
+```text
+You are an expert full-stack developer.
+
+Context:
+- Product: EvidenceOS (AI-powered DORA RoI evidence & validation copilot).
+- Docs to read: project_runbook.md, evidenceos_prd_v2_..., evidenceos_sdd_v1.md, evidenceos_domain_model_v1.md, ui_spec.md, api_spec.md, db_schema.md, milestone_roadmap.md, env_guide.md.
+
+Goal:
+- Implement [PHASE NAME] with [specific features].
+
+Constraints:
+- Use Next.js + TypeScript + Tailwind + shadcn/ui for frontend.
+- Use FastAPI + Python for backend.
+- Use Supabase PostgreSQL + Storage.
+- No external services except [list].
+- Keep code modular and testable.
+
+Tasks:
+1. [Task 1]
+2. [Task 2]
+...
+
+Output:
+- Generate all necessary files (code, config, migrations, etc.).
+- Show the file structure.
+- Explain how to run locally.
+```
+
+---
+
+## Build Flow
+
+Recommended order:
+
+1. Phase 0: Project scaffolding + environment + auth.
+2. Phase 1: Document upload + pipeline model.
+3. Phase 2: OCR/parsing + extraction + normalization.
+4. Phase 3: Validation engine + review UI.
+5. Phase 4: Recommendations + review actions.
+6. Phase 5: Export + audit + observability.
+7. Phase 6: Polish, integration tests, deployment prep.
+
+Always follow `milestone_roadmap.md` and `prompt_pack.md` for pacing.
+
+---
+
+## When You Are Unsure
+
+If anything is unclear:
+- Check `evidenceos_prd_v2_...` for business rules.
+- Check `evidenceos_sdd_v1.md` for architecture.
+- Check `evidenceos_domain_model_v1.md` for entities.
+- If still unclear, ask me for clarification before coding.
+
+---
+
+## Success Criteria
+
+You have built the MVP when:
+- A user can log in, create a workspace, and upload documents.
+- The system can run a pipeline (OCR/parsing, extraction, normalization, validation, recommendations).
+- A user can review validation results and recommendations, approve/reject/modify.
+- The system can generate an export package with:
+  - RoI draft.
+  - Validation report.
+  - Evidence report.
+  - Review summary.
+- All data is EU-hosted, versioned, and audit-loggable.
+
+---
+
+Use this runbook as your “master guide” whenever you start a new prompt session.

@@ -1,0 +1,123 @@
+# Environment & Configuration Guide
+# EvidenceOS
+
+**Purpose:**  
+Define environment variables, local dev setup, and deployment instructions.
+
+---
+
+## Environment Variables
+
+### Backend (.env)
+
+- `DATABASE_URL`  
+  Supabase PostgreSQL connection string.
+
+- `SUPABASE_URL`  
+  Supabase project URL.
+
+- `SUPABASE_ANON_KEY`  
+  Supabase anon/public key.
+
+- `LLM_API_KEY`  
+  API key for chosen LLM (e.g. OpenAI, etc.).
+
+- `LLM_MODEL`  
+  Model name (e.g. `gpt-5` or similar).
+
+- `EMBEDDING_API_KEY`  
+  API key for embedding provider.
+
+- `OCR_API_KEY`  
+  API key for OCR provider (e.g. Azure Document Intelligence).
+
+- `OCR_ENDPOINT`  
+  OCR service endpoint.
+
+- `STORAGE_BUCKET`  
+  Name of storage bucket for documents.
+
+- `WORKER_QUEUE_URL` or `REDIS_URL`  
+  For job queue (if using Redis).
+
+- `ENV`  
+  `development`, `staging`, or `production`.
+
+### Frontend (.env.local)
+
+- `NEXT_PUBLIC_API_BASE_URL`  
+  Backend API base URL.
+
+- `NEXT_PUBLIC_SUPABASE_URL`  
+  Supabase URL.
+
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`  
+  Supabase anon key.
+
+---
+
+## Local Development
+
+### Frontend
+
+1. `cd frontend`
+2. `npm install`
+3. Set `.env.local`.
+4. `npm run dev`.
+5. Open `http://localhost:3000`.
+
+### Backend
+
+1. `cd backend`
+2. `python -m venv venv` (or use existing setup).
+3. `source venv/bin/activate` (or `venv\\Scripts\\activate`).
+4. `pip install -r requirements.txt`.
+5. Set `.env`.
+6. `uvicorn main:app --reload --port 8000`.
+7. Open `http://localhost:8000`.
+
+### Workers
+
+1. `cd workers`
+2. Install dependencies.
+3. Set `.env` (same as backend).
+4. Run worker script (e.g. `python worker.py`).
+
+### Database
+
+1. Create Supabase project.
+2. Run migrations from `db_schema.md` (SQL).
+3. Create storage bucket for documents.
+
+---
+
+## Deployment
+
+### Frontend
+
+- Platform: Vercel.
+- Connect repo.
+- Set environment variables in Vercel.
+- Deploy.
+
+### Backend
+
+- Platform: EU-hosted container (e.g. Render, Fly.io, or similar).
+- Build FastAPI app.
+- Set environment variables.
+- Deploy.
+
+### Workers
+
+- Platform: Same as backend or separate worker container.
+- Configure to poll queue or run continuously.
+- Set environment variables.
+
+---
+
+## Security Notes
+
+- Always use EU-hosted resources.
+- Never commit secrets.
+- Use environment variables for all secrets.
+- Configure row-level security in Supabase.
