@@ -49,12 +49,12 @@ export const env = {
   APP_ENV: optionalEnv("NEXT_PUBLIC_APP_ENV", "local"),
 
   /**
-   * Supabase (public keys only — the anon key is designed to be shipped
-   * to the browser; RLS is what enforces isolation).
-   * Wired in Phase 0.5 once we create the Supabase project.
+   * Supabase — required from Phase 0.5 onwards. The anon key is
+   * designed to be shipped to the browser; Row-Level Security is what
+   * enforces isolation. Both must be present or the app will not boot.
    */
-  SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-  SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+  SUPABASE_URL: requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
+  SUPABASE_ANON_KEY: requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
 } as const;
 
 /**

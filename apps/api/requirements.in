@@ -18,6 +18,9 @@ pydantic-settings    # Typed .env loading — replaces the old BaseSettings.
 # --- HTTP client (for calling Supabase REST, LLM APIs later) ---
 httpx                # Async HTTP client. Same author as requests.
 
+# --- Supabase client (Phase 0.5+) ---
+supabase             # Postgres + Auth + Storage SDK. Wraps postgrest, gotrue, storage3.
+
 # --- Logging ---
 structlog            # Structured JSON logs — required for observability + audit.
 
