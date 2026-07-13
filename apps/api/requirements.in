@@ -24,6 +24,12 @@ supabase             # Postgres + Auth + Storage SDK. Wraps postgrest, gotrue, s
 # --- Logging ---
 structlog            # Structured JSON logs — required for observability + audit.
 
+# --- OCR / text extraction (Phase 2+) ---
+pymupdf              # PDF text extraction (no external binaries needed).
+python-docx          # DOCX text extraction.
+openpyxl             # XLSX cell reading.
+# CSV uses Python stdlib — no extra package needed.
+
 # --- Dev-only (kept in main file for simplicity; split later) ---
 pytest               # Test runner.
 pytest-asyncio       # Enables `async def test_...`.

@@ -3,18 +3,15 @@
 /**
  * Server Actions for the pipeline page.
  *
- * startPipelineRun — creates a pipeline_run row (status: queued) and the
- * corresponding pipeline_run_documents rows for each selected document
- * version. Workers will pick up the run and update stage statuses.
- *
- * For Phase 1 the "worker" does not exist yet — this action gets the
- * data model right so Phase 2 can plug the OCR worker in without any
- * schema changes.
+ * startPipelineRun — creates a pipeline_run row (status: queued), inserts the
+ * pipeline_run_documents junction rows, then calls the FastAPI trigger endpoint
+ * to kick off the OCR worker in the background.
  */
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 export async function startPipelineRun(
@@ -57,6 +54,22 @@ export async function startPipelineRun(
 
   if (docsError) {
     return { error: docsError.message };
+  }
+
+  // Trigger the OCR worker in the FastAPI backend (fire-and-forget from
+  // the action's perspective — the worker runs as a BackgroundTask there).
+  try {
+    const triggerRes = await fetch(
+      `${env.API_BASE_URL}/pipeline/runs/${run.id}/trigger`,
+      { method: "POST" },
+    );
+    if (!triggerRes.ok) {
+      // Log but don't block the user — the run is queued and can be
+      // manually retried or picked up by a poller later.
+      console.error("Pipeline trigger failed:", await triggerRes.text());
+    }
+  } catch (err) {
+    console.error("Pipeline trigger unreachable:", err);
   }
 
   revalidatePath(`/dashboard/${workspaceSlug}/pipeline`);
