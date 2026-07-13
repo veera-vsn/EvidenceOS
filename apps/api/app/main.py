@@ -21,6 +21,7 @@ from app import __version__
 from app.api.health import router as health_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
+from app.pipeline.router import router as pipeline_router
 
 
 @asynccontextmanager
@@ -77,6 +78,7 @@ def create_app() -> FastAPI:
 
     # Routers — mount here as they are added.
     app.include_router(health_router)
+    app.include_router(pipeline_router)
 
     return app
 

@@ -22,6 +22,41 @@ export type Database = {
   };
   public: {
     Tables: {
+      document_text: {
+        Row: {
+          content: string;
+          document_version_id: string;
+          extracted_at: string;
+          extractor: string;
+          id: string;
+          word_count: number;
+        };
+        Insert: {
+          content: string;
+          document_version_id: string;
+          extracted_at?: string;
+          extractor: string;
+          id?: string;
+          word_count?: number;
+        };
+        Update: {
+          content?: string;
+          document_version_id?: string;
+          extracted_at?: string;
+          extractor?: string;
+          id?: string;
+          word_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "document_text_document_version_id_fkey";
+            columns: ["document_version_id"];
+            isOneToOne: true;
+            referencedRelation: "document_versions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       document_versions: {
         Row: {
           checksum: string | null;
@@ -318,3 +353,4 @@ export type DocumentRow           = Database["public"]["Tables"]["documents"]["R
 export type DocumentVersionRow    = Database["public"]["Tables"]["document_versions"]["Row"];
 export type PipelineRunRow        = Database["public"]["Tables"]["pipeline_runs"]["Row"];
 export type PipelineRunDocumentRow = Database["public"]["Tables"]["pipeline_run_documents"]["Row"];
+export type DocumentTextRow        = Database["public"]["Tables"]["document_text"]["Row"];
