@@ -1,0 +1,53 @@
+/*
+ * Global stylesheet.
+ *
+ * Tailwind v4 uses CSS-first configuration: the `@theme` block below is
+ * the equivalent of tailwind.config.js in v3. Any token declared here
+ * is available as a utility class (e.g. `--color-brand` becomes
+ * `bg-brand`, `text-brand`, etc.).
+ *
+ * We keep the palette minimal until Phase 0.5 (shadcn/ui theme).
+ */
+@import "tailwindcss";
+
+:root {
+  /* Neutral surface tokens. */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+
+  /* Brand tokens (placeholder — refine when we have visual identity). */
+  --brand: #0f172a;
+  --brand-foreground: #f8fafc;
+
+  /* Semantic tokens for validation / recommendation states. */
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --brand: #f8fafc;
+    --brand-foreground: #0f172a;
+  }
+}
+
+/*
+ * `@theme inline` maps our raw CSS variables to Tailwind's token
+ * namespace. This is what enables classes like `bg-background`,
+ * `text-foreground`, `bg-brand`, `text-success` in JSX.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}

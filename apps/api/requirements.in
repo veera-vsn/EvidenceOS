@@ -1,0 +1,27 @@
+# ============================================================================
+# EvidenceOS API dependencies — source of truth.
+# ----------------------------------------------------------------------------
+# Add packages here (unpinned or minimally pinned). Then run:
+#   .venv/Scripts/pip install -r requirements.in
+#   .venv/Scripts/pip freeze > requirements.txt
+# `requirements.txt` is the lockfile committed for reproducible installs.
+# ============================================================================
+
+# --- Web framework ---
+fastapi              # ASGI framework — Pydantic-native, async-first, auto OpenAPI.
+uvicorn[standard]    # ASGI server. `[standard]` pulls in fast uvloop + httptools.
+
+# --- Configuration ---
+pydantic>=2          # Data validation (used by FastAPI internally).
+pydantic-settings    # Typed .env loading — replaces the old BaseSettings.
+
+# --- HTTP client (for calling Supabase REST, LLM APIs later) ---
+httpx                # Async HTTP client. Same author as requests.
+
+# --- Logging ---
+structlog            # Structured JSON logs — required for observability + audit.
+
+# --- Dev-only (kept in main file for simplicity; split later) ---
+pytest               # Test runner.
+pytest-asyncio       # Enables `async def test_...`.
+ruff                 # Linter + formatter. Replaces black + isort + flake8.
