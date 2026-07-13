@@ -60,14 +60,19 @@ export default async function DashboardPage({
       {hasWorkspaces ? (
         <ul className="flex flex-col gap-3">
           {workspaces!.map((workspace) => (
-            <li
-              key={workspace.id}
-              className="rounded-xl border border-foreground/10 bg-foreground/[0.02] px-4 py-3"
-            >
-              <div className="text-sm font-medium">{workspace.name}</div>
-              <div className="font-mono text-xs text-foreground/50">
-                {workspace.slug}
-              </div>
+            <li key={workspace.id}>
+              <a
+                href={`/dashboard/${workspace.slug}/documents`}
+                className="flex items-center justify-between rounded-xl border border-foreground/10 bg-foreground/[0.02] px-4 py-3 transition hover:border-foreground/25 hover:bg-foreground/[0.04]"
+              >
+                <div>
+                  <div className="text-sm font-medium">{workspace.name}</div>
+                  <div className="font-mono text-xs text-foreground/50">
+                    {workspace.slug}
+                  </div>
+                </div>
+                <span className="text-xs text-foreground/40">Open →</span>
+              </a>
             </li>
           ))}
         </ul>
