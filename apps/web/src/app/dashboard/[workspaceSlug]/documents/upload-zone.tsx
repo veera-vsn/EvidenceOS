@@ -20,12 +20,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { DocumentType } from "@/lib/supabase/database.types";
 
-import {
-  initiateUpload,
-  confirmUpload,
-  failUpload,
-  extensionToDocumentType,
-} from "./actions";
+import { extensionToDocumentType } from "./document-utils";
+import { initiateUpload, confirmUpload, failUpload } from "./actions";
 
 type FileStatus = "queued" | "uploading" | "done" | "failed";
 
