@@ -84,8 +84,11 @@ handle_new_user      | {postgres=X/postgres, service_role=X/postgres}
 
 Only the owner (`postgres`) and `service_role` retain EXECUTE.
 Triggers still work because they run as the function's owner via
-`SECURITY DEFINER`. RLS still works because the policies invoke the
-helpers through the same owner path.
+`SECURITY DEFINER`.
+
+**⚠️ However, this broke RLS.** See Challenge #3 below — we did not
+discover this until a user could not see their own workspace on the
+dashboard.
 
 **Interview lessons.**
 
@@ -144,14 +147,98 @@ of attack.
 
 ---
 
+## 3. Revoking EXECUTE from PUBLIC broke the RLS policies silently
+
+**What happened.** After Challenges 1 & 2 fixed the advisor warnings,
+everything compiled. But during end-to-end testing (Phase 0.5.5) a
+workspace was created and appeared in the database — yet the dashboard
+showed "Create your first workspace" as if the user had none.
+
+No error appeared in the UI. The Supabase query returned `data: null`
+silently. There was no exception, no 4xx, no log line.
+
+**Root cause.** This is the missing half of the mental model from
+Challenge 1.
+
+A SECURITY DEFINER function has two separate permission boundaries:
+
+| Boundary | Governs | Requirement |
+|----------|---------|-------------|
+| EXECUTE privilege | Can the caller *invoke* the function? | Caller's role must have EXECUTE |
+| SECURITY DEFINER body | What *data* can the function body see? | Runs as owner, bypasses RLS |
+
+We understood the second row (SECURITY DEFINER lets triggers write to
+`workspace_members` without needing membership themselves). We missed
+the first row.
+
+When an RLS policy calls `public.is_workspace_member(id)`, Postgres
+evaluates the expression in the *calling user's* security context. The
+`authenticated` role must have EXECUTE on `is_workspace_member`. After
+migration 0003 revoked from `PUBLIC`, `authenticated` no longer had it.
+
+**What Postgres does when a policy function is not executable.** It
+does not throw an error — it treats the expression as `FALSE`. The row
+is not visible. From the application's perspective the table looks
+empty. This is the "safe" default: deny over expose.
+
+**The debugging path.**
+
+1. Workspace and workspace_members rows confirmed in DB via Supabase
+   MCP SQL.
+2. Attempted to SET LOCAL role TO authenticated and call the function —
+   got `permission denied for function is_workspace_member`.
+3. That confirmed the `authenticated` role had no EXECUTE.
+
+**The fix.** `0004_grant_helper_execute_to_authenticated.sql`:
+
+```sql
+GRANT EXECUTE ON FUNCTION public.is_workspace_member(uuid)                       TO authenticated;
+GRANT EXECUTE ON FUNCTION public.has_workspace_role(uuid, public.workspace_role) TO authenticated;
+```
+
+ACL after fix:
+```
+{postgres=X/postgres, service_role=X/postgres, authenticated=X/postgres}
+```
+
+`anon` still has no EXECUTE — so the advisor warning stays resolved.
+The two trigger functions (`handle_new_user`, `handle_new_workspace`)
+do not need this grant because only Postgres fires them; users never
+call them directly.
+
+**Why the silent failure is by design.** Postgres RLS is designed to
+be deny-by-default. A failed policy expression is equivalent to `false`,
+not an error, so an attacker cannot enumerate RLS behaviour through
+error messages. For developers this means: **a query returning empty is
+not proof the query is correct** — it could be RLS silently blocking.
+
+**Interview lessons.**
+
+1. EXECUTE permission and SECURITY DEFINER are orthogonal concepts.
+   You need EXECUTE to *call* the function; SECURITY DEFINER controls
+   what the *body* can do once running.
+2. RLS failures are silent — returning empty data, not errors. Always
+   verify with direct SQL (as a service-role or postgres user) when a
+   query returns unexpectedly empty results.
+3. Any time you REVOKE from PUBLIC to satisfy a security advisor, ask:
+   "does any policy or trigger that my app relies on call this
+   function?" If yes, GRANT selectively to the roles that legitimately
+   need it.
+4. The migration sequence (0001 → 0002 → 0003 → 0004) is now a
+   full worked example of iterative security hardening: discover,
+   fix, discover the side-effect, fix that too.
+
+---
+
 ## What did not go wrong
 
-- The RLS policies themselves. Every policy compiled and behaved as
-  expected on first apply. We will verify multi-tenant isolation
-  end-to-end in Phase 0.5.5 with two sessions and cross-tenant reads,
-  but on inspection there are no bugs.
 - The triggers. `handle_new_user` and `handle_new_workspace` fired
-  on their first real invocation once we tested signup / workspace
-  creation (Phase 0.5.5).
-- The migration ordering. `0001` → `0002` → `0003` applied cleanly
-  in order. Naming with monotonic prefixes worked as intended.
+  on their first real invocation during signup and workspace creation.
+  The SECURITY DEFINER path for the trigger body worked exactly as
+  intended — `handle_new_workspace` was able to INSERT into
+  `workspace_members` even though the calling user had no membership
+  yet (and therefore would have been denied by the RLS INSERT policy).
+- The migration ordering. `0001` → `0002` → `0003` → `0004` applied
+  cleanly in sequence. Naming with monotonic prefixes worked as
+  intended, and the history now reads as a complete debugging story
+  rather than a clean-room implementation.
