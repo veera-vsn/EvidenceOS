@@ -18,9 +18,9 @@ import type {
   PipelineRunDocumentRow,
   StageStatus,
   ValidationResultRow,
-  ValidationStatus,
 } from "@/lib/supabase/database.types";
 
+import { ConfidencePip, ValidationBadges } from "../_components/field-badges";
 import { StartRunForm, type SelectableDocument } from "./start-run-form";
 
 interface PipelinePageProps {
@@ -257,45 +257,3 @@ function StagePip({ status }: { status: StageStatus }) {
   );
 }
 
-function ConfidencePip({ confidence }: { confidence: number }) {
-  const pct = Math.round(confidence * 100);
-  const colour =
-    pct >= 80 ? "text-success" : pct >= 50 ? "text-warning" : "text-danger";
-  return (
-    <span className={`text-[10px] ${colour}`}>
-      {pct}% confidence
-    </span>
-  );
-}
-
-const VALIDATION_BADGE_STYLES: Record<ValidationStatus, string> = {
-  pass: "bg-success/15 text-success",
-  fail: "bg-danger/15 text-danger",
-  warning: "bg-warning/15 text-warning",
-  skipped: "bg-foreground/10 text-foreground/40",
-};
-
-function ValidationBadges({
-  results,
-}: {
-  results: Pick<ValidationResultRow, "rule_id" | "rule_label" | "status" | "message">[];
-}) {
-  // 'skipped' means the rule had nothing to check (e.g. optional field left
-  // blank) — not informative next to a value the reviewer can already see.
-  const visible = results.filter((r) => r.status !== "skipped");
-  if (visible.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap gap-1 pt-0.5">
-      {visible.map((r) => (
-        <span
-          key={r.rule_id}
-          title={r.message ?? r.rule_label}
-          className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${VALIDATION_BADGE_STYLES[r.status as ValidationStatus]}`}
-        >
-          {r.rule_id.replace(/_/g, " ")}
-        </span>
-      ))}
-    </div>
-  );
-}

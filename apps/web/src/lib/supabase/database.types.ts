@@ -180,6 +180,47 @@ export type Database = {
           },
         ];
       };
+      field_reviews: {
+        Row: {
+          decision: string;
+          document_version_id: string;
+          edited_value: string | null;
+          field_code: string;
+          id: string;
+          notes: string | null;
+          reviewed_at: string;
+          reviewed_by: string;
+        };
+        Insert: {
+          decision: string;
+          document_version_id: string;
+          edited_value?: string | null;
+          field_code: string;
+          id?: string;
+          notes?: string | null;
+          reviewed_at?: string;
+          reviewed_by: string;
+        };
+        Update: {
+          decision?: string;
+          document_version_id?: string;
+          edited_value?: string | null;
+          field_code?: string;
+          id?: string;
+          notes?: string | null;
+          reviewed_at?: string;
+          reviewed_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "field_reviews_document_version_id_fkey";
+            columns: ["document_version_id"];
+            isOneToOne: false;
+            referencedRelation: "document_versions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       pipeline_run_documents: {
         Row: {
           created_at: string;
@@ -430,6 +471,8 @@ export type StageStatus     = Database["public"]["Enums"]["stage_status"];
 // validation_results.status has no Postgres enum (checked via a CHECK
 // constraint instead), so the allowed values are declared by hand here.
 export type ValidationStatus = "pass" | "fail" | "warning" | "skipped";
+// field_reviews.decision has no Postgres enum either, same reasoning.
+export type ReviewDecision = "approved" | "edited" | "rejected";
 
 export type WorkspaceRow          = Database["public"]["Tables"]["workspaces"]["Row"];
 export type ProfileRow            = Database["public"]["Tables"]["profiles"]["Row"];
@@ -441,3 +484,4 @@ export type PipelineRunDocumentRow = Database["public"]["Tables"]["pipeline_run_
 export type DocumentTextRow        = Database["public"]["Tables"]["document_text"]["Row"];
 export type ExtractionResultRow    = Database["public"]["Tables"]["extraction_results"]["Row"];
 export type ValidationResultRow    = Database["public"]["Tables"]["validation_results"]["Row"];
+export type FieldReviewRow         = Database["public"]["Tables"]["field_reviews"]["Row"];

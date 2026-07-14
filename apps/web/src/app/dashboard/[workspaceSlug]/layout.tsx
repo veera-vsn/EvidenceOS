@@ -73,6 +73,12 @@ export default async function WorkspaceLayout({
             >
               Pipeline
             </Link>
+            <Link
+              href={`/dashboard/${workspaceSlug}/review`}
+              className="rounded-md px-3 py-1.5 text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
+            >
+              Review
+            </Link>
           </nav>
 
           <div className="flex items-center gap-4 text-sm">
