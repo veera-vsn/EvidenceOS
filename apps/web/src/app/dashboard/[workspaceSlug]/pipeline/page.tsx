@@ -17,6 +17,8 @@ import type {
   PipelineRunRow,
   PipelineRunDocumentRow,
   StageStatus,
+  ValidationResultRow,
+  ValidationStatus,
 } from "@/lib/supabase/database.types";
 
 import { StartRunForm, type SelectableDocument } from "./start-run-form";
@@ -71,7 +73,8 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
         validation_status, recommendation_status,
         document_versions (
           documents ( name, file_type ),
-          extraction_results ( field_code, field_label, extracted_value, confidence )
+          extraction_results ( field_code, field_label, extracted_value, confidence ),
+          validation_results ( field_code, rule_id, rule_label, status, message )
         )
       )
     `)
@@ -83,6 +86,7 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
           document_versions: {
             documents: { name: string; file_type: string } | null;
             extraction_results: Pick<ExtractionResultRow, "field_code" | "field_label" | "extracted_value" | "confidence">[];
+            validation_results: Pick<ValidationResultRow, "field_code" | "rule_id" | "rule_label" | "status" | "message">[];
           } | null;
         })[];
       })[]
@@ -167,9 +171,7 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
 
                 {/* Extracted DORA fields */}
                 {run.pipeline_run_documents.map((prd) => {
-                  const fields = (prd.document_versions?.extraction_results ?? []).filter(
-                    (f) => f.extracted_value,
-                  );
+                  const fields = prd.document_versions?.extraction_results ?? [];
                   if (fields.length === 0) return null;
                   return (
                     <div key={prd.document_version_id} className="flex flex-col gap-2">
@@ -189,10 +191,21 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
                               {f.field_code}
                             </span>
                             <span className="text-xs text-foreground/60">{f.field_label}</span>
-                            <span className="text-xs font-medium text-foreground/90">
-                              {f.extracted_value}
-                            </span>
-                            <ConfidencePip confidence={f.confidence ?? 0} />
+                            {f.extracted_value ? (
+                              <>
+                                <span className="text-xs font-medium text-foreground/90">
+                                  {f.extracted_value}
+                                </span>
+                                <ConfidencePip confidence={f.confidence ?? 0} />
+                              </>
+                            ) : (
+                              <span className="text-xs italic text-foreground/35">Not extracted</span>
+                            )}
+                            <ValidationBadges
+                              results={(prd.document_versions?.validation_results ?? []).filter(
+                                (v) => v.field_code === f.field_code,
+                              )}
+                            />
                           </div>
                         ))}
                       </div>
@@ -252,5 +265,37 @@ function ConfidencePip({ confidence }: { confidence: number }) {
     <span className={`text-[10px] ${colour}`}>
       {pct}% confidence
     </span>
+  );
+}
+
+const VALIDATION_BADGE_STYLES: Record<ValidationStatus, string> = {
+  pass: "bg-success/15 text-success",
+  fail: "bg-danger/15 text-danger",
+  warning: "bg-warning/15 text-warning",
+  skipped: "bg-foreground/10 text-foreground/40",
+};
+
+function ValidationBadges({
+  results,
+}: {
+  results: Pick<ValidationResultRow, "rule_id" | "rule_label" | "status" | "message">[];
+}) {
+  // 'skipped' means the rule had nothing to check (e.g. optional field left
+  // blank) — not informative next to a value the reviewer can already see.
+  const visible = results.filter((r) => r.status !== "skipped");
+  if (visible.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1 pt-0.5">
+      {visible.map((r) => (
+        <span
+          key={r.rule_id}
+          title={r.message ?? r.rule_label}
+          className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${VALIDATION_BADGE_STYLES[r.status as ValidationStatus]}`}
+        >
+          {r.rule_id.replace(/_/g, " ")}
+        </span>
+      ))}
+    </div>
   );
 }

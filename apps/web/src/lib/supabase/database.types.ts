@@ -22,47 +22,6 @@ export type Database = {
   };
   public: {
     Tables: {
-      extraction_results: {
-        Row: {
-          confidence: number | null;
-          document_version_id: string;
-          extracted_at: string;
-          extracted_value: string | null;
-          extraction_method: string;
-          field_code: string;
-          field_label: string;
-          id: string;
-        };
-        Insert: {
-          confidence?: number | null;
-          document_version_id: string;
-          extracted_at?: string;
-          extracted_value?: string | null;
-          extraction_method?: string;
-          field_code: string;
-          field_label: string;
-          id?: string;
-        };
-        Update: {
-          confidence?: number | null;
-          document_version_id?: string;
-          extracted_at?: string;
-          extracted_value?: string | null;
-          extraction_method?: string;
-          field_code?: string;
-          field_label?: string;
-          id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "extraction_results_document_version_id_fkey";
-            columns: ["document_version_id"];
-            isOneToOne: false;
-            referencedRelation: "document_versions";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       document_text: {
         Row: {
           content: string;
@@ -180,6 +139,47 @@ export type Database = {
           },
         ];
       };
+      extraction_results: {
+        Row: {
+          confidence: number | null;
+          document_version_id: string;
+          extracted_at: string;
+          extracted_value: string | null;
+          extraction_method: string;
+          field_code: string;
+          field_label: string;
+          id: string;
+        };
+        Insert: {
+          confidence?: number | null;
+          document_version_id: string;
+          extracted_at?: string;
+          extracted_value?: string | null;
+          extraction_method?: string;
+          field_code: string;
+          field_label: string;
+          id?: string;
+        };
+        Update: {
+          confidence?: number | null;
+          document_version_id?: string;
+          extracted_at?: string;
+          extracted_value?: string | null;
+          extraction_method?: string;
+          field_code?: string;
+          field_label?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "extraction_results_document_version_id_fkey";
+            columns: ["document_version_id"];
+            isOneToOne: false;
+            referencedRelation: "document_versions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       pipeline_run_documents: {
         Row: {
           created_at: string;
@@ -293,6 +293,47 @@ export type Database = {
         };
         Relationships: [];
       };
+      validation_results: {
+        Row: {
+          document_version_id: string;
+          field_code: string;
+          id: string;
+          message: string | null;
+          rule_id: string;
+          rule_label: string;
+          status: string;
+          validated_at: string;
+        };
+        Insert: {
+          document_version_id: string;
+          field_code: string;
+          id?: string;
+          message?: string | null;
+          rule_id: string;
+          rule_label: string;
+          status: string;
+          validated_at?: string;
+        };
+        Update: {
+          document_version_id?: string;
+          field_code?: string;
+          id?: string;
+          message?: string | null;
+          rule_id?: string;
+          rule_label?: string;
+          status?: string;
+          validated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "validation_results_document_version_id_fkey";
+            columns: ["document_version_id"];
+            isOneToOne: false;
+            referencedRelation: "document_versions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       workspace_members: {
         Row: {
           joined_at: string;
@@ -386,6 +427,9 @@ export type DocumentType    = Database["public"]["Enums"]["document_type"];
 export type UploadStatus    = Database["public"]["Enums"]["upload_status"];
 export type PipelineRunStatus = Database["public"]["Enums"]["pipeline_run_status"];
 export type StageStatus     = Database["public"]["Enums"]["stage_status"];
+// validation_results.status has no Postgres enum (checked via a CHECK
+// constraint instead), so the allowed values are declared by hand here.
+export type ValidationStatus = "pass" | "fail" | "warning" | "skipped";
 
 export type WorkspaceRow          = Database["public"]["Tables"]["workspaces"]["Row"];
 export type ProfileRow            = Database["public"]["Tables"]["profiles"]["Row"];
@@ -396,3 +440,4 @@ export type PipelineRunRow        = Database["public"]["Tables"]["pipeline_runs"
 export type PipelineRunDocumentRow = Database["public"]["Tables"]["pipeline_run_documents"]["Row"];
 export type DocumentTextRow        = Database["public"]["Tables"]["document_text"]["Row"];
 export type ExtractionResultRow    = Database["public"]["Tables"]["extraction_results"]["Row"];
+export type ValidationResultRow    = Database["public"]["Tables"]["validation_results"]["Row"];
