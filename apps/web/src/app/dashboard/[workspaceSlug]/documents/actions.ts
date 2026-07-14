@@ -127,3 +127,47 @@ export async function failUpload(
     .update({ upload_status: "failed" })
     .eq("id", versionId);
 }
+
+/**
+ * Delete a document and all associated data.
+ *
+ * Order of operations:
+ *   1. Fetch all version storage paths so we can remove the files.
+ *   2. Delete Storage objects (best-effort — DB delete proceeds even if
+ *      Storage removal partially fails; orphaned files are harmless).
+ *   3. Delete the documents row — cascades to document_versions,
+ *      pipeline_run_documents, document_text, and extraction_results.
+ */
+export async function deleteDocument(
+  documentId: string,
+  workspaceSlug: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Fetch storage paths for all versions of this document.
+  const { data: versions } = await supabase
+    .from("document_versions")
+    .select("storage_path")
+    .eq("document_id", documentId);
+
+  const paths = (versions ?? []).map((v) => v.storage_path).filter(Boolean);
+
+  if (paths.length > 0) {
+    await supabase.storage.from("documents").remove(paths);
+  }
+
+  const { error } = await supabase
+    .from("documents")
+    .delete()
+    .eq("id", documentId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/dashboard/${workspaceSlug}/documents`);
+  return {};
+}

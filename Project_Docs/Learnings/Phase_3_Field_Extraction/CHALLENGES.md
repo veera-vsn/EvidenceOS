@@ -132,3 +132,29 @@ except Exception:
 **Why it matters:** Async batch senders are the industry default for observability SDKs (Langfuse, Sentry, DataDog) because they add near-zero latency to the hot path. But they require an explicit flush at process/task exit. In long-running servers this happens at shutdown; in short-lived background tasks you must call it manually.
 
 **Interview lesson:** Any time you use an observability SDK in a non-web-server context (CLI, background job, lambda, test suite), check whether the SDK has a `flush()` or `shutdown()` method and call it before the process exits. The SDK documentation usually mentions this but it is easy to miss.
+
+---
+
+## C9: PostgreSQL rejects null bytes (U+0000) from PDF extraction
+
+**What happened:** Running the pipeline against a real PDF produced by a scanner or with complex embedded fonts gave this Postgres error:
+
+```
+'\\u0000 cannot be converted to text.'  (code 22P05)
+```
+
+The OCR stage failed and the pipeline was marked `failed`. No extraction ran so no Langfuse traces appeared — two symptoms with one root cause.
+
+**Root cause:** PyMuPDF emits `\x00` (null byte, U+0000) when it cannot decode certain character codes in embedded font tables. The extracted text is valid Python `str` but PostgreSQL's `text` type hard-rejects null bytes — they are not part of the SQL character set.
+
+**Fix:** Strip null bytes immediately after extraction and before any DB write or LLM call:
+
+```python
+clean_text = result.text.replace("\x00", "")
+```
+
+Applied in `ocr_worker.py` right after `extract()` returns. The word count remains from the original extraction (minor inaccuracy) but the text stored is clean.
+
+**Why it matters:** This error blocks the entire document — OCR fails, extraction is skipped, no Langfuse trace is produced. The failure is silent from the user's perspective (they see "failed" status with no explanation). Stripping null bytes is safe: `\x00` has no semantic content in natural language text.
+
+**Interview lesson:** When storing LLM-extracted or OCR-produced text in a relational database, always sanitise before the DB write. Common issues: null bytes (PDF/OCR), lone surrogates (some Unicode encodings), and text exceeding column length limits. A defensive `text.replace("\x00", "")` in the worker is simpler than catching and re-raising a database error mid-pipeline.

@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { DocumentRow, DocumentVersionRow } from "@/lib/supabase/database.types";
 
+import { DeleteDocumentButton } from "./delete-document-button";
 import { UploadZone } from "./upload-zone";
 
 interface DocumentsPageProps {
@@ -93,9 +94,15 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
                       : ""}
                   </span>
                 </div>
-                <VersionBadge
-                  status={doc.latest_version?.upload_status ?? null}
-                />
+                <div className="flex items-center gap-2">
+                  <VersionBadge
+                    status={doc.latest_version?.upload_status ?? null}
+                  />
+                  <DeleteDocumentButton
+                    documentId={doc.id}
+                    workspaceSlug={workspaceSlug}
+                  />
+                </div>
               </li>
             ))}
           </ul>
