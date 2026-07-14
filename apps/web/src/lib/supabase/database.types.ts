@@ -22,6 +22,47 @@ export type Database = {
   };
   public: {
     Tables: {
+      extraction_results: {
+        Row: {
+          confidence: number | null;
+          document_version_id: string;
+          extracted_at: string;
+          extracted_value: string | null;
+          extraction_method: string;
+          field_code: string;
+          field_label: string;
+          id: string;
+        };
+        Insert: {
+          confidence?: number | null;
+          document_version_id: string;
+          extracted_at?: string;
+          extracted_value?: string | null;
+          extraction_method?: string;
+          field_code: string;
+          field_label: string;
+          id?: string;
+        };
+        Update: {
+          confidence?: number | null;
+          document_version_id?: string;
+          extracted_at?: string;
+          extracted_value?: string | null;
+          extraction_method?: string;
+          field_code?: string;
+          field_label?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "extraction_results_document_version_id_fkey";
+            columns: ["document_version_id"];
+            isOneToOne: false;
+            referencedRelation: "document_versions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       document_text: {
         Row: {
           content: string;
@@ -354,3 +395,4 @@ export type DocumentVersionRow    = Database["public"]["Tables"]["document_versi
 export type PipelineRunRow        = Database["public"]["Tables"]["pipeline_runs"]["Row"];
 export type PipelineRunDocumentRow = Database["public"]["Tables"]["pipeline_run_documents"]["Row"];
 export type DocumentTextRow        = Database["public"]["Tables"]["document_text"]["Row"];
+export type ExtractionResultRow    = Database["public"]["Tables"]["extraction_results"]["Row"];

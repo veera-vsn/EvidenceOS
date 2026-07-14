@@ -1,10 +1,10 @@
 /**
  * `/dashboard/[workspaceSlug]/pipeline` — pipeline runs view.
  *
- * Two panels:
+ * Three panels:
  *   1. Start a new run — select uploaded documents, click "Start".
- *   2. Run history — list of all pipeline_runs with their status and
- *      a per-document stage breakdown.
+ *   2. Run history — list of all pipeline_runs with stage status grid.
+ *   3. Extracted fields — DORA RoI fields pulled from each document.
  */
 
 import { redirect } from "next/navigation";
@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   DocumentRow,
   DocumentVersionRow,
+  ExtractionResultRow,
   PipelineRunRow,
   PipelineRunDocumentRow,
   StageStatus,
@@ -59,7 +60,7 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
     return { ...doc, latest_version: sorted[0] ?? null };
   });
 
-  // Fetch pipeline runs with their document rows.
+  // Fetch pipeline runs with document rows + extraction results.
   const { data: runs } = await supabase
     .from("pipeline_runs")
     .select(`
@@ -68,7 +69,10 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
         document_version_id,
         ocr_status, extraction_status, normalisation_status,
         validation_status, recommendation_status,
-        document_versions ( documents ( name, file_type ) )
+        document_versions (
+          documents ( name, file_type ),
+          extraction_results ( field_code, field_label, extracted_value, confidence )
+        )
       )
     `)
     .eq("workspace_id", workspace.id)
@@ -76,7 +80,10 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
     .returns<
       (PipelineRunRow & {
         pipeline_run_documents: (PipelineRunDocumentRow & {
-          document_versions: { documents: { name: string; file_type: string } | null } | null;
+          document_versions: {
+            documents: { name: string; file_type: string } | null;
+            extraction_results: Pick<ExtractionResultRow, "field_code" | "field_label" | "extracted_value" | "confidence">[];
+          } | null;
         })[];
       })[]
     >();
@@ -103,14 +110,12 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
       {/* Run history */}
       {(runs?.length ?? 0) > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-foreground/70">
-            Run history
-          </h2>
-          <ul className="flex flex-col gap-4">
+          <h2 className="text-sm font-medium text-foreground/70">Run history</h2>
+          <ul className="flex flex-col gap-6">
             {runs!.map((run) => (
               <li
                 key={run.id}
-                className="flex flex-col gap-3 rounded-xl border border-foreground/10 bg-foreground/[0.02] p-4"
+                className="flex flex-col gap-4 rounded-xl border border-foreground/10 bg-foreground/[0.02] p-4"
               >
                 {/* Run header */}
                 <div className="flex items-center justify-between">
@@ -134,10 +139,7 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
                           Document
                         </th>
                         {STAGES.map((s) => (
-                          <th
-                            key={s.key}
-                            className="pb-1 text-center font-medium text-foreground/50"
-                          >
+                          <th key={s.key} className="pb-1 text-center font-medium text-foreground/50">
                             {s.label}
                           </th>
                         ))}
@@ -154,9 +156,7 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
                           </td>
                           {STAGES.map((s) => (
                             <td key={s.key} className="py-1.5 text-center">
-                              <StagePip
-                                status={prd[s.key] as StageStatus}
-                              />
+                              <StagePip status={prd[s.key] as StageStatus} />
                             </td>
                           ))}
                         </tr>
@@ -164,6 +164,41 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
                     </tbody>
                   </table>
                 )}
+
+                {/* Extracted DORA fields */}
+                {run.pipeline_run_documents.map((prd) => {
+                  const fields = (prd.document_versions?.extraction_results ?? []).filter(
+                    (f) => f.extracted_value,
+                  );
+                  if (fields.length === 0) return null;
+                  return (
+                    <div key={prd.document_version_id} className="flex flex-col gap-2">
+                      <p className="text-xs font-medium text-foreground/50">
+                        Extracted fields —{" "}
+                        <span className="text-foreground/70">
+                          {prd.document_versions?.documents?.name}
+                        </span>
+                      </p>
+                      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                        {fields.map((f) => (
+                          <div
+                            key={f.field_code}
+                            className="flex flex-col gap-0.5 rounded-lg border border-foreground/8 bg-foreground/[0.015] px-3 py-2"
+                          >
+                            <span className="font-mono text-[10px] text-foreground/35">
+                              {f.field_code}
+                            </span>
+                            <span className="text-xs text-foreground/60">{f.field_label}</span>
+                            <span className="text-xs font-medium text-foreground/90">
+                              {f.extracted_value}
+                            </span>
+                            <ConfidencePip confidence={f.confidence ?? 0} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </li>
             ))}
           </ul>
@@ -181,9 +216,7 @@ function RunStatusBadge({ status }: { status: PipelineRunRow["status"] }) {
     failed: "bg-danger/15 text-danger",
   };
   return (
-    <span
-      className={`rounded-md px-2 py-0.5 text-xs font-medium capitalize ${styles[status] ?? ""}`}
-    >
+    <span className={`rounded-md px-2 py-0.5 text-xs font-medium capitalize ${styles[status] ?? ""}`}>
       {status}
     </span>
   );
@@ -207,6 +240,17 @@ function StagePip({ status }: { status: StageStatus }) {
   return (
     <span className={`text-sm ${colours[status]}`} title={status}>
       {icons[status]}
+    </span>
+  );
+}
+
+function ConfidencePip({ confidence }: { confidence: number }) {
+  const pct = Math.round(confidence * 100);
+  const colour =
+    pct >= 80 ? "text-success" : pct >= 50 ? "text-warning" : "text-danger";
+  return (
+    <span className={`text-[10px] ${colour}`}>
+      {pct}% confidence
     </span>
   );
 }

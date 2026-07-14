@@ -49,6 +49,15 @@ class Settings(BaseSettings):
     supabase_service_role_key: str = ""  # Backend only — bypasses RLS.
     supabase_anon_key: str = ""  # Used for user-scoped calls.
 
+    # --- OpenAI (Phase 3+) ----------------------------------------------
+    openai_api_key: str = ""  # Required for field extraction + RAG.
+
+    # --- Langfuse (Phase 3+) — LLM observability -----------------------
+    # Keys from https://eu.cloud.langfuse.com (EU region for GDPR).
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = "https://eu.cloud.langfuse.com"
+
     # --- Pydantic settings config ----------------------------------------
     model_config = SettingsConfigDict(
         env_file=".env",

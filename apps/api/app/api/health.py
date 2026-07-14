@@ -10,7 +10,7 @@ frontend landing page. Must:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 
 from fastapi import APIRouter
@@ -48,5 +48,5 @@ def health() -> HealthResponse:
         status="ok",
         env=settings.app_env,
         version=settings.app_version,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )

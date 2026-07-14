@@ -24,6 +24,9 @@ supabase             # Postgres + Auth + Storage SDK. Wraps postgrest, gotrue, s
 # --- Logging ---
 structlog            # Structured JSON logs — required for observability + audit.
 
+# --- LLM (Phase 3+) ---
+openai               # OpenAI API — field extraction, recommendations, RAG.
+
 # --- OCR / text extraction (Phase 2+) ---
 pymupdf              # PDF text extraction (no external binaries needed).
 python-docx          # DOCX text extraction.

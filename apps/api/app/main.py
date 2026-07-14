@@ -11,8 +11,8 @@ side effects to a minimum.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -87,4 +87,4 @@ def create_app() -> FastAPI:
 app: FastAPI = create_app()
 
 # Sanity check for tooling that imports the module: expose the version.
-__all__ = ["app", "create_app", "__version__"]
+__all__ = ["__version__", "app", "create_app"]
