@@ -7,6 +7,9 @@ Endpoints
 POST /pipeline/runs/{run_id}/trigger
     Kicks off the OCR worker for a queued pipeline run.
     Returns immediately (202 Accepted); the worker runs as a BackgroundTask.
+POST /pipeline/documents/{document_version_id}/revalidate
+    Re-runs deterministic validation for one document version after a human
+    review edit. Runs synchronously -- the caller awaits it.
 """
 
 from __future__ import annotations
@@ -16,6 +19,7 @@ from pydantic import BaseModel
 
 from app.core.supabase import get_service_client
 from app.pipeline.ocr_worker import run_ocr_for_pipeline
+from app.pipeline.revalidate import revalidate_document_version
 
 router = APIRouter(prefix="/pipeline", tags=["pipeline"])
 
@@ -74,4 +78,32 @@ async def trigger_pipeline_run(
         run_id=run_id,
         status="accepted",
         message="OCR processing started in the background.",
+    )
+
+
+class RevalidateResponse(BaseModel):
+    """Response body for the revalidate endpoint."""
+
+    document_version_id: str
+    rules_evaluated: int
+
+
+@router.post(
+    "/documents/{document_version_id}/revalidate",
+    response_model=RevalidateResponse,
+    status_code=200,
+    summary="Re-run deterministic validation after a human review edit",
+)
+async def revalidate_document(document_version_id: str) -> RevalidateResponse:
+    """Recompute validation_results for one document version.
+
+    Runs synchronously (not a BackgroundTask) and is called *awaited* by the
+    review Server Action immediately after a field_reviews upsert, so the
+    caller has the updated validation_results before it revalidates the
+    Next.js page cache.
+    """
+    rules_evaluated = revalidate_document_version(document_version_id)
+    return RevalidateResponse(
+        document_version_id=document_version_id,
+        rules_evaluated=rules_evaluated,
     )
