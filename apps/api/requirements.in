@@ -26,6 +26,7 @@ structlog            # Structured JSON logs — required for observability + aud
 
 # --- LLM (Phase 3+) ---
 openai               # OpenAI API — field extraction, recommendations, RAG.
+langfuse>=2,<3       # LLM observability — v2 uses REST API (v3+ switched to OTEL, unstable).
 
 # --- OCR / text extraction (Phase 2+) ---
 pymupdf              # PDF text extraction (no external binaries needed).

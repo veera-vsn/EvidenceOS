@@ -30,6 +30,7 @@ import json
 from dataclasses import dataclass
 
 import structlog
+from langfuse import Langfuse
 from langfuse.openai import OpenAI  # drop-in replacement — auto-traces all calls
 
 from app.core.config import get_settings
@@ -293,4 +294,13 @@ Document text:
         found=found,
         version_id=document_version_id,
     )
+
+    # Langfuse batches traces asynchronously. In a FastAPI BackgroundTask the
+    # worker exits before the queue drains, so traces never reach the dashboard.
+    # flush() blocks until all queued events are sent.
+    try:
+        Langfuse().flush()
+    except Exception:
+        log.warning("langfuse_flush_failed")
+
     return results

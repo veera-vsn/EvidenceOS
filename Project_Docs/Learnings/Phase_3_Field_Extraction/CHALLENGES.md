@@ -69,3 +69,66 @@ fields = extract_fields(extracted_text, doc_name, document_version_id=version_id
 **Fix:** Run `.venv/Scripts/pip install -r requirements.in && .venv/Scripts/pip freeze > requirements.txt` before committing Phase 3.
 
 **Interview lesson:** Treat `requirements.in` as the source of truth (what you want) and `requirements.txt` as the lockfile (what gets installed). Both must be committed together. In a CI pipeline, add a check that `requirements.txt` is consistent with `requirements.in` — similar to how `package.json` + `pnpm-lock.yaml` are kept in sync.
+
+---
+
+## C6: Langfuse v4 broke traces — silent 405 on span export
+
+**What happened:** `pip install langfuse` installed v4.14.0. The pipeline ran, extraction completed (9/13 fields found), but zero traces appeared in the Langfuse dashboard. The API logs showed:
+
+```
+Failed to export span batch code: 405, reason: Method Not Allowed
+```
+
+**Root cause:** Langfuse v3+ replaced its direct REST API client with an OpenTelemetry (OTEL) exporter. The OTEL SDK sends spans to `/v1/traces` (the standard OTLP endpoint path), but the Langfuse server only accepts traces at `/api/public/otel`. Neither the SDK nor the server gave a useful error message — the pipeline appeared to succeed and traces silently vanished.
+
+**Fix:** Pin `langfuse>=2,<3` in `requirements.in`. Langfuse v2 uses a direct REST client (no OTEL dependency) and works reliably with the `from langfuse.openai import OpenAI` drop-in pattern. Reinstalled with `pip install "langfuse>=2,<3"` → downgraded to 2.60.10.
+
+**Why it matters:** A tracing tool that silently drops traces is worse than no tracing tool — it gives false confidence that everything is instrumented when nothing is. Always trigger a real pipeline run and verify traces appear in the dashboard before claiming observability is wired.
+
+**Interview lesson:** Unpinned dependencies (`langfuse` with no version) will silently upgrade to a breaking major version the next time someone does `pip install`. For observability tooling specifically, pin aggressively — a broken tracer costs you visibility at exactly the moment you need it most (incident investigation). The `requirements.in` + `requirements.txt` two-file pattern is the correct mitigation.
+
+---
+
+## C7: `LANGFUSE_BASE_URL` vs `LANGFUSE_HOST` — dashboard vs SDK mismatch
+
+**What happened:** After downgrading to Langfuse v2, traces still did not appear. The Langfuse dashboard quickstart snippet shows:
+
+```
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+```
+
+But the Langfuse Python SDK v2 reads a different environment variable:
+
+```
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+Our `.env` had `LANGFUSE_BASE_URL` (copied from the dashboard) so `settings.langfuse_host` fell back to the default `https://eu.cloud.langfuse.com`, which is the EU region — but the user's account is on the US region `cloud.langfuse.com`. The SDK was sending traces to the wrong host.
+
+**Fix:** Renamed `LANGFUSE_BASE_URL` → `LANGFUSE_HOST` in `apps/api/.env` with the correct value `https://cloud.langfuse.com`.
+
+**Why it matters:** Different Langfuse SDK versions and different languages (Python vs JS) use different environment variable names. Always check the SDK source or Python-specific docs, not the generic dashboard snippet.
+
+**Interview lesson:** When integrating a third-party SDK, always test with a minimal script (`python -c "from langfuse import Langfuse; l = Langfuse(); l.trace(name='test'); l.flush()"`) before wiring into your application. A 30-second smoke test would have caught both C6 and C7 before spending time debugging the full pipeline.
+
+---
+
+## C8: Langfuse flush required in background tasks
+
+**What happened:** Even with the correct host, traces were not appearing because the Langfuse v2 client queues events in memory and flushes them asynchronously on a background thread. In FastAPI `BackgroundTasks`, the worker function exits before the flush thread drains the queue — traces were queued but never sent.
+
+**Fix:** Added `Langfuse().flush()` call at the end of `extract_fields()`:
+
+```python
+try:
+    Langfuse().flush()
+except Exception:
+    log.warning("langfuse_flush_failed")
+```
+
+`flush()` is a blocking call — it waits until all queued events are delivered to the Langfuse server before returning.
+
+**Why it matters:** Async batch senders are the industry default for observability SDKs (Langfuse, Sentry, DataDog) because they add near-zero latency to the hot path. But they require an explicit flush at process/task exit. In long-running servers this happens at shutdown; in short-lived background tasks you must call it manually.
+
+**Interview lesson:** Any time you use an observability SDK in a non-web-server context (CLI, background job, lambda, test suite), check whether the SDK has a `flush()` or `shutdown()` method and call it before the process exits. The SDK documentation usually mentions this but it is easy to miss.
