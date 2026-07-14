@@ -68,3 +68,4 @@ supabase/.temp
 storage/
 uploads/
 tmp/
+test_documents

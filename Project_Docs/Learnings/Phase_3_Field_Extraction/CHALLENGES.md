@@ -158,3 +158,36 @@ Applied in `ocr_worker.py` right after `extract()` returns. The word count remai
 **Why it matters:** This error blocks the entire document — OCR fails, extraction is skipped, no Langfuse trace is produced. The failure is silent from the user's perspective (they see "failed" status with no explanation). Stripping null bytes is safe: `\x00` has no semantic content in natural language text.
 
 **Interview lesson:** When storing LLM-extracted or OCR-produced text in a relational database, always sanitise before the DB write. Common issues: null bytes (PDF/OCR), lone surrogates (some Unicode encodings), and text exceeding column length limits. A defensive `text.replace("\x00", "")` in the worker is simpler than catching and re-raising a database error mid-pipeline.
+
+---
+
+## C10: Null byte embedded in Python source file by the code editor
+
+**What happened:** After writing the null-byte fix in `ocr_worker.py`, the API server failed to start with:
+
+```
+SyntaxError: source code string cannot contain null bytes
+  File "app/pipeline/ocr_worker.py", line 99
+```
+
+The file was syntactically valid Python — except that the comment on line 99 contained a literal `\x00` character that was accidentally embedded when the editor wrote the string `"\x00"` into the comment text. Python's parser rejects any source file that contains null bytes, even inside comments.
+
+**Root cause:** The Edit tool was given a replacement string containing `\x00` as part of a comment (`# PostgreSQL text columns reject \x00 (null bytes)`). The tool wrote the literal null byte character into the file instead of the two-character escape sequence. The resulting `.py` file was binary-corrupted and Python refused to parse it.
+
+**Fix:** Because the Edit tool could not match the corrupted string (it also couldn't find the null bytes), the file had to be rewritten from scratch using the Write tool with clean ASCII-only comment text. The logic was unchanged; only the comment wording was made safe.
+
+**Why it matters:** This error cascaded — the SyntaxError prevented `ocr_worker.py` from importing, which prevented `router.py` from importing, which prevented the entire FastAPI app from starting. One corrupted comment took the whole API down.
+
+**Interview lesson:** Never write control characters or non-printable bytes into source code comments. If you need to document what a character looks like, use its Unicode code point name (`U+0000`, `null byte`) rather than the character itself. In code, use the escape sequence `"\x00"` — Python will interpret it correctly in string literals without embedding the byte into the source file.
+
+---
+
+## C11: Langfuse traces appear with a 3-5 second delay — expected behaviour
+
+**What happened:** After triggering a pipeline run and seeing `extraction_complete` in the API logs, the Langfuse dashboard showed no new traces. Refreshing after a few seconds revealed the traces had appeared.
+
+**Root cause:** This is not a bug. Langfuse v2 batches events in memory and flushes them to the server asynchronously. Even after our explicit `Langfuse().flush()` call (which blocks until the SDK's internal queue is drained), the Langfuse server still needs ~1–3 seconds to index and surface the trace in the dashboard.
+
+**There is no fix needed.** The pipeline is working correctly. Traces appear within 5 seconds of a run completing.
+
+**Interview lesson:** LLM observability platforms are designed for after-the-fact analysis, not real-time monitoring. A 3–5 second indexing lag is normal and acceptable. If you need sub-second visibility (e.g. to alert on a failing extraction mid-run), that belongs in your structured application logs (structlog → stdout), not in Langfuse. Use the right tool for each job: structlog for operational triage, Langfuse for cost/accuracy analysis.
