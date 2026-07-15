@@ -10,14 +10,19 @@ POST /pipeline/runs/{run_id}/trigger
 POST /pipeline/documents/{document_version_id}/revalidate
     Re-runs deterministic validation for one document version after a human
     review edit. Runs synchronously -- the caller awaits it.
+GET /pipeline/workspaces/{workspace_id}/export
+    Builds and returns a draft xBRL-CSV zip for every fully-reviewed
+    document in a workspace. Unauthenticated at this layer -- the caller
+    (a Next.js Route Handler) verifies workspace membership first.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Response
 from pydantic import BaseModel
 
 from app.core.supabase import get_service_client
+from app.pipeline.export import build_export_zip
 from app.pipeline.ocr_worker import run_ocr_for_pipeline
 from app.pipeline.revalidate import revalidate_document_version
 
@@ -106,4 +111,31 @@ async def revalidate_document(document_version_id: str) -> RevalidateResponse:
     return RevalidateResponse(
         document_version_id=document_version_id,
         rules_evaluated=rules_evaluated,
+    )
+
+
+@router.get(
+    "/workspaces/{workspace_id}/export",
+    status_code=200,
+    summary="Export all fully-reviewed documents as a draft xBRL-CSV zip",
+)
+async def export_workspace(workspace_id: str) -> Response:
+    """Build and return the workspace's draft xBRL-CSV export as a zip.
+
+    Built fully in-memory per request -- no persisted export row; the
+    output is always cheaply regenerable from extraction_results and
+    field_reviews. Only documents whose latest version is both validated
+    and fully reviewed are included (see export.determine_export_eligibility).
+    """
+    try:
+        zip_bytes = build_export_zip(workspace_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="evidenceos-export-{workspace_id}.zip"'
+        },
     )

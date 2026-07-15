@@ -79,6 +79,12 @@ export default async function WorkspaceLayout({
             >
               Review
             </Link>
+            <Link
+              href={`/dashboard/${workspaceSlug}/export`}
+              className="rounded-md px-3 py-1.5 text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
+            >
+              Export
+            </Link>
           </nav>
 
           <div className="flex items-center gap-4 text-sm">

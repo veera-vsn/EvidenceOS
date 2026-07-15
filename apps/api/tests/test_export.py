@@ -1,0 +1,134 @@
+"""Unit tests for the pure parts of export.py.
+
+determine_export_eligibility() and build_export_zip() need a Supabase
+client and are not unit-tested here -- no DB-mocking harness exists
+elsewhere in this codebase; they're verified via a manual end-to-end pass
+instead (see Phase 6's Learnings doc).
+"""
+
+from app.pipeline.export import (
+    ExcludedDocument,
+    ExportableDocument,
+    ExportEligibility,
+    _build_manifest,
+    _build_sources_csv,
+    _build_template_csv,
+    _template_csv_name,
+    build_template_groups,
+    fields_for_group,
+    is_fully_reviewed,
+)
+
+
+def test_build_template_groups_matches_three_esma_templates() -> None:
+    groups = build_template_groups()
+    codes = [g.code for g in groups]
+    assert codes == ["RT.01.01", "RT.02.01", "RT.03.01"]
+
+
+def test_fields_for_group_counts_match_dora_fields_catalogue() -> None:
+    groups = build_template_groups()
+    counts = {g.code: len(fields_for_group(g)) for g in groups}
+    assert counts == {"RT.01.01": 7, "RT.02.01": 3, "RT.03.01": 3}
+
+
+def test_fields_for_group_only_contains_matching_prefix() -> None:
+    groups = {g.code: g for g in build_template_groups()}
+    codes = [f["code"] for f in fields_for_group(groups["RT.02.01"])]
+    assert all(code.startswith("b_02.01") for code in codes)
+
+
+def test_template_csv_name_format() -> None:
+    group = build_template_groups()[0]
+    assert _template_csv_name(group) == "RT_01_01_contractual_arrangements.csv"
+
+
+def test_is_fully_reviewed_true_when_every_field_has_any_decision() -> None:
+    field_codes = ["b_01.01.0010", "b_01.01.0020"]
+    reviews = {
+        "b_01.01.0010": {"decision": "approved"},
+        "b_01.01.0020": {"decision": "rejected"},
+    }
+    assert is_fully_reviewed(field_codes, reviews) is True
+
+
+def test_is_fully_reviewed_false_when_a_field_is_missing() -> None:
+    field_codes = ["b_01.01.0010", "b_01.01.0020"]
+    reviews = {"b_01.01.0010": {"decision": "approved"}}
+    assert is_fully_reviewed(field_codes, reviews) is False
+
+
+def test_is_fully_reviewed_true_for_empty_field_codes() -> None:
+    assert is_fully_reviewed([], {}) is True
+
+
+def test_build_template_csv_uses_effective_values() -> None:
+    group = build_template_groups()[0]  # RT.01.01
+    doc = ExportableDocument(
+        document_id="doc-1",
+        document_name="AWS Customer Agreement.pdf",
+        document_version_id="ver-1",
+        extracted={
+            "b_01.01.0010": "REF-1",
+            "b_01.01.0020": "cloud",
+            "b_01.01.0050": "30",
+        },
+        reviews={
+            "b_01.01.0010": {"decision": "edited", "edited_value": "REF-CORRECTED"},
+            "b_01.01.0020": {"decision": "approved"},
+            "b_01.01.0050": {"decision": "rejected"},
+        },
+    )
+    csv_text = _build_template_csv(group, [doc])
+    rows = csv_text.strip().splitlines()
+    assert "REF-CORRECTED" in rows[1]  # edited value wins
+    assert "cloud" in rows[1]  # approved value kept
+    # Rejected field renders as an empty cell -- the row still has the
+    # right number of columns, just no value for that field.
+    header = rows[0].split(",")
+    data = rows[1].split(",")
+    notice_period_idx = header.index("Notice period for termination (days)")
+    assert data[notice_period_idx] == ""
+
+
+def test_build_sources_csv_includes_all_13_fields_per_document() -> None:
+    doc = ExportableDocument(
+        document_id="doc-1",
+        document_name="AWS Customer Agreement.pdf",
+        document_version_id="ver-1",
+        extracted={"b_01.01.0010": "REF-1"},
+        reviews={"b_01.01.0010": {"decision": "approved", "reviewed_by": "user-1"}},
+    )
+    csv_text = _build_sources_csv([doc], reviewer_names={"user-1": "Jane Reviewer"})
+    rows = csv_text.strip().splitlines()
+    assert len(rows) == 14  # header + 13 fields
+    assert "Jane Reviewer" in rows[1]
+
+
+def test_build_sources_csv_falls_back_to_raw_id_without_a_profile() -> None:
+    doc = ExportableDocument(
+        document_id="doc-1",
+        document_name="AWS Customer Agreement.pdf",
+        document_version_id="ver-1",
+        extracted={"b_01.01.0010": "REF-1"},
+        reviews={"b_01.01.0010": {"decision": "approved", "reviewed_by": "user-1"}},
+    )
+    csv_text = _build_sources_csv([doc], reviewer_names={})
+    rows = csv_text.strip().splitlines()
+    assert "user-1" in rows[1]
+
+
+def test_build_manifest_includes_disclaimer_and_counts() -> None:
+    eligibility = ExportEligibility(
+        included=[
+            ExportableDocument("doc-1", "Doc A", "ver-1", {}, {}),
+        ],
+        excluded=[
+            ExcludedDocument("doc-2", "Doc B", "incomplete_review"),
+        ],
+    )
+    manifest = _build_manifest("Acme Bank", eligibility)
+    assert "Documents included: 1" in manifest
+    assert "Documents excluded: 1" in manifest
+    assert "Doc B (incomplete_review)" in manifest
+    assert "NOT a taxonomy-validated xBRL-CSV filing" in manifest
