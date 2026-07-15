@@ -119,6 +119,34 @@ first time you try to connect.
 
 ---
 
+## C6 — GitHub-connected builds failed: "No Next.js version detected"
+
+**Symptom:** after connecting the Vercel project to GitHub (so pushes to
+`claude` auto-deploy), the first real push-triggered build failed
+immediately: `Error: No Next.js version detected. Make sure your
+package.json has "next" in either "dependencies" or "devDependencies".`
+— even though `apps/web/package.json` clearly has it.
+
+**Root cause:** the project's **Root Directory** setting was empty/unset.
+Earlier CLI deploys (`vercel deploy`) never hit this, because I ran that
+command *from inside* `apps/web` locally, so Vercel only ever saw that
+folder. A GitHub-triggered build instead clones the **whole monorepo**
+from its root — with no Root Directory set, it looked for a Next.js
+`package.json` at the repo root (`EvidenceOS/`), found the wrong one (or
+none), and failed.
+
+**Fix:** Project Settings → Build and Deployment → Root Directory →
+set to `apps/web`, save, then re-trigger the failed deployment ("Redeploy"
+from the deployment's action menu). Confirmed fixed: same commit, same
+branch, second attempt built and deployed successfully.
+
+**Lesson:** a CLI deploy run from inside a subdirectory and a
+GitHub-integration deploy are not equivalent, even against the same
+Vercel project — the former "just works" because your shell's working
+directory silently supplies the context that the latter needs an explicit
+setting for. Worth setting Root Directory proactively for any monorepo
+project, rather than waiting for the first git-triggered build to fail.
+
 ## What went right without incident
 
 Worth naming, not just the bumps: Python 3.13 was directly available via
