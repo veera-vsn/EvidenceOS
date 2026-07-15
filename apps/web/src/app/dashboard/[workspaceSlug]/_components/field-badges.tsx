@@ -15,17 +15,17 @@ export function ConfidencePip({ confidence }: { confidence: number }) {
   const colour =
     pct >= 80 ? "text-success" : pct >= 50 ? "text-warning" : "text-danger";
   return (
-    <span className={`text-[10px] ${colour}`}>
+    <span className={`font-mono text-[10.5px] font-semibold ${colour}`}>
       {pct}% confidence
     </span>
   );
 }
 
 const VALIDATION_BADGE_STYLES: Record<ValidationStatus, string> = {
-  pass: "bg-success/15 text-success",
-  fail: "bg-danger/15 text-danger",
-  warning: "bg-warning/15 text-warning",
-  skipped: "bg-foreground/10 text-foreground/40",
+  pass: "bg-success-soft text-success",
+  fail: "bg-danger-soft text-danger",
+  warning: "bg-warning-soft text-warning",
+  skipped: "bg-border-2 text-fg-3",
 };
 
 export function ValidationBadges({
@@ -44,7 +44,7 @@ export function ValidationBadges({
         <span
           key={r.rule_id}
           title={r.message ?? r.rule_label}
-          className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${VALIDATION_BADGE_STYLES[r.status as ValidationStatus]}`}
+          className={`rounded-[5px] px-1.5 py-0.5 font-mono text-[9.5px] font-semibold tracking-wide uppercase ${VALIDATION_BADGE_STYLES[r.status as ValidationStatus]}`}
         >
           {r.rule_id.replace(/_/g, " ")}
         </span>

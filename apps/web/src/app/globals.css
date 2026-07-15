@@ -3,51 +3,106 @@
  *
  * Tailwind v4 uses CSS-first configuration: the `@theme` block below is
  * the equivalent of tailwind.config.js in v3. Any token declared here
- * is available as a utility class (e.g. `--color-brand` becomes
- * `bg-brand`, `text-brand`, etc.).
+ * is available as a utility class (e.g. `--color-accent` becomes
+ * `bg-accent`, `text-accent`, etc.).
  *
- * We keep the palette minimal until Phase 0.5 (shadcn/ui theme).
+ * Visual identity, v1 (Phase 7 UI redesign). Deep teal accent, a
+ * Newsreader-serif/Geist-sans display pairing, and a three-step text
+ * hierarchy (fg/fg-2/fg-3) instead of a single colour at varying
+ * opacity — chosen to read as "audit-grade financial tool", not
+ * consumer SaaS, for an audience of compliance officers evaluating a
+ * product that will sit inside a regulatory filing workflow.
  */
 @import "tailwindcss";
 
 :root {
-  /* Neutral surface tokens. */
-  --background: #ffffff;
-  --foreground: #0a0a0a;
+  --bg: #f6f7f7;
+  --surface: #ffffff;
+  --surface-2: #fbfcfc;
 
-  /* Brand tokens (placeholder — refine when we have visual identity). */
-  --brand: #0f172a;
-  --brand-foreground: #f8fafc;
+  --fg: #191f24;
+  --fg-2: #586470;
+  --fg-3: #8b96a1;
 
-  /* Semantic tokens for validation / recommendation states. */
-  --success: #059669;
-  --warning: #d97706;
-  --danger: #dc2626;
+  --border: #e4e7ea;
+  --border-2: #eef0f1;
+
+  --accent: #0c6d6d;
+  --accent-fg: #ffffff;
+  --accent-soft: #e5efef;
+  --accent-line: #0c6d6d;
+
+  --success: #1f7a52;
+  --success-soft: #e7f2ec;
+  --warning: #8f6410;
+  --warning-soft: #f6efdd;
+  --danger: #a83232;
+  --danger-soft: #f6e8e8;
+
+  --shadow: 0 1px 2px rgba(20, 30, 40, 0.04);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --brand: #f8fafc;
-    --brand-foreground: #0f172a;
+    --bg: #0e1317;
+    --surface: #141a20;
+    --surface-2: #191f26;
+
+    --fg: #e9edf0;
+    --fg-2: #9aa4ae;
+    --fg-3: #68727c;
+
+    --border: #232c34;
+    --border-2: #1a222a;
+
+    --accent: #3fb0a8;
+    --accent-fg: #06110f;
+    --accent-soft: #14302e;
+    --accent-line: #3fb0a8;
+
+    --success: #4bb583;
+    --success-soft: #10281f;
+    --warning: #c99a3e;
+    --warning-soft: #2a2113;
+    --danger: #d97a7a;
+    --danger-soft: #2a1717;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 }
 
 /*
  * `@theme inline` maps our raw CSS variables to Tailwind's token
- * namespace. This is what enables classes like `bg-background`,
- * `text-foreground`, `bg-brand`, `text-success` in JSX.
+ * namespace. This is what enables classes like `bg-surface`,
+ * `text-fg-2`, `border-border`, `bg-accent-soft` in JSX.
  */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-brand: var(--brand);
-  --color-brand-foreground: var(--brand-foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+
+  --color-border: var(--border);
+  --color-border-2: var(--border-2);
+
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  --shadow-card: var(--shadow);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-newsreader);
 }

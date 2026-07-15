@@ -168,18 +168,20 @@ export function UploadZone({ workspaceId, workspaceSlug }: UploadZoneProps) {
         onClick={() => inputRef.current?.click()}
         onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
         className={[
-          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition",
+          "flex cursor-pointer flex-col items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-dashed px-6 py-[30px] text-center transition",
           isDragging
-            ? "border-foreground/40 bg-foreground/5"
-            : "border-foreground/15 hover:border-foreground/30 hover:bg-foreground/[0.02]",
+            ? "border-accent bg-accent-soft"
+            : "border-border bg-surface-2 hover:border-accent-line",
         ].join(" ")}
       >
-        <div className="text-2xl">↑</div>
-        <p className="text-sm font-medium text-foreground/80">
-          Drop files here or click to browse
+        <span className="flex h-11 w-11 items-center justify-center rounded-[11px] bg-accent-soft text-xl text-accent">
+          ↥
+        </span>
+        <p className="text-[15px] font-semibold text-fg">
+          Drop contracts to upload, or <span className="text-accent">browse files</span>
         </p>
-        <p className="text-xs text-foreground/50">
-          PDF · DOCX · XLSX · CSV — max 50 MB each
+        <p className="font-mono text-[12.5px] text-fg-3">
+          PDF · DOCX · XLSX · CSV — up to 50 MB each
         </p>
         <input
           ref={inputRef}
@@ -197,11 +199,9 @@ export function UploadZone({ workspaceId, workspaceSlug }: UploadZoneProps) {
           {entries.map((entry) => (
             <li
               key={entry.id}
-              className="flex items-center justify-between rounded-lg border border-foreground/10 px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-[10px] border border-border bg-surface px-3.5 py-3 text-sm"
             >
-              <span className="truncate text-foreground/80 max-w-[60%]">
-                {entry.file.name}
-              </span>
+              <span className="max-w-[60%] truncate text-fg-2">{entry.file.name}</span>
               <StatusBadge status={entry.status} error={entry.error} />
             </li>
           ))}
@@ -219,13 +219,13 @@ function StatusBadge({
   error?: string;
 }) {
   if (status === "queued")
-    return <span className="text-foreground/40">Queued</span>;
+    return <span className="font-mono text-xs text-fg-3">Queued</span>;
   if (status === "uploading")
-    return <span className="text-foreground/60 animate-pulse">Uploading…</span>;
+    return <span className="animate-pulse font-mono text-xs text-accent">Uploading…</span>;
   if (status === "done")
-    return <span className="text-success font-medium">Uploaded</span>;
+    return <span className="font-mono text-xs font-medium text-success">Uploaded</span>;
   return (
-    <span className="text-danger" title={error}>
+    <span className="font-mono text-xs text-danger" title={error}>
       Failed{error ? ` — ${error}` : ""}
     </span>
   );
