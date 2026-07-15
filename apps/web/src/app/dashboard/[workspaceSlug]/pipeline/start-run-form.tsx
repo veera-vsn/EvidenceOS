@@ -69,33 +69,51 @@ export function StartRunForm({
 
   if (uploadedDocs.length === 0) {
     return (
-      <p className="text-sm text-foreground/50">
-        No uploaded documents yet.{" "}
-        <a
-          href={`/dashboard/${workspaceSlug}/documents`}
-          className="underline hover:text-foreground"
-        >
-          Upload documents first.
-        </a>
-      </p>
+      <div className="rounded-[13px] border border-border bg-surface p-5">
+        <p className="text-sm text-fg-3">
+          No uploaded documents yet.{" "}
+          <a
+            href={`/dashboard/${workspaceSlug}/documents`}
+            className="text-accent underline"
+          >
+            Upload documents first.
+          </a>
+        </p>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="rounded-[13px] border border-border bg-surface p-5">
       {error && (
         <p
           role="alert"
-          className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm"
+          className="mb-3.5 rounded-[9px] border border-danger bg-danger-soft px-3.5 py-2.5 text-sm text-fg"
         >
           {error}
         </p>
       )}
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-medium text-foreground/70 mb-1">
-          Select documents to process
-        </legend>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-semibold text-fg">Start a new run</div>
+          <div className="mt-0.5 text-[12.5px] text-fg-2">
+            <strong className="font-semibold text-fg">{selected.size}</strong> of{" "}
+            {uploadedDocs.length} uploaded document{uploadedDocs.length !== 1 ? "s" : ""}{" "}
+            selected
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={selected.size === 0 || isPending}
+          className="rounded-[9px] bg-accent px-[18px] py-2.5 text-[13.5px] font-semibold text-accent-fg transition hover:opacity-90 disabled:opacity-40"
+        >
+          {isPending ? "Starting…" : "Start pipeline run →"}
+        </button>
+      </div>
+
+      <fieldset className="mt-3.5 flex flex-wrap gap-2">
+        <legend className="sr-only">Select documents to process</legend>
         {uploadedDocs.map((doc) => {
           const vid = doc.latest_version!.id;
           const checked = selected.has(vid);
@@ -103,36 +121,31 @@ export function StartRunForm({
             <label
               key={doc.id}
               className={[
-                "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition",
+                "flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[12.5px] transition",
                 checked
-                  ? "border-foreground/30 bg-foreground/5"
-                  : "border-foreground/10 hover:border-foreground/20",
+                  ? "border-accent bg-accent-soft text-fg"
+                  : "border-border bg-surface-2 text-fg-2 hover:border-accent-line",
               ].join(" ")}
             >
               <input
                 type="checkbox"
-                className="accent-foreground"
+                className="sr-only"
                 checked={checked}
                 onChange={() => toggle(vid)}
               />
-              <span className="flex-1 font-medium truncate">{doc.name}</span>
-              <span className="font-mono text-xs uppercase text-foreground/40">
-                {doc.file_type} · v{doc.latest_version!.version_number}
+              <span
+                className={[
+                  "flex h-3.5 w-3.5 flex-none items-center justify-center rounded-[4px] border-[1.5px] text-[9px] text-accent-fg",
+                  checked ? "border-accent bg-accent" : "border-border",
+                ].join(" ")}
+              >
+                {checked ? "✓" : ""}
               </span>
+              {doc.name}
             </label>
           );
         })}
       </fieldset>
-
-      <button
-        type="submit"
-        disabled={selected.size === 0 || isPending}
-        className="self-start rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-40"
-      >
-        {isPending
-          ? "Starting…"
-          : `Start pipeline run${selected.size > 0 ? ` (${selected.size})` : ""}`}
-      </button>
     </form>
   );
 }

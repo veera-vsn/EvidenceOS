@@ -1,64 +1,295 @@
 /**
  * Landing page (route: `/`).
  *
- * This is a Server Component (default in the App Router) — it renders on
- * the server and streams HTML to the browser. No JavaScript is shipped
- * for this page beyond React's runtime.
- *
- * We also fetch the backend health endpoint here to prove the API is
- * reachable. The fetch runs server-side, so a failing backend does not
- * block the page — it just renders a "down" pill.
+ * Server Component, fully static — no client JavaScript beyond React's
+ * runtime, no data fetching. This page's job is conversion: a compliance
+ * officer arriving from a cold outreach email or LinkedIn should
+ * understand the regulatory problem, the human-in-the-loop trust
+ * argument, and the evidence-chain differentiator within 15 seconds.
  */
-import { fetchBackendHealth } from "@/lib/api";
 
-export default async function Home() {
-  const health = await fetchBackendHealth();
+import Link from "next/link";
 
+export default function Home() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-10 px-6 py-24">
-      <header className="flex flex-col gap-3">
-        <span className="text-sm font-medium uppercase tracking-widest text-foreground/60">
-          EvidenceOS
-        </span>
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-          AI-powered DORA Register of Information copilot.
-        </h1>
-        <p className="max-w-xl text-lg text-foreground/70">
-          Turn contracts, spreadsheets, and vendor inventories into a
-          submission-ready RoI draft — with evidence, validation, and
-          explainable recommendations that always stay under human control.
-        </p>
+    <div className="min-h-screen bg-bg text-fg">
+      {/* top bar */}
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-8 py-[22px]">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-[26px] w-[26px] items-center justify-center rounded-md bg-accent">
+            <span className="h-2.5 w-2.5 rounded-sm border-2 border-accent-fg" />
+          </span>
+          <span className="text-base font-semibold tracking-tight">EvidenceOS</span>
+        </div>
+        <nav className="flex items-center gap-7">
+          <a href="#problem" className="text-sm text-fg-2">The problem</a>
+          <a href="#how" className="text-sm text-fg-2">How it works</a>
+          <a href="#trust" className="text-sm text-fg-2">Evidence</a>
+          <Link href="/login" className="text-sm font-medium text-fg">Sign in</Link>
+          <a
+            href="#cta"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-fg"
+          >
+            Get a demo
+          </a>
+        </nav>
       </header>
 
-      <section className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
-        <h2 className="text-sm font-semibold text-foreground/80">
-          System status
-        </h2>
-        <div className="mt-3 flex items-center gap-3 text-sm">
-          <StatusPill ok={health.ok} />
-          <span className="font-mono text-foreground/70">
-            {health.ok
-              ? `API reachable (${health.env ?? "unknown"})`
-              : "API unreachable — start the backend on port 8000"}
-          </span>
+      {/* hero */}
+      <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-8 pt-12 pb-10 lg:grid-cols-[1.15fr_0.85fr]">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-[11px] py-1.5 font-mono text-[11px] tracking-[0.16em] text-accent uppercase">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            EvidenceOS
+          </div>
+          <h1 className="mt-5 font-serif text-4xl leading-[1.04] font-medium tracking-tight text-fg sm:text-[56px]">
+            The AI copilot for the DORA Register of Information
+          </h1>
+          <p className="mt-[22px] max-w-xl text-lg leading-[1.55] text-fg-2">
+            Upload ICT vendor contracts. AI extracts the regulatory fields,
+            deterministic rules validate them, and a human approves every
+            value — before you export a filing-ready draft.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-3 font-mono text-xs tracking-wide text-fg-3">
+            <span>Upload</span>
+            <span className="text-accent">→</span>
+            <span>Extract</span>
+            <span className="text-accent">→</span>
+            <span>Validate</span>
+            <span className="text-accent">→</span>
+            <span className="font-semibold text-fg">Human review</span>
+            <span className="text-accent">→</span>
+            <span>Export</span>
+          </div>
+          <div className="mt-[34px] flex gap-3">
+            <a
+              href="#cta"
+              className="rounded-[9px] bg-accent px-[22px] py-3.5 text-[15px] font-medium text-accent-fg"
+            >
+              Get a demo
+            </a>
+            <a
+              href="#how"
+              className="rounded-[9px] border border-border bg-surface px-[22px] py-3.5 text-[15px] font-medium text-fg"
+            >
+              See how it works
+            </a>
+          </div>
+        </div>
+
+        {/* stat card */}
+        <div className="rounded-2xl border border-border bg-surface p-8 shadow-card">
+          <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
+            March 2026 · EBA quality checks
+          </div>
+          <div className="mt-3.5 flex items-baseline gap-1.5">
+            <span className="font-serif text-[88px] leading-[0.9] font-semibold tracking-tight text-danger">
+              93.5
+            </span>
+            <span className="font-serif text-4xl font-medium text-danger">%</span>
+          </div>
+          <div className="mt-3.5 text-[15px] leading-normal font-medium text-fg">
+            of EU financial firms failed the DORA Register of Information
+            quality checks.
+          </div>
+          <div className="my-5 h-px bg-border-2" />
+          <div className="flex h-2 gap-1.5 overflow-hidden rounded-full">
+            <div className="bg-danger" style={{ flex: 93.5 }} />
+            <div className="bg-success" style={{ flex: 6.5 }} />
+          </div>
+          <div className="mt-2.5 flex justify-between font-mono text-[11px]">
+            <span className="text-danger">93.5% failed</span>
+            <span className="text-success">6.5% passed</span>
+          </div>
         </div>
       </section>
 
-      <footer className="text-xs text-foreground/50">
-        Walking skeleton · Phase 0 · See{" "}
-        <code className="font-mono">Project_Docs/Learnings/</code> for the
-        build log.
-      </footer>
-    </main>
-  );
-}
+      {/* stats strip */}
+      <section className="border-t border-b border-border-2 bg-surface-2">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-10 px-8 py-5 text-[13px] text-fg-2">
+          <span className="font-mono text-[11px] tracking-[0.12em] text-fg-3 uppercase">
+            Built for the RoI itself
+          </span>
+          <span><strong className="font-semibold text-fg">116</strong> automated quality checks</span>
+          <span><strong className="font-semibold text-fg">13</strong> DORA fields per contract</span>
+          <span><strong className="font-semibold text-fg">3</strong> regulatory templates (RT.01–03)</span>
+          <span><strong className="font-semibold text-fg">100%</strong> human-approved before export</span>
+        </div>
+      </section>
 
-function StatusPill({ ok }: { ok: boolean }) {
-  const colour = ok ? "bg-success" : "bg-danger";
-  return (
-    <span
-      className={`inline-flex h-2.5 w-2.5 rounded-full ${colour}`}
-      aria-label={ok ? "Healthy" : "Unhealthy"}
-    />
+      {/* the problem */}
+      <section id="problem" className="mx-auto max-w-6xl px-8 py-[72px]">
+        <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">The problem</div>
+        <h2 className="mt-3 max-w-2xl font-serif text-4xl leading-[1.1] font-medium tracking-tight text-fg">
+          A spreadsheet can&apos;t satisfy 116 machine quality checks.
+        </h2>
+        <div className="mt-9 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-surface p-[26px]">
+            <div className="font-mono text-[11px] tracking-[0.1em] text-fg-3 uppercase">Today</div>
+            <div className="mt-2 mb-2.5 text-[17px] font-semibold text-fg">
+              Manual reconciliation in a spreadsheet
+            </div>
+            <p className="text-sm leading-[1.6] text-fg-2">
+              One analyst hand-copies fields out of hundreds of ICT vendor
+              contracts into a template — no source traceability, no
+              confidence signal, and no way to know which of the 116 checks
+              the file will fail until the regulator runs them.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-accent-line bg-surface p-[26px]">
+            <div className="font-mono text-[11px] tracking-[0.1em] text-accent uppercase">With EvidenceOS</div>
+            <div className="mt-2 mb-2.5 text-[17px] font-semibold text-fg">
+              Extract, validate, and prove every value
+            </div>
+            <p className="text-sm leading-[1.6] text-fg-2">
+              Every field is extracted with a confidence score, checked
+              against the deterministic rules before you ever file, and
+              traced back to the exact clause in the source contract and the
+              reviewer who approved it.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* how it works */}
+      <section id="how" className="border-t border-b border-border-2 bg-surface-2">
+        <div className="mx-auto max-w-6xl px-8 py-[72px]">
+          <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">How it works</div>
+          <h2 className="mt-3 mb-10 font-serif text-4xl leading-[1.1] font-medium tracking-tight text-fg">
+            Five steps. The human owns the decisive one.
+          </h2>
+          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="rounded-xl border border-border bg-surface p-5">
+              <div className="font-mono text-[11px] text-fg-3">01</div>
+              <div className="mt-2.5 mb-1.5 text-[15px] font-semibold text-fg">Upload</div>
+              <p className="text-[12.5px] leading-[1.5] text-fg-2">
+                Drag in ICT vendor contracts — PDF, DOCX, XLSX or CSV.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-surface p-5">
+              <div className="font-mono text-[11px] text-fg-3">02</div>
+              <div className="mt-2.5 mb-1.5 text-[15px] font-semibold text-fg">AI extract</div>
+              <p className="text-[12.5px] leading-[1.5] text-fg-2">
+                Structured DORA fields pulled with a confidence score each.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-surface p-5">
+              <div className="font-mono text-[11px] text-fg-3">03</div>
+              <div className="mt-2.5 mb-1.5 text-[15px] font-semibold text-fg">Validate</div>
+              <p className="text-[12.5px] leading-[1.5] text-fg-2">
+                Deterministic rules check every value — not the AI&apos;s opinion.
+              </p>
+            </div>
+            <div className="relative rounded-xl border-2 border-accent bg-accent-soft p-5">
+              <div className="absolute -top-[9px] left-5 rounded-full bg-accent px-2 py-0.5 font-mono text-[9px] tracking-[0.1em] text-accent-fg uppercase">
+                The trust gate
+              </div>
+              <div className="font-mono text-[11px] text-accent">04</div>
+              <div className="mt-2.5 mb-1.5 text-[15px] font-bold text-fg">Human review</div>
+              <p className="text-[12.5px] leading-[1.5] text-fg-2">
+                A compliance analyst approves, corrects or rejects every field.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-surface p-5">
+              <div className="font-mono text-[11px] text-fg-3">05</div>
+              <div className="mt-2.5 mb-1.5 text-[15px] font-semibold text-fg">Export</div>
+              <p className="text-[12.5px] leading-[1.5] text-fg-2">
+                A filing-ready draft with a full evidence trail attached.
+              </p>
+            </div>
+          </div>
+          <p className="mt-[26px] max-w-2xl text-sm leading-[1.6] text-fg-2">
+            EvidenceOS never auto-submits to a regulator. The AI does the
+            reading; the analyst makes the call. That separation is the
+            entire point.
+          </p>
+        </div>
+      </section>
+
+      {/* trust / evidence */}
+      <section id="trust" className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-8 py-[72px] lg:grid-cols-[0.9fr_1.1fr]">
+        <div>
+          <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">Evidence, not assertions</div>
+          <h2 className="mt-3 mb-4 font-serif text-4xl leading-[1.1] font-medium tracking-tight text-fg">
+            Every value traces back to where it came from.
+          </h2>
+          <p className="text-[15px] leading-[1.6] text-fg-2">
+            A regulator can ask you to defend any figure. In EvidenceOS every
+            approved field carries its source document, the exact extracted
+            text, its confidence score, and the reviewer and timestamp that
+            signed off on it — a permanent audit record, exported alongside
+            the filing.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border bg-surface p-[22px] shadow-card">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-xs text-fg-3">b_01.01.0010</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-[9px] py-1 text-[11px] font-semibold text-success">
+              ✓ Approved
+            </span>
+          </div>
+          <div className="mt-2.5 text-[13px] text-fg-2">Contractual arrangement reference number</div>
+          <div className="mt-1.5 font-mono text-base font-medium text-fg">CA-2026-004417</div>
+          <div className="my-4 h-px bg-border-2" />
+          <div className="flex flex-col gap-2 text-[12.5px] text-fg-2">
+            <div className="flex justify-between">
+              <span>Source</span>
+              <span className="font-mono text-fg">Nimbus_Cloud_MSA_v3.pdf · p.2</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Confidence</span>
+              <span className="font-mono text-success">98%</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Approved by</span>
+              <span className="font-mono text-fg">m.okafor · 14 Jul 2026</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section id="cta" className="mx-auto max-w-6xl px-8 pb-20">
+        <div className="rounded-[18px] border border-border bg-surface p-[52px] text-center shadow-card">
+          <h2 className="mx-auto max-w-xl font-serif text-[40px] leading-[1.08] font-medium tracking-tight text-fg">
+            See EvidenceOS on your own contracts.
+          </h2>
+          <p className="mx-auto mt-4 mb-7 max-w-lg text-base leading-[1.55] text-fg-2">
+            We&apos;re onboarding design partners ahead of the next filing
+            cycle. Book a walkthrough — we&apos;ll run one of your real
+            vendor contracts through the pipeline.
+          </p>
+          {/* TODO: wire to a real contact mechanism (mailto, contact form,
+              or booking link) before this page goes live — placeholder
+              anchors only for now. */}
+          <div className="flex justify-center gap-3">
+            <a href="#cta" className="rounded-[9px] bg-accent px-6 py-3.5 text-[15px] font-medium text-accent-fg">
+              Get a demo
+            </a>
+            <a href="#cta" className="rounded-[9px] border border-border px-6 py-3.5 text-[15px] font-medium text-fg">
+              Join the waitlist
+            </a>
+          </div>
+          <p className="mt-5 font-mono text-[11px] text-fg-3">
+            No self-serve signup yet · talk to a human first
+          </p>
+        </div>
+      </section>
+
+      {/* footer */}
+      <footer className="border-t border-border-2">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-8 py-7">
+          <div className="flex items-center gap-2.5">
+            <span className="h-5 w-5 rounded-[5px] bg-accent" />
+            <span className="text-[13px] text-fg-2">© 2026 EvidenceOS</span>
+          </div>
+          <div className="flex items-center gap-2 text-[12.5px] text-fg-2">
+            <span className="h-[7px] w-[7px] rounded-full bg-success" />
+            All data stored and processed in EU regions only — GDPR-aligned,
+            no data leaves the EU.
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

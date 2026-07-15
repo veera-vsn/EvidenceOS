@@ -5,7 +5,7 @@
  * one validation_results row — deliberately bypasses pipeline_run_documents
  * / pipeline_runs entirely, since validation_results is keyed only by
  * document_version_id and upserted idempotently regardless of which run
- * produced it), with a review-progress badge, most-recently-validated
+ * produced it), with a review-progress ring, most-recently-validated
  * first. Clicking a row opens the per-document review workspace.
  */
 
@@ -90,47 +90,71 @@ export default async function ReviewListPage({ params }: ReviewListPageProps) {
       };
     })
     .filter((d): d is ReviewableDocument => d !== null)
-    .sort((a, b) => (a.lastValidatedAt < b.lastValidatedAt ? 1 : -1));
+    .sort((a, b) => {
+      // Needs attention first: not-started and in-progress ahead of fully
+      // reviewed, then most-recently-validated within each group.
+      const aDone = a.reviewedCount >= a.totalCount;
+      const bDone = b.reviewedCount >= b.totalCount;
+      if (aDone !== bDone) return aDone ? 1 : -1;
+      return a.lastValidatedAt < b.lastValidatedAt ? 1 : -1;
+    });
+
+  const totalFieldsAwaiting = reviewable.reduce(
+    (sum, d) => sum + Math.max(0, d.totalCount - d.reviewedCount),
+    0,
+  );
+  const fullyReviewedCount = reviewable.filter((d) => d.reviewedCount >= d.totalCount).length;
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-10">
-      <section className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">Review</h1>
-        <p className="text-sm text-foreground/60">
-          Approve, edit, or reject each extracted DORA field before it can be
-          exported. Nothing is finalised without a human decision.
-        </p>
-      </section>
+    <div className="mx-auto max-w-[1000px] px-10 py-[34px] pb-20">
+      <div className="mb-2">
+        <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
+          Human-in-the-loop
+        </div>
+        <h1 className="mt-1.5 font-serif text-[28px] font-medium tracking-tight text-fg">
+          Review queue
+        </h1>
+      </div>
+      <p className="mb-[22px] max-w-lg text-sm text-fg-2">
+        Every AI-extracted field must be approved, corrected or rejected
+        before its document can be exported. Work top-down — items needing
+        attention are surfaced first.
+      </p>
+
+      {reviewable.length > 0 && (
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-[11px] border border-border bg-surface px-[17px] py-[15px]">
+            <div className="font-serif text-[26px] text-fg">{reviewable.length}</div>
+            <div className="mt-0.5 text-xs text-fg-2">documents in queue</div>
+          </div>
+          <div className="rounded-[11px] border border-border bg-surface px-[17px] py-[15px]">
+            <div className="font-serif text-[26px] text-warning">{totalFieldsAwaiting}</div>
+            <div className="mt-0.5 text-xs text-fg-2">fields awaiting your decision</div>
+          </div>
+          <div className="rounded-[11px] border border-border bg-surface px-[17px] py-[15px]">
+            <div className="font-serif text-[26px] text-success">{fullyReviewedCount}</div>
+            <div className="mt-0.5 text-xs text-fg-2">fully reviewed, ready to export</div>
+          </div>
+        </div>
+      )}
 
       {reviewable.length > 0 ? (
-        <ul className="flex flex-col gap-2">
-          {reviewable.map((doc) => (
-            <li key={doc.id}>
-              <Link
-                href={`/dashboard/${workspaceSlug}/review/${doc.id}`}
-                className="flex items-center justify-between rounded-xl border border-foreground/10 bg-foreground/[0.02] px-4 py-3 hover:border-foreground/20"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{doc.name}</span>
-                  <span className="font-mono text-xs uppercase text-foreground/40">
-                    {doc.file_type} · validated {new Date(doc.lastValidatedAt).toLocaleString()}
-                  </span>
-                </div>
-                <ReviewProgressBadge
-                  reviewedCount={doc.reviewedCount}
-                  totalCount={doc.totalCount}
-                />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="mb-2.5 font-mono text-[10.5px] tracking-[0.1em] text-fg-3 uppercase">
+            Ordered by attention needed
+          </div>
+          <ul className="flex flex-col gap-2">
+            {reviewable.map((doc) => (
+              <li key={doc.id}>
+                <ReviewRow workspaceSlug={workspaceSlug} doc={doc} />
+              </li>
+            ))}
+          </ul>
+        </>
       ) : (
-        <p className="text-sm text-foreground/50">
+        <p className="text-sm text-fg-3">
           No documents ready for review yet — validate one in{" "}
-          <Link
-            href={`/dashboard/${workspaceSlug}/pipeline`}
-            className="underline hover:text-foreground"
-          >
+          <Link href={`/dashboard/${workspaceSlug}/pipeline`} className="text-accent">
             Pipeline
           </Link>{" "}
           first.
@@ -140,22 +164,60 @@ export default async function ReviewListPage({ params }: ReviewListPageProps) {
   );
 }
 
-function ReviewProgressBadge({
-  reviewedCount,
-  totalCount,
+function ReviewRow({
+  workspaceSlug,
+  doc,
 }: {
-  reviewedCount: number;
-  totalCount: number;
+  workspaceSlug: string;
+  doc: ReviewableDocument;
 }) {
-  const styles =
-    reviewedCount === 0
-      ? "bg-foreground/10 text-foreground/60"
-      : reviewedCount === totalCount
-        ? "bg-success/15 text-success"
-        : "bg-warning/15 text-warning";
+  const { ring, stage, cta } = ringMeta(doc.reviewedCount, doc.totalCount);
+  const pct = doc.totalCount === 0 ? 0 : (doc.reviewedCount / doc.totalCount) * 100;
+
   return (
-    <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${styles}`}>
-      {reviewedCount}/{totalCount} reviewed
-    </span>
+    <Link
+      href={`/dashboard/${workspaceSlug}/review/${doc.id}`}
+      className="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-xl border border-border bg-surface px-[18px] py-[15px] shadow-card hover:border-accent-line"
+    >
+      <div className="flex w-[66px] flex-col items-center gap-1.5">
+        <div className="relative h-11 w-11">
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: `conic-gradient(${ring} ${pct * 3.6}deg, var(--border-2) 0)`,
+            }}
+          />
+          <div
+            className="absolute inset-[5px] flex items-center justify-center rounded-full bg-surface font-mono text-[11px] font-semibold"
+            style={{ color: ring }}
+          >
+            {doc.reviewedCount}/{doc.totalCount}
+          </div>
+        </div>
+        <span className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: ring }}>
+          {stage}
+        </span>
+      </div>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2.5">
+          <span className="flex-none rounded border border-border px-1.5 py-0.5 font-mono text-[9.5px] text-fg-3">
+            {doc.file_type.toUpperCase()}
+          </span>
+          <span className="truncate text-[14.5px] font-semibold text-fg">{doc.name}</span>
+        </div>
+        <div className="mt-1 text-xs text-fg-3">
+          Last validated {new Date(doc.lastValidatedAt).toLocaleString()}
+        </div>
+      </div>
+      <span className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-accent">
+        {cta} <span className="text-[15px]">→</span>
+      </span>
+    </Link>
   );
+}
+
+function ringMeta(reviewed: number, total: number): { ring: string; stage: string; cta: string } {
+  if (reviewed === 0) return { ring: "var(--fg-3)", stage: "not started", cta: "Start review" };
+  if (total > 0 && reviewed >= total) return { ring: "var(--success)", stage: "complete", cta: "View" };
+  return { ring: "var(--warning)", stage: "in progress", cta: "Continue" };
 }

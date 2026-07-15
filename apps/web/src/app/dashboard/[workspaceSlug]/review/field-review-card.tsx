@@ -9,6 +9,13 @@
  * the field_reviews.rejected-requires-notes CHECK constraint). All three
  * paths call submitFieldReview inside useTransition, same shape as
  * start-run-form.tsx's inline error handling.
+ *
+ * The three action buttons carry `data-field-code`/`data-action`
+ * attributes purely so `ReviewKeyboardShortcuts` (a sibling component)
+ * can trigger them via a simulated click for the page's A/E/R keyboard
+ * shortcuts — a DOM-level hook rather than lifting this component's
+ * state into a shared store, so the working approve/edit/reject logic
+ * here stays untouched.
  */
 
 import { useState, useTransition } from "react";
@@ -37,9 +44,11 @@ interface FieldReviewCardProps {
 }
 
 const ACTIVE =
-  "rounded-md bg-foreground px-3 py-1 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-40";
+  "rounded-lg bg-accent px-3.5 py-2 text-[13px] font-semibold text-accent-fg transition hover:opacity-90 disabled:opacity-40";
 const INACTIVE =
-  "rounded-md border border-foreground/15 px-3 py-1 text-sm hover:bg-foreground/5 disabled:opacity-40";
+  "rounded-lg border border-border bg-surface px-3.5 py-2 text-[13px] font-medium text-fg hover:bg-surface-2 disabled:opacity-40";
+const REJECT_INACTIVE =
+  "rounded-lg border border-border bg-surface px-3.5 py-2 text-[13px] font-medium text-danger hover:bg-surface-2 disabled:opacity-40";
 
 export function FieldReviewCard({
   field,
@@ -62,6 +71,7 @@ export function FieldReviewCard({
   // "Not extracted" right next to an "Edited" badge, which reads as if the
   // correction vanished.
   const displayValue = review?.decision === "edited" ? review.edited_value : field.extracted_value;
+  const decision = (review?.decision as ReviewDecision) ?? null;
 
   function submit(submission: Parameters<typeof submitFieldReview>[4]) {
     setError(null);
@@ -83,111 +93,138 @@ export function FieldReviewCard({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-foreground/10 bg-foreground/[0.02] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <span className="font-mono text-xs text-foreground/40">{field.field_code}</span>
-          <span className="text-sm font-medium">{field.field_label}</span>
+    <div
+      id={`field-${field.field_code}`}
+      data-decision={decision ?? "pending"}
+      className={`rounded-[11px] border bg-surface p-4 shadow-card ${
+        mode === "rejecting" ? "border-danger" : "border-border"
+      }`}
+      style={{
+        borderLeftWidth: 3,
+        borderLeftColor:
+          decision === "rejected"
+            ? "var(--danger)"
+            : decision === "approved" || decision === "edited"
+              ? "var(--success)"
+              : "var(--border)",
+      }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="font-mono text-[11px] text-fg-3">{field.field_code}</span>
+            <span className="text-[13.5px] font-semibold text-fg">{field.field_label}</span>
+          </div>
+
+          {mode === "editing" ? (
+            <div className="mt-2.5 flex items-center gap-2">
+              <input
+                className="flex-1 rounded-lg border border-accent bg-surface-2 px-3 py-2 text-sm text-fg outline-none"
+                value={draftValue}
+                onChange={(e) => setDraftValue(e.target.value)}
+                disabled={isPending}
+                autoFocus
+              />
+              <button
+                className={ACTIVE}
+                disabled={draftValue.trim() === "" || isPending}
+                onClick={() => submit({ decision: "edited", editedValue: draftValue.trim() })}
+              >
+                Save
+              </button>
+              <button className={INACTIVE} disabled={isPending} onClick={() => setMode("idle")}>
+                Cancel
+              </button>
+            </div>
+          ) : displayValue ? (
+            review?.decision === "edited" ? (
+              <div className="mt-2.5">
+                <div className="font-mono text-[9.5px] tracking-wide text-success uppercase">
+                  Corrected value
+                </div>
+                <div className="mt-0.5 text-[15px] font-medium text-fg">{displayValue}</div>
+              </div>
+            ) : (
+              <div className="mt-2.5 flex items-baseline gap-3">
+                <span className="text-[15px] font-medium text-fg">{displayValue}</span>
+                <ConfidencePip confidence={field.confidence ?? 0} />
+              </div>
+            )
+          ) : (
+            <span className="mt-2.5 block text-[15px] italic text-fg-3">Not extracted</span>
+          )}
+
+          <ValidationBadges results={validationResults} />
         </div>
-        <ReviewDecisionBadge decision={(review?.decision as ReviewDecision) ?? null} />
+
+        <ReviewDecisionBadge decision={decision} />
       </div>
 
-      {mode === "editing" ? (
-        <div className="flex flex-col gap-2">
-          <input
-            className="rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
-            value={draftValue}
-            onChange={(e) => setDraftValue(e.target.value)}
-            disabled={isPending}
-            autoFocus
-          />
-          <div className="flex gap-1.5">
-            <button
-              className={ACTIVE}
-              disabled={draftValue.trim() === "" || isPending}
-              onClick={() => submit({ decision: "edited", editedValue: draftValue.trim() })}
-            >
-              Save
-            </button>
-            <button className={INACTIVE} disabled={isPending} onClick={() => setMode("idle")}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : displayValue ? (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium text-foreground/90">{displayValue}</span>
-          {review?.decision === "edited" ? (
-            <span className="text-[10px] text-foreground/40">Corrected value</span>
-          ) : (
-            <ConfidencePip confidence={field.confidence ?? 0} />
-          )}
-        </div>
-      ) : (
-        <span className="text-sm italic text-foreground/35">Not extracted</span>
-      )}
-
-      <ValidationBadges results={validationResults} />
-
       {mode === "rejecting" && (
-        <div className="flex flex-col gap-2">
+        <div className="mt-3.5 rounded-[9px] border border-danger bg-danger-soft p-3.5">
+          <div className="font-mono text-[9.5px] font-semibold tracking-wide text-danger uppercase">
+            Rejection reason — required · permanent audit record
+          </div>
           <textarea
-            className="min-h-[4rem] rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
-            placeholder="Why is this value wrong? (required)"
+            className="mt-2.5 min-h-[72px] w-full resize-y rounded-lg border border-danger bg-surface px-3 py-2.5 text-[13px] leading-relaxed text-fg outline-none"
+            placeholder="Explain precisely why this value is wrong. An auditor or national regulator may read this later."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             disabled={isPending}
             autoFocus
           />
-          <div className="flex gap-1.5">
+          <div className="mt-2.5 flex justify-end gap-2">
+            <button className={INACTIVE} disabled={isPending} onClick={() => setMode("idle")}>
+              Cancel
+            </button>
             <button
-              className={ACTIVE}
+              className="rounded-lg bg-danger px-3.5 py-2 text-[12.5px] font-semibold text-white transition disabled:opacity-40"
               disabled={notes.trim() === "" || isPending}
               onClick={() => submit({ decision: "rejected", notes: notes.trim() })}
             >
               Submit rejection
-            </button>
-            <button className={INACTIVE} disabled={isPending} onClick={() => setMode("idle")}>
-              Cancel
             </button>
           </div>
         </div>
       )}
 
       {error && (
-        <p role="alert" className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm">
+        <p role="alert" className="mt-3.5 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-sm">
           {error}
         </p>
       )}
 
       {canReview && mode === "idle" && (
-        <div className="flex items-center gap-1.5">
+        <div className="mt-3.5 flex gap-2 border-t border-border-2 pt-3.5">
           <button
-            className={review?.decision === "approved" ? ACTIVE : INACTIVE}
+            data-field-code={field.field_code}
+            data-action="approve"
+            className={`flex-1 ${decision === "approved" ? ACTIVE : INACTIVE}`}
             disabled={isPending}
             onClick={() => submit({ decision: "approved" })}
           >
-            Approve
+            ✓ Approve
           </button>
           <button
-            className={review?.decision === "edited" ? ACTIVE : INACTIVE}
+            data-field-code={field.field_code}
+            data-action="edit"
+            className={`flex-1 ${decision === "edited" ? ACTIVE : INACTIVE}`}
             disabled={isPending}
             onClick={() => {
               setDraftValue(review?.edited_value ?? field.extracted_value ?? "");
               setMode("editing");
             }}
           >
-            Edit
+            ✎ Edit
           </button>
           <button
-            className={review?.decision === "rejected" ? ACTIVE : INACTIVE}
+            data-field-code={field.field_code}
+            data-action="reject"
+            className={`flex-1 ${decision === "rejected" ? ACTIVE : REJECT_INACTIVE}`}
             disabled={isPending}
-            onClick={() => {
-              setNotes(review?.notes ?? "");
-              setMode("rejecting");
-            }}
+            onClick={() => setMode("rejecting")}
           >
-            Reject
+            ✕ Reject
           </button>
         </div>
       )}
@@ -198,15 +235,14 @@ export function FieldReviewCard({
 function ReviewDecisionBadge({ decision }: { decision: ReviewDecision | null }) {
   if (!decision) {
     return (
-      <span className="rounded-md px-2 py-0.5 text-xs font-medium bg-foreground/10 text-foreground/60">
+      <span className="flex-none rounded-full bg-surface-2 px-2.5 py-1 text-[11.5px] font-semibold text-fg-2">
         Pending review
       </span>
     );
   }
-  const colour =
-    decision === "rejected" ? "bg-danger/15 text-danger" : "bg-success/15 text-success";
+  const colour = decision === "rejected" ? "bg-danger-soft text-danger" : "bg-success-soft text-success";
   return (
-    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${colour}`}>
+    <span className={`inline-flex flex-none items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${colour}`}>
       <DecisionIcon decision={decision} />
       {reviewDecisionLabel(decision)}
     </span>

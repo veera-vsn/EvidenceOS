@@ -6,16 +6,17 @@
  * the auth check once and redirects anonymous visitors to `/login`.
  *
  * Doing the check here (rather than in middleware) keeps the redirect
- * logic co-located with the data it protects. It also means we can
- * fetch the user once and pass it down via context if we ever need to,
- * without another round-trip to Supabase.
+ * logic co-located with the data it protects.
+ *
+ * No chrome rendered here — `/dashboard` (the workspace list) renders
+ * its own top bar, and `/dashboard/[workspaceSlug]/*` renders the
+ * persistent sidebar from its own layout. Keeping this layout to just
+ * the auth guarantee avoids double chrome stacking on workspace pages.
  */
 
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-
-import { logout } from "../(auth)/actions";
 
 export default async function DashboardLayout({
   children,
@@ -31,28 +32,5 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <header className="flex items-center justify-between border-b border-foreground/10 px-6 py-4">
-        <div className="flex flex-col">
-          <span className="text-xs font-medium uppercase tracking-widest text-foreground/60">
-            EvidenceOS
-          </span>
-          <span className="text-sm font-medium">Dashboard</span>
-        </div>
-        <div className="flex items-center gap-4 text-sm">
-          <span className="text-foreground/60">{user.email}</span>
-          <form action={logout}>
-            <button
-              type="submit"
-              className="rounded-md border border-foreground/15 px-3 py-1 text-sm hover:bg-foreground/5"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
-      <main className="flex-1 px-6 py-10">{children}</main>
-    </div>
-  );
+  return <>{children}</>;
 }

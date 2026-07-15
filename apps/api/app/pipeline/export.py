@@ -1,9 +1,9 @@
 """Workspace-wide draft xBRL-CSV export (Phase 6).
 
 Builds an in-memory zip containing one CSV per ESMA template
-(RT.01.01/RT.02.01/RT.03.01), a `sources.csv` evidence trail, and a
-`manifest.txt` disclaimer -- for every document in a workspace whose latest
-version is both validated and *fully reviewed*.
+(RT.01.01/RT.02.01/RT.03.01), an `evidence_audit_trail.csv` source trail, and
+a `disclaimer_manifest.txt` disclaimer -- for every document in a workspace
+whose latest version is both validated and *fully reviewed*.
 
 This is a structured draft aid, not a taxonomy-conformant xBRL-CSV filing.
 A real EBA/ESMA XBRL-CSV package needs a licensed DPM/taxonomy artefact and
@@ -353,8 +353,10 @@ def build_export_zip(workspace_id: str) -> bytes:
     with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
         for group in groups:
             zf.writestr(_template_csv_name(group), _build_template_csv(group, eligibility.included))
-        zf.writestr("sources.csv", _build_sources_csv(eligibility.included, reviewer_names))
-        zf.writestr("manifest.txt", _build_manifest(workspace_name, eligibility))
+        zf.writestr(
+            "evidence_audit_trail.csv", _build_sources_csv(eligibility.included, reviewer_names)
+        )
+        zf.writestr("disclaimer_manifest.txt", _build_manifest(workspace_name, eligibility))
 
     log.info(
         "export_built",

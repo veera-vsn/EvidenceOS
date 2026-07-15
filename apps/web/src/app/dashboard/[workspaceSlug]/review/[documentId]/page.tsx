@@ -3,9 +3,13 @@
  * workspace.
  *
  * Shows the document's latest validated version, grouped into the three
- * ESMA template sections, with one FieldReviewCard per DORA field.
+ * ESMA template sections, with one FieldReviewCard per DORA field. The
+ * only Client Components on this page are the cards themselves (each
+ * owns its own approve/edit/reject state) and `ReviewKeyboardShortcuts`,
+ * which drives the A/E/R/↓ shortcuts advertised in the header.
  */
 
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -19,6 +23,7 @@ import type {
 import { DORA_FIELD_GROUPS, groupForFieldCode } from "../dora-field-groups";
 import { computeReviewProgress } from "../review-utils";
 import { FieldReviewCard } from "../field-review-card";
+import { ReviewKeyboardShortcuts } from "../keyboard-shortcuts";
 
 interface ReviewDetailPageProps {
   params: Promise<{ workspaceSlug: string; documentId: string }>;
@@ -96,49 +101,81 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
   }
 
   const progress = computeReviewProgress(reviewByField.size, version.extraction_results.length);
+  const isComplete = progress.reviewedCount >= progress.totalCount && progress.totalCount > 0;
+  const orderedFieldCodes = version.extraction_results.map((f) => f.field_code);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-10">
-      <section className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold tracking-tight">{doc.name}</h1>
-        <p className="text-sm text-foreground/60">
-          {progress.reviewedCount} of {progress.totalCount} fields reviewed
-        </p>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+    <div className="mx-auto max-w-[920px]">
+      {canReview && <ReviewKeyboardShortcuts fieldCodes={orderedFieldCodes} />}
+
+      <div className="sticky top-0 z-10 border-b border-border-2 bg-bg px-10 pt-[22px] pb-4">
+        <Link href={`/dashboard/${workspaceSlug}/review`} className="text-[12.5px] text-fg-2">
+          ← Review queue
+        </Link>
+        <div className="mt-2.5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="font-serif text-2xl font-medium tracking-tight text-fg">{doc.name}</h1>
+            <div className="mt-1 text-[12.5px] text-fg-2">
+              <span className="font-semibold text-fg">{progress.reviewedCount}</span> of{" "}
+              {progress.totalCount} fields reviewed
+            </div>
+          </div>
+          <div className="flex items-center gap-3.5">
+            {canReview && (
+              <span className="hidden rounded-[7px] border border-border px-2.5 py-1.5 font-mono text-[11px] text-fg-3 sm:inline-block">
+                A approve · E edit · R reject · ↓ next
+              </span>
+            )}
+            <Link
+              href={`/dashboard/${workspaceSlug}/export`}
+              aria-disabled={!isComplete}
+              className={`rounded-lg bg-accent px-[15px] py-2.5 text-[13px] font-semibold text-accent-fg transition ${
+                isComplete ? "hover:opacity-90" : "pointer-events-none opacity-45"
+              }`}
+            >
+              Finish &amp; export →
+            </Link>
+          </div>
+        </div>
+        <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-border-2">
           <div
-            className="h-full rounded-full bg-success transition-all"
+            className="h-full rounded-full bg-success transition-all duration-300"
             style={{ width: `${progress.percent}%` }}
           />
         </div>
-      </section>
+      </div>
 
-      {DORA_FIELD_GROUPS.map((group) => {
-        const fields = version.extraction_results.filter(
-          (f) => groupForFieldCode(f.field_code).code === group.code,
-        );
-        if (fields.length === 0) return null;
-        return (
-          <section key={group.code} className="flex flex-col gap-3">
-            <h2 className="text-sm font-medium text-foreground/70">
-              {group.code} — {group.label}
-            </h2>
-            <div className="flex flex-col gap-3">
-              {fields.map((field) => (
-                <FieldReviewCard
-                  key={field.field_code}
-                  field={field}
-                  validationResults={validationByField.get(field.field_code) ?? []}
-                  review={reviewByField.get(field.field_code) ?? null}
-                  documentVersionId={version.id}
-                  documentId={doc.id}
-                  workspaceSlug={workspaceSlug}
-                  canReview={canReview}
-                />
-              ))}
+      <div className="px-10 pt-6.5 pb-[90px]">
+        {DORA_FIELD_GROUPS.map((group) => {
+          const fields = version.extraction_results.filter(
+            (f) => groupForFieldCode(f.field_code).code === group.code,
+          );
+          if (fields.length === 0) return null;
+          return (
+            <div key={group.code} className="mb-[30px]">
+              <div className="mb-3 flex items-baseline gap-2.5">
+                <span className="font-mono text-xs font-semibold text-accent">{group.code}</span>
+                <span className="text-sm font-semibold text-fg">{group.label}</span>
+                <span className="text-xs text-fg-3">{fields.length} fields</span>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {fields.map((field) => (
+                  <FieldReviewCard
+                    key={field.field_code}
+                    field={field}
+                    validationResults={validationByField.get(field.field_code) ?? []}
+                    review={reviewByField.get(field.field_code) ?? null}
+                    documentVersionId={version.id}
+                    documentId={doc.id}
+                    workspaceSlug={workspaceSlug}
+                    canReview={canReview}
+                  />
+                ))}
+              </div>
             </div>
-          </section>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

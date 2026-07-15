@@ -26,7 +26,7 @@ export function DeleteDocumentButton({
       onClick={handleDelete}
       disabled={isPending}
       aria-label="Delete document"
-      className="rounded-md p-1.5 text-foreground/30 transition-colors hover:bg-danger/10 hover:text-danger disabled:pointer-events-none disabled:opacity-40"
+      className="rounded-md p-1.5 text-fg-3 transition-colors hover:bg-danger-soft hover:text-danger disabled:pointer-events-none disabled:opacity-40"
     >
       {isPending ? (
         <svg

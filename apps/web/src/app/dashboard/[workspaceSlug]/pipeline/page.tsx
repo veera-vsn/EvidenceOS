@@ -4,6 +4,8 @@
  * Three panels:
  *   1. Start a new run — select uploaded documents, click "Start".
  *   2. Run history — list of all pipeline_runs with stage status grid.
+ *      Runs collapse by default (native <details>, no client JS) except
+ *      the most recent one, which stays open.
  *   3. Extracted fields — DORA RoI fields pulled from each document.
  */
 
@@ -34,6 +36,13 @@ const STAGES: { key: keyof PipelineRunDocumentRow; label: string }[] = [
   { key: "validation_status", label: "Validate" },
   { key: "recommendation_status", label: "Recommend" },
 ];
+
+const RUN_STATUS_STYLES: Record<string, string> = {
+  queued: "text-fg-2",
+  running: "text-accent",
+  completed: "text-success",
+  failed: "text-danger",
+};
 
 export default async function PipelinePage({ params }: PipelinePageProps) {
   const { workspaceSlug } = await params;
@@ -93,57 +102,73 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
     >();
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-6 py-10">
-      {/* Start new run */}
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">Pipeline</h1>
-          <p className="text-sm text-foreground/60">
-            Select uploaded documents and start a processing run. Each run is
-            independently tracked so you can compare extraction results across
-            versions.
-          </p>
+    <div className="mx-auto max-w-[1120px] px-10 py-[34px] pb-20">
+      <div className="mb-6">
+        <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
+          Processing
         </div>
-        <StartRunForm
-          workspaceId={workspace.id}
-          workspaceSlug={workspaceSlug}
-          documents={selectableDocs}
-        />
-      </section>
+        <h1 className="mt-1.5 font-serif text-[28px] font-medium tracking-tight text-fg">
+          Pipeline
+        </h1>
+      </div>
 
-      {/* Run history */}
+      <StartRunForm
+        workspaceId={workspace.id}
+        workspaceSlug={workspaceSlug}
+        documents={selectableDocs}
+      />
+
       {(runs?.length ?? 0) > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-foreground/70">Run history</h2>
-          <ul className="flex flex-col gap-6">
-            {runs!.map((run) => (
-              <li
+        <section className="mt-6">
+          <div className="mb-3 flex flex-wrap items-center gap-4 text-[11.5px] text-fg-2">
+            <span className="font-mono text-[10.5px] tracking-[0.1em] text-fg-3 uppercase">
+              Run history
+            </span>
+            <LegendItem colour="bg-success" label="completed" />
+            <LegendItem colour="bg-accent" label="running" />
+            <LegendItem colour="border border-border" label="pending" />
+            <LegendItem colour="bg-danger" label="failed" />
+            <LegendItem colour="bg-border" label="skipped" />
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            {runs!.map((run, i) => (
+              <details
                 key={run.id}
-                className="flex flex-col gap-4 rounded-xl border border-foreground/10 bg-foreground/[0.02] p-4"
+                open={i === 0}
+                className={`overflow-hidden rounded-[13px] border bg-surface ${
+                  run.status === "running" ? "border-accent-line" : "border-border"
+                }`}
               >
-                {/* Run header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-mono text-xs text-foreground/40">
-                      {run.id.slice(0, 8)}
+                <summary
+                  className={`flex cursor-pointer list-none items-center justify-between px-5 py-4 ${
+                    run.status === "running" ? "bg-accent-soft" : ""
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold capitalize ${RUN_STATUS_STYLES[run.status] ?? ""}`}>
+                      <span className={`h-2 w-2 rounded-full ${runDotColour(run.status)} ${run.status === "running" ? "animate-pulse" : ""}`} />
+                      {run.status}
                     </span>
-                    <span className="text-xs text-foreground/50">
+                    <span className="font-mono text-[12.5px] text-fg">run_{run.id.slice(0, 6)}</span>
+                    <span className="font-mono text-xs text-fg-3">
                       {new Date(run.created_at).toLocaleString()}
                     </span>
                   </div>
-                  <RunStatusBadge status={run.status} />
-                </div>
+                  <span className="text-xs text-fg-2">
+                    {run.pipeline_run_documents.length} document
+                    {run.pipeline_run_documents.length !== 1 ? "s" : ""}
+                  </span>
+                </summary>
 
-                {/* Per-document stage grid */}
-                {run.pipeline_run_documents.length > 0 && (
-                  <table className="w-full text-xs">
+                <div className="border-t border-border-2 px-5">
+                  {/* stage grid */}
+                  <table className="mt-1.5 w-full text-xs">
                     <thead>
-                      <tr className="border-b border-foreground/10">
-                        <th className="pb-1 text-left font-medium text-foreground/50">
-                          Document
-                        </th>
+                      <tr className="border-b border-border-2 font-mono text-[10px] tracking-wide text-fg-3 uppercase">
+                        <th className="pb-2 pt-2 text-left font-medium">Document</th>
                         {STAGES.map((s) => (
-                          <th key={s.key} className="pb-1 text-center font-medium text-foreground/50">
+                          <th key={s.key} className="w-[68px] pb-2 pt-2 text-center font-medium">
                             {s.label}
                           </th>
                         ))}
@@ -151,15 +176,12 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
                     </thead>
                     <tbody>
                       {run.pipeline_run_documents.map((prd) => (
-                        <tr
-                          key={prd.document_version_id}
-                          className="border-b border-foreground/5 last:border-0"
-                        >
-                          <td className="py-1.5 pr-4 text-foreground/80 truncate max-w-[160px]">
+                        <tr key={prd.document_version_id} className="border-b border-border-2 last:border-0">
+                          <td className="max-w-[220px] truncate py-2.5 pr-4 text-[13px] font-medium text-fg">
                             {prd.document_versions?.documents?.name ?? "—"}
                           </td>
                           {STAGES.map((s) => (
-                            <td key={s.key} className="py-1.5 text-center">
+                            <td key={s.key} className="py-2.5 text-center">
                               <StagePip status={prd[s.key] as StageStatus} />
                             </td>
                           ))}
@@ -167,93 +189,102 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
                       ))}
                     </tbody>
                   </table>
-                )}
 
-                {/* Extracted DORA fields */}
-                {run.pipeline_run_documents.map((prd) => {
-                  const fields = prd.document_versions?.extraction_results ?? [];
-                  if (fields.length === 0) return null;
-                  return (
-                    <div key={prd.document_version_id} className="flex flex-col gap-2">
-                      <p className="text-xs font-medium text-foreground/50">
-                        Extracted fields —{" "}
-                        <span className="text-foreground/70">
-                          {prd.document_versions?.documents?.name}
-                        </span>
-                      </p>
-                      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-                        {fields.map((f) => (
-                          <div
-                            key={f.field_code}
-                            className="flex flex-col gap-0.5 rounded-lg border border-foreground/8 bg-foreground/[0.015] px-3 py-2"
-                          >
-                            <span className="font-mono text-[10px] text-foreground/35">
-                              {f.field_code}
-                            </span>
-                            <span className="text-xs text-foreground/60">{f.field_label}</span>
-                            {f.extracted_value ? (
-                              <>
-                                <span className="text-xs font-medium text-foreground/90">
-                                  {f.extracted_value}
-                                </span>
-                                <ConfidencePip confidence={f.confidence ?? 0} />
-                              </>
-                            ) : (
-                              <span className="text-xs italic text-foreground/35">Not extracted</span>
-                            )}
-                            <ValidationBadges
-                              results={(prd.document_versions?.validation_results ?? []).filter(
-                                (v) => v.field_code === f.field_code,
+                  {/* extracted fields */}
+                  {run.pipeline_run_documents.map((prd) => {
+                    const fields = prd.document_versions?.extraction_results ?? [];
+                    if (fields.length === 0) return null;
+                    return (
+                      <div key={prd.document_version_id} className="py-4">
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="text-[12.5px] font-semibold text-fg">
+                            {prd.document_versions?.documents?.name}
+                          </span>
+                          <span className="font-mono text-[11px] text-fg-3">
+                            · {fields.length} extracted fields
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                          {fields.map((f) => (
+                            <div
+                              key={f.field_code}
+                              className="rounded-[9px] border border-border bg-surface-2 px-3 py-2.5"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-mono text-[10.5px] text-fg-3">{f.field_code}</span>
+                              </div>
+                              <div className="mt-1 text-[11.5px] leading-tight text-fg-2">{f.field_label}</div>
+                              {f.extracted_value ? (
+                                <>
+                                  <div className="mt-1 truncate text-[13px] font-medium text-fg">
+                                    {f.extracted_value}
+                                  </div>
+                                  <ConfidencePip confidence={f.confidence ?? 0} />
+                                </>
+                              ) : (
+                                <span className="mt-1 block text-[13px] italic text-fg-3">Not extracted</span>
                               )}
-                            />
-                          </div>
-                        ))}
+                              <ValidationBadges
+                                results={(prd.document_versions?.validation_results ?? []).filter(
+                                  (v) => v.field_code === f.field_code,
+                                )}
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </li>
+                    );
+                  })}
+                </div>
+              </details>
             ))}
-          </ul>
+          </div>
         </section>
       )}
     </div>
   );
 }
 
-function RunStatusBadge({ status }: { status: PipelineRunRow["status"] }) {
-  const styles: Record<string, string> = {
-    queued: "bg-foreground/10 text-foreground/60",
-    running: "bg-warning/15 text-warning",
-    completed: "bg-success/15 text-success",
-    failed: "bg-danger/15 text-danger",
-  };
+function LegendItem({ colour, label }: { colour: string; label: string }) {
   return (
-    <span className={`rounded-md px-2 py-0.5 text-xs font-medium capitalize ${styles[status] ?? ""}`}>
-      {status}
+    <span className="flex items-center gap-1.5">
+      <span className={`h-[11px] w-[11px] rounded-[3px] ${colour}`} />
+      {label}
     </span>
   );
+}
+
+function runDotColour(status: string): string {
+  const map: Record<string, string> = {
+    queued: "bg-fg-3",
+    running: "bg-accent",
+    completed: "bg-success",
+    failed: "bg-danger",
+  };
+  return map[status] ?? "bg-fg-3";
 }
 
 function StagePip({ status }: { status: StageStatus }) {
-  const icons: Record<StageStatus, string> = {
-    pending: "○",
-    running: "◑",
-    completed: "●",
+  const glyphs: Record<StageStatus, string> = {
+    pending: "",
+    running: "●",
+    completed: "✓",
     failed: "✕",
-    skipped: "—",
+    skipped: "–",
   };
-  const colours: Record<StageStatus, string> = {
-    pending: "text-foreground/25",
-    running: "text-warning",
-    completed: "text-success",
-    failed: "text-danger",
-    skipped: "text-foreground/25",
+  const styles: Record<StageStatus, string> = {
+    pending: "border-[1.5px] border-border text-transparent",
+    running: "bg-accent text-accent-fg animate-pulse",
+    completed: "bg-success text-white",
+    failed: "bg-danger text-white",
+    skipped: "bg-border text-fg-3",
   };
   return (
-    <span className={`text-sm ${colours[status]}`} title={status}>
-      {icons[status]}
+    <span
+      title={status}
+      className={`inline-flex h-[22px] w-[22px] items-center justify-center rounded-[6px] text-[11px] font-bold ${styles[status]}`}
+    >
+      {glyphs[status]}
     </span>
   );
 }
-

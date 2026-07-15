@@ -63,52 +63,55 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-10">
-      <section className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">Documents</h1>
-        <p className="text-sm text-foreground/60">
-          Upload contracts, spreadsheets, and vendor inventories to begin
-          pipeline processing.
-        </p>
-      </section>
+    <div className="mx-auto max-w-[1040px] px-10 py-[34px] pb-20">
+      <div className="mb-6 flex items-end justify-between">
+        <div>
+          <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
+            Repository
+          </div>
+          <h1 className="mt-1.5 font-serif text-[28px] font-medium tracking-tight text-fg">
+            Documents
+          </h1>
+        </div>
+        <div className="text-[13px] text-fg-2">
+          <strong className="font-semibold text-fg">{docs.length}</strong> ICT
+          vendor contract{docs.length !== 1 ? "s" : ""}
+        </div>
+      </div>
 
       <UploadZone workspaceId={workspace.id} workspaceSlug={workspaceSlug} />
 
       {docs.length > 0 ? (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-foreground/70">
-            {docs.length} document{docs.length !== 1 ? "s" : ""}
-          </h2>
-          <ul className="flex flex-col gap-2">
-            {docs.map((doc) => (
-              <li
-                key={doc.id}
-                className="flex items-center justify-between rounded-xl border border-foreground/10 bg-foreground/[0.02] px-4 py-3"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{doc.name}</span>
-                  <span className="font-mono text-xs uppercase text-foreground/40">
-                    {doc.file_type}
-                    {doc.latest_version?.size_bytes
-                      ? ` · ${formatBytes(doc.latest_version.size_bytes)}`
-                      : ""}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <VersionBadge
-                    status={doc.latest_version?.upload_status ?? null}
-                  />
-                  <DeleteDocumentButton
-                    documentId={doc.id}
-                    workspaceSlug={workspaceSlug}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <div className="mt-8">
+          <div className="grid grid-cols-[1fr_90px_90px_130px_40px] gap-3 border-b border-border-2 px-3.5 pb-2.5 font-mono text-[10.5px] tracking-[0.08em] text-fg-3 uppercase">
+            <span>Document</span>
+            <span>Type</span>
+            <span>Size</span>
+            <span>Status</span>
+            <span />
+          </div>
+          {docs.map((doc) => (
+            <div
+              key={doc.id}
+              className="grid grid-cols-[1fr_90px_90px_130px_40px] items-center gap-3 border-b border-border-2 px-3.5 py-3.5"
+            >
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span className="flex-none rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-fg-3">
+                  {doc.file_type.toUpperCase()}
+                </span>
+                <span className="truncate text-[13.5px] font-medium text-fg">{doc.name}</span>
+              </div>
+              <span className="text-[12.5px] text-fg-2">{doc.file_type}</span>
+              <span className="font-mono text-[12.5px] text-fg-2">
+                {doc.latest_version?.size_bytes ? formatBytes(doc.latest_version.size_bytes) : "—"}
+              </span>
+              <VersionBadge status={doc.latest_version?.upload_status ?? null} />
+              <DeleteDocumentButton documentId={doc.id} workspaceSlug={workspaceSlug} />
+            </div>
+          ))}
+        </div>
       ) : (
-        <p className="text-sm text-foreground/50">
+        <p className="mt-8 text-sm text-fg-3">
           No documents yet — upload one above to get started.
         </p>
       )}
@@ -121,16 +124,17 @@ function VersionBadge({
 }: {
   status: DocumentVersionRow["upload_status"] | null;
 }) {
-  if (!status) return null;
+  if (!status) return <span />;
   const styles: Record<string, string> = {
-    uploaded: "bg-success/15 text-success",
-    uploading: "bg-warning/15 text-warning",
-    failed: "bg-danger/15 text-danger",
+    uploaded: "bg-success-soft text-success",
+    uploading: "bg-accent-soft text-accent",
+    failed: "bg-danger-soft text-danger",
   };
   return (
     <span
-      className={`rounded-md px-2 py-0.5 text-xs font-medium capitalize ${styles[status] ?? ""}`}
+      className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold capitalize ${styles[status] ?? ""}`}
     >
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {status}
     </span>
   );

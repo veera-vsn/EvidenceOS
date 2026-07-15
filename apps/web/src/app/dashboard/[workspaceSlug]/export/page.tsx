@@ -39,13 +39,29 @@ interface ExportStatusDocument {
   totalCount: number;
 }
 
+// Mirrors the zip contents built by apps/api/app/pipeline/export.py —
+// keep this list in sync if a filename changes there.
+const ZIP_FILES = [
+  { tag: "CSV", name: "RT_01_01_contractual_arrangements.csv", desc: "— template 1", kind: "template" as const },
+  { tag: "CSV", name: "RT_02_01_ict_third-party_providers.csv", desc: "— template 2", kind: "template" as const },
+  { tag: "CSV", name: "RT_03_01_outsourced_functions.csv", desc: "— template 3", kind: "template" as const },
+  { tag: "CSV", name: "evidence_audit_trail.csv", desc: "— source, confidence & reviewer per field", kind: "audit" as const },
+  { tag: "TXT", name: "disclaimer_manifest.txt", desc: "— draft-status statement", kind: "manifest" as const },
+];
+
+const ZIP_TAG_STYLES: Record<(typeof ZIP_FILES)[number]["kind"], string> = {
+  template: "bg-accent-soft text-accent",
+  audit: "bg-success-soft text-success",
+  manifest: "bg-surface-2 text-fg-2",
+};
+
 export default async function ExportPage({ params }: ExportPageProps) {
   const { workspaceSlug } = await params;
   const supabase = await createClient();
 
   const { data: workspace } = await supabase
     .from("workspaces")
-    .select("id")
+    .select("id, name")
     .eq("slug", workspaceSlug)
     .single();
 
@@ -90,94 +106,154 @@ export default async function ExportPage({ params }: ExportPageProps) {
 
   const included = documents.filter((d) => d.status === "included");
   const excluded = documents.filter((d) => d.status !== "included");
+  const zipFilename = `${workspaceSlug}-roi-draft_${new Date().toISOString().slice(0, 10)}.zip`;
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-10">
-      <section className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">Export</h1>
-        <p className="text-sm text-foreground/60">
-          A structured draft for your own review — not a taxonomy-validated
-          xBRL-CSV filing. You remain responsible for the final submission
-          to your NCA.
-        </p>
-      </section>
+    <div className="mx-auto max-w-[940px] px-10 py-[34px] pb-20">
+      <div className="mb-[22px]">
+        <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
+          Finish line
+        </div>
+        <h1 className="mt-1.5 font-serif text-[28px] font-medium tracking-tight text-fg">
+          Export the Register of Information
+        </h1>
+      </div>
 
-      {documents.length > 0 ? (
-        <>
-          <section className="flex flex-col gap-3">
-            <div className="flex items-center gap-4 rounded-xl border border-foreground/10 bg-foreground/[0.02] p-4">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-2xl font-semibold tracking-tight text-success">
-                  {included.length}
-                </span>
-                <span className="text-xs text-foreground/50">ready to export</span>
-              </div>
-              <div className="h-8 w-px bg-foreground/10" />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-2xl font-semibold tracking-tight text-foreground/60">
-                  {excluded.length}
-                </span>
-                <span className="text-xs text-foreground/50">not yet ready</span>
-              </div>
-            </div>
-
-            {included.length > 0 ? (
-              <a
-                href={`/dashboard/${workspaceSlug}/export/download`}
-                className="self-start rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90"
-              >
-                Download export (.zip)
-              </a>
-            ) : (
-              <p className="text-sm text-foreground/50">
-                Nothing is ready to export yet — finish reviewing at least
-                one document below.
-              </p>
-            )}
-          </section>
-
-          {excluded.length > 0 && (
-            <section className="flex flex-col gap-2">
-              <h2 className="text-sm font-medium text-foreground/70">Not yet ready</h2>
-              <ul className="flex flex-col gap-2">
-                {excluded.map((doc) => (
-                  <li
-                    key={doc.id}
-                    className="flex items-center justify-between rounded-xl border border-foreground/10 bg-foreground/[0.02] px-4 py-3"
-                  >
-                    <span className="text-sm font-medium">{doc.name}</span>
-                    {doc.status === "not_validated" ? (
-                      <Link
-                        href={`/dashboard/${workspaceSlug}/pipeline`}
-                        className="text-xs text-foreground/50 underline hover:text-foreground"
-                      >
-                        Not yet validated — run it through Pipeline
-                      </Link>
-                    ) : (
-                      <Link
-                        href={`/dashboard/${workspaceSlug}/review/${doc.id}`}
-                        className="text-xs text-foreground/50 underline hover:text-foreground"
-                      >
-                        {doc.reviewedCount}/{doc.totalCount} fields reviewed — finish review
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-        </>
-      ) : (
-        <p className="text-sm text-foreground/50">
+      {documents.length === 0 ? (
+        <p className="text-sm text-fg-3">
           No documents yet —{" "}
-          <Link
-            href={`/dashboard/${workspaceSlug}/documents`}
-            className="underline hover:text-foreground"
-          >
+          <Link href={`/dashboard/${workspaceSlug}/documents`} className="text-accent">
             upload one
           </Link>{" "}
           to get started.
         </p>
+      ) : (
+        <>
+          <div
+            className={`overflow-hidden rounded-[14px] border bg-surface shadow-card ${
+              included.length > 0 ? "border-accent-line" : "border-border"
+            }`}
+          >
+            <div className="grid grid-cols-1 items-center gap-6 p-[26px] sm:grid-cols-[1fr_auto]">
+              <div>
+                <div className="flex items-baseline gap-2.5">
+                  <span className="font-serif text-[44px] leading-none text-success">
+                    {included.length}
+                  </span>
+                  <span className="text-[15px] font-medium text-fg">
+                    of {documents.length} document{documents.length !== 1 ? "s" : ""} ready to export
+                  </span>
+                </div>
+                <p className="mt-3 max-w-[440px] text-[13.5px] leading-relaxed text-fg-2">
+                  A document is export-ready once all of its DORA fields have been
+                  reviewed. The download bundles every ready document into the
+                  regulatory template structure, with a full evidence trail attached.
+                </p>
+              </div>
+              <div className="text-center sm:text-right">
+                {included.length > 0 ? (
+                  <a
+                    href={`/dashboard/${workspaceSlug}/export/download`}
+                    className="inline-block whitespace-nowrap rounded-[10px] bg-accent px-6 py-3.5 text-sm font-semibold text-accent-fg transition hover:opacity-90"
+                  >
+                    ↧ Download .zip
+                  </a>
+                ) : (
+                  <span className="inline-block whitespace-nowrap rounded-[10px] border border-border px-6 py-3.5 text-sm font-semibold text-fg-3">
+                    ↧ Download .zip
+                  </span>
+                )}
+                <div className="mt-2 font-mono text-[10.5px] text-fg-3">
+                  {included.length > 0 ? zipFilename : "nothing ready yet"}
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-border-2 bg-surface-2 px-[26px] py-[18px]">
+              <div className="mb-3 font-mono text-[10px] tracking-[0.1em] text-fg-3 uppercase">
+                What&apos;s inside the download
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {ZIP_FILES.map((z) => (
+                  <div key={z.name} className="flex items-center gap-3 text-[13px]">
+                    <span
+                      className={`w-11 flex-none rounded text-center font-mono text-[9.5px] ${ZIP_TAG_STYLES[z.kind]}`}
+                    >
+                      {z.tag}
+                    </span>
+                    <span className="font-mono text-fg">{z.name}</span>
+                    <span className="text-xs text-fg-3">{z.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3.5 flex gap-3.5 rounded-xl border border-border bg-surface px-5 py-[17px]">
+            <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-accent-soft text-[15px] text-accent">
+              §
+            </span>
+            <div>
+              <div className="text-[13.5px] font-semibold text-fg">
+                This is a structured draft for your compliance team to review.
+              </div>
+              <p className="mt-1 text-[12.5px] leading-relaxed text-fg-2">
+                EvidenceOS never submits to a regulator. A named person on your
+                team makes the final filing decision — exactly as a careful
+                compliance process should work. The export includes a plain-text
+                disclaimer manifest recording that separation.
+              </p>
+            </div>
+          </div>
+
+          {excluded.length > 0 && (
+            <div className="mt-[30px]">
+              <div className="mb-3 flex items-baseline gap-2.5">
+                <span className="text-[15px] font-semibold text-fg">Not ready yet</span>
+                <span className="text-xs text-fg-3">
+                  {excluded.length} document{excluded.length !== 1 ? "s" : ""} · each needs one more
+                  step before it can be exported
+                </span>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {excluded.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-[11px] border border-border bg-surface px-[18px] py-3.5"
+                  >
+                    <span
+                      className={`h-[9px] w-[9px] flex-none rounded-full ${
+                        doc.status === "not_validated" ? "bg-fg-3" : "bg-warning"
+                      }`}
+                    />
+                    <div className="min-w-0">
+                      <div className="truncate text-[13.5px] font-semibold text-fg">{doc.name}</div>
+                      <div
+                        className={`mt-0.5 text-xs ${
+                          doc.status === "not_validated" ? "text-fg-2" : "text-warning"
+                        }`}
+                      >
+                        {doc.status === "not_validated"
+                          ? "Not yet validated — run it through the Pipeline"
+                          : `${doc.reviewedCount} / ${doc.totalCount} fields reviewed — finish review`}
+                      </div>
+                    </div>
+                    <Link
+                      href={
+                        doc.status === "not_validated"
+                          ? `/dashboard/${workspaceSlug}/pipeline`
+                          : `/dashboard/${workspaceSlug}/review/${doc.id}`
+                      }
+                      className="inline-flex items-center gap-1.5 whitespace-nowrap text-[12.5px] font-medium text-accent"
+                    >
+                      {doc.status === "not_validated" ? "Go to Pipeline" : "Continue review"} →
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
