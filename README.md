@@ -8,6 +8,30 @@ EvidenceOS turns fragmented contracts, spreadsheets, and vendor inventories into
 
 ---
 
+## Status
+
+The full pipeline below is built and working end-to-end, with a redesigned
+UI, and deployed to a live staging environment plus a production
+environment (`main`, currently sharing the same backend/database as
+staging — see [deployment status](#deployment) below).
+
+| Phase | What | Status |
+|---|---|---|
+| 0 – 0.5 | Scaffold, auth, Supabase schema + RLS | ✅ |
+| 1 | Document upload + storage | ✅ |
+| 2 | OCR worker | ✅ |
+| 3 | DORA field extraction (LLM) + Langfuse observability | ✅ |
+| 4 | Deterministic validation | ✅ |
+| 5 | Human review workflow | ✅ |
+| 6 | xBRL-CSV export (draft) | ✅ |
+| — | UI/UX redesign (all pages) | ✅ |
+| 7 | Deployment — AWS EC2 (API) + Vercel (web) | ✅ (staging + production live) |
+| — | RAG / evidence retrieval | not started |
+
+Full detail on every phase: [`Project_Docs/Learnings/`](./Project_Docs/Learnings/).
+
+---
+
 ## Pipeline
 
 ```
@@ -23,13 +47,13 @@ Every AI output carries **evidence + confidence + reason**. Every export is **tr
 ```
 EvidenceOS/
 |-- apps/
-|   |-- web/         # Next.js 14 frontend (App Router + TS + Tailwind + shadcn/ui)
-|   \-- api/         # FastAPI backend (Python 3.13)
-|-- workers/         # Async pipeline workers (OCR, extraction, validation, ...)
+|   |-- web/         # Next.js 16 frontend (App Router + TS + Tailwind v4)
+|   \-- api/         # FastAPI backend (Python 3.13), deploy.sh redeploys it to EC2
+|-- workers/         # Reserved for future standalone workers — empty for now;
+|                       MVP background jobs run in-process (FastAPI BackgroundTasks)
 |-- packages/
-|   |-- contracts/   # Shared Pydantic + Zod schemas
-|   \-- infrastructure/  # Shared DB / storage / auth clients
-|-- scripts/         # Dev + deployment scripts
+|   |-- contracts/   # Reserved for shared Pydantic + Zod schemas — empty for now
+|   \-- infrastructure/  # Reserved for shared DB / storage / auth clients — empty for now
 |-- Project_Docs/
 |   |-- (PRD, SDD, schema, roadmap, ...)
 |   \-- Learnings/   # Step-by-step build documentation — read this to understand the code
@@ -42,36 +66,51 @@ EvidenceOS/
 
 ## Tech stack (one-liner)
 
-Next.js + FastAPI + Supabase Postgres (EU) + Azure Document Intelligence + Claude/GPT + LangGraph.
+Next.js 16 + FastAPI (Python 3.13) + Supabase Postgres (EU) + Claude/GPT + Langfuse. Deployed on Vercel (web) + AWS EC2 (API).
 
-**Why each choice?** See [`Project_Docs/Learnings/00_STACK_DECISIONS.md`](./Project_Docs/Learnings/00_STACK_DECISIONS.md).
+**Why each choice?** See [`Project_Docs/Learnings/00_STACK_DECISIONS.md`](./Project_Docs/Learnings/00_STACK_DECISIONS.md) (the AWS EC2 backend choice specifically postdates that doc — see [Deployment](#deployment) below for why).
+
+---
+
+## Deployment
+
+| | URL | Deploys on |
+|---|---|---|
+| Staging frontend | `evidenceos-web-git-claude-*.vercel.app` | every push to `claude` (automatic) |
+| Production frontend | `evidenceos-web.vercel.app` | every push/merge to `main` (automatic) |
+| Backend (shared by both, for now) | AWS EC2, `eu-central-1` | manual — `apps/api/deploy.sh` |
+
+Staging and production currently share one backend process and one
+Supabase project — there's no environment data separation yet. Full
+setup log, a plain-language glossary of every AWS/nginx/systemd term
+involved, every bug hit along the way, and a day-to-day operations
+runbook: [`Project_Docs/Learnings/Phase_7_Deployment/`](./Project_Docs/Learnings/Phase_7_Deployment/).
 
 ---
 
 ## Quick start (local dev)
 
-**Prerequisites:** Node.js 20+, Python 3.11+, a Supabase project (EU region).
+**Prerequisites:** Node.js 20+, Python 3.13, a Supabase project (EU region).
 
 ```bash
 # 1. Clone and copy env templates
-cp .env.example .env
 cp apps/web/.env.example apps/web/.env.local
 cp apps/api/.env.example apps/api/.env
 
 # 2. Frontend
 cd apps/web
 npm install
-npm run dev            # http://localhost:3000
+npx next dev --webpack   # http://localhost:3000 — Turbopack (the default) crashes on some Windows setups
 
 # 3. Backend (new terminal)
 cd apps/api
 python -m venv .venv
-.venv\Scripts\activate  # Windows
+.venv\Scripts\activate  # Windows; source .venv/bin/activate on Mac/Linux
 pip install -r requirements.txt
-uvicorn app.main:app --reload   # http://localhost:8000
+uvicorn app.main:app --reload   # http://localhost:8000 (or whichever PORT is set in .env)
 ```
 
-Full setup walkthrough: [`Project_Docs/Learnings/Phase_0_Setup/`](./Project_Docs/Learnings/Phase_0_Setup/).
+Full setup walkthrough: [`Project_Docs/Learnings/Phase_0_Setup/`](./Project_Docs/Learnings/Phase_0_Setup/). Day-to-day operations (redeploying, checking logs, troubleshooting): [`Project_Docs/Learnings/Phase_7_Deployment/03_operations_runbook.md`](./Project_Docs/Learnings/Phase_7_Deployment/03_operations_runbook.md).
 
 ---
 
