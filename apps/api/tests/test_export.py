@@ -24,18 +24,26 @@ from app.pipeline.export import (
 )
 
 
-def test_build_template_groups_matches_four_esma_templates() -> None:
+def test_build_template_groups_matches_six_esma_templates() -> None:
     groups = build_template_groups()
     codes = [g.code for g in groups]
-    assert codes == ["RT.02.01", "RT.02.02", "RT.05.01", "RT.06.01"]
+    assert codes == ["RT.02.01", "RT.02.02", "RT.05.01", "RT.06.01", "RT.05.02", "RT.07.01"]
 
 
 def test_fields_for_group_counts_match_dora_fields_catalogue() -> None:
-    """Full RoI Stage 1 expanded these 4 tables to their complete real
-    column counts (5/17/12/10 = 44 fields total)."""
+    """Full RoI Stage 1 expanded the first 4 tables to their complete real
+    column counts; Stage 2A added B_05.02/B_07.01 (5/17/12/10/6/11 = 61
+    fields total)."""
     groups = build_template_groups()
     counts = {g.code: len(fields_for_group(g)) for g in groups}
-    assert counts == {"RT.02.01": 5, "RT.02.02": 17, "RT.05.01": 12, "RT.06.01": 10}
+    assert counts == {
+        "RT.02.01": 5,
+        "RT.02.02": 17,
+        "RT.05.01": 12,
+        "RT.06.01": 10,
+        "RT.05.02": 6,
+        "RT.07.01": 11,
+    }
 
 
 def test_fields_for_group_only_contains_matching_prefix() -> None:

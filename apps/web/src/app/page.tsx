@@ -123,8 +123,8 @@ export default function Home() {
             What EvidenceOS covers today
           </span>
           <span><strong className="font-semibold text-fg">12</strong> deterministic rule types</span>
-          <span><strong className="font-semibold text-fg">44</strong> DORA fields per contract</span>
-          <span><strong className="font-semibold text-fg">4</strong> regulatory templates</span>
+          <span><strong className="font-semibold text-fg">61</strong> DORA fields per contract</span>
+          <span><strong className="font-semibold text-fg">6</strong> regulatory templates</span>
           <span><strong className="font-semibold text-fg">100%</strong> human-approved before export</span>
         </div>
       </section>

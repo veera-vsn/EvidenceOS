@@ -351,6 +351,130 @@ DORA_FIELDS: list[dict[str, str]] = [
         "label": "Impact of discontinuing the function",
         "hint": "One of: Low / Medium / High / Assessment not performed",
     },
+    # RT.05.02 — ICT service supply chains / sub-outsourcing (EBA table B_05.02).
+    # 6 of 7 real columns — 0010 (contractual arrangement reference number)
+    # is the same real-world value already captured once via
+    # b_02.01.0010; not re-extracted per table, same simplification
+    # b_02.02 already uses.
+    {
+        "code": "b_05.02.0020",
+        "label": "Type of ICT services",
+        "hint": (
+            "One of the 19 EBA categories, e.g. Cloud services: SaaS/PaaS/IaaS, "
+            "ICT Consulting, Network infrastructure, Data analysis, ICT Development"
+        ),
+    },
+    {
+        "code": "b_05.02.0030",
+        "label": "Identification code of the third-party service provider",
+        "hint": "Identifier for the ICT provider in this link of the sub-outsourcing chain",
+    },
+    {
+        "code": "b_05.02.0040",
+        "label": "Type of code of the third-party service provider",
+        "hint": (
+            "One of: Legal Entity Identifier (LEI) / National code / "
+            "European Unified ID (EUID) / Company registration number "
+            "(CRN) / Value added tax identification number (VAT) / "
+            "Passport Number"
+        ),
+    },
+    {
+        "code": "b_05.02.0050",
+        "label": "Rank",
+        "hint": "Position of this provider in the sub-outsourcing chain (1 = the direct provider)",
+    },
+    {
+        "code": "b_05.02.0060",
+        "label": "Identification code of the recipient of sub-contracted ICT services",
+        "hint": "Identifier for the sub-contractor the service is passed on to",
+    },
+    {
+        "code": "b_05.02.0070",
+        "label": "Type of code of the recipient of sub-contracted ICT services",
+        "hint": (
+            "One of: Legal Entity Identifier (LEI) / National code / "
+            "European Unified ID (EUID) / Company registration number "
+            "(CRN) / Value added tax identification number (VAT) / "
+            "Passport Number"
+        ),
+    },
+    # RT.07.01 — Assessment of the ICT services (EBA table B_07.01).
+    # 11 of 12 real columns — 0010 (contractual arrangement reference
+    # number) is the same shared-value simplification as B_05.02 above.
+    {
+        "code": "b_07.01.0020",
+        "label": "Identification code of the third-party service provider",
+        "hint": "Identifier for the ICT provider being assessed (usually its LEI)",
+    },
+    {
+        "code": "b_07.01.0030",
+        "label": "Type of code of the third-party service provider",
+        "hint": (
+            "One of: Legal Entity Identifier (LEI) / National code / "
+            "European Unified ID (EUID) / Company registration number "
+            "(CRN) / Value added tax identification number (VAT) / "
+            "Passport Number"
+        ),
+    },
+    {
+        "code": "b_07.01.0040",
+        "label": "Type of ICT services",
+        "hint": (
+            "One of the 19 EBA categories, e.g. Cloud services: SaaS/PaaS/IaaS, "
+            "ICT Consulting, Network infrastructure, Data analysis, ICT Development"
+        ),
+    },
+    {
+        "code": "b_07.01.0050",
+        "label": "Substitutability of the ICT third-party service provider",
+        "hint": (
+            "One of: Easily substitutable / Medium complexity in terms of "
+            "substitutability / Highly complex substitutability / Not substitutable"
+        ),
+    },
+    {
+        "code": "b_07.01.0060",
+        "label": (
+            "Reason if the ICT third-party service provider is considered "
+            "not substitutable or difficult to substitute"
+        ),
+        "hint": (
+            "One of: Lack of real alternatives / Difficulties in migrating "
+            "or reintegrating / Lack of real alternatives and difficulties "
+            "in migrating or reintegrating"
+        ),
+    },
+    {
+        "code": "b_07.01.0070",
+        "label": "Date of the last audit on the ICT third-party service provider",
+        "hint": "Date of the most recent audit of this provider (ISO 8601: YYYY-MM-DD)",
+    },
+    {
+        "code": "b_07.01.0080",
+        "label": "Existence of an exit plan",
+        "hint": "Yes or No",
+    },
+    {
+        "code": "b_07.01.0090",
+        "label": "Possibility of reintegration of the contracted ICT service",
+        "hint": "One of: Easy / Difficult / Highly complex / Not applicable",
+    },
+    {
+        "code": "b_07.01.0100",
+        "label": "Impact of discontinuing the ICT services",
+        "hint": "One of: Low / Medium / High / Assessment not performed",
+    },
+    {
+        "code": "b_07.01.0110",
+        "label": "Are there alternative ICT third-party service providers identified?",
+        "hint": "One of: Yes / No / Assessment not performed",
+    },
+    {
+        "code": "b_07.01.0120",
+        "label": "Identification of alternative ICT third-party service provider",
+        "hint": "Identifier of an alternative provider, if one has been identified",
+    },
 ]
 
 

@@ -13,6 +13,11 @@ the catalogue from 13 to all 44 real columns of these same 4 tables and
 replaced the 7 hand-approximated rule types with the real EBA business
 rules (completeness groups, conditional pairs, allowed-value sets) sourced
 directly from EBA's own validation-rules and dropdown-values workbooks.
+
+Full RoI Stage 2A (Project_Docs/Learnings/Phase_10_Full_RoI_Stage2A/) added
+B_05.02 (ICT service supply chains, 0 active EBA rules) and B_07.01
+(assessment of the ICT services, a completeness group plus a conditional
+rule with two trigger values) — 44 -> 61 fields.
 """
 
 from app.pipeline.validator import ValidationResult, validate_fields
@@ -36,7 +41,7 @@ _VALID_VALUES: dict[str, str | None] = {
     "b_02.01.0040": "EUR",
     "b_02.01.0050": "50000",
     "b_02.02.0040": "Legal Entity Identfier (LEI)",
-    "b_02.02.0060": "Cloud hosting",
+    "b_02.02.0060": "Cloud services: SaaS",
     "b_02.02.0070": "2025-01-01",
     "b_02.02.0080": "2026-01-01",
     "b_02.02.0090": "Termination not for cause: expired and not renewed",
@@ -66,6 +71,23 @@ _VALID_VALUES: dict[str, str | None] = {
     "b_06.01.0080": "4",
     "b_06.01.0090": "1",
     "b_06.01.0100": "High",
+    "b_05.02.0020": "Cloud services: SaaS",
+    "b_05.02.0030": "PROVIDER-ID-001",
+    "b_05.02.0040": "National code",
+    "b_05.02.0050": "1",
+    "b_05.02.0060": "SUBCONTRACTOR-001",
+    "b_05.02.0070": "National code",
+    "b_07.01.0020": "5493001KJTIIGC8Y1R12",
+    "b_07.01.0030": "Legal Entity Identfier (LEI)",
+    "b_07.01.0040": "ICT Consulting",
+    "b_07.01.0050": "Easily substitutable",
+    "b_07.01.0060": "Lack of real alternatives",
+    "b_07.01.0070": "2025-06-01",
+    "b_07.01.0080": "Yes",
+    "b_07.01.0090": "Not applicable",
+    "b_07.01.0100": "Low",
+    "b_07.01.0110": "No",
+    "b_07.01.0120": "ALT-PROVIDER-001",
 }
 
 
@@ -350,3 +372,91 @@ def test_non_negative_numeric_passes_zero() -> None:
     values = {**_VALID_VALUES, "b_02.01.0050": "0"}
     result = _find(validate_fields(values), "b_02.01.0050", "NON_NEGATIVE_NUMERIC")
     assert result.status == "pass"
+
+
+# --- Full RoI Stage 2A: B_07.01 completeness group ---------------------
+
+
+def test_b_07_01_group_skipped_when_entire_group_empty() -> None:
+    values = {**_VALID_VALUES}
+    for code in (
+        "b_07.01.0030",
+        "b_07.01.0050",
+        "b_07.01.0060",
+        "b_07.01.0070",
+        "b_07.01.0080",
+        "b_07.01.0090",
+        "b_07.01.0100",
+        "b_07.01.0110",
+        "b_07.01.0120",
+    ):
+        values[code] = None
+    results = validate_fields(values)
+    b0701_group = [
+        r
+        for r in results
+        if r.rule_id == "COMPLETENESS_GROUP" and r.field_code.startswith("b_07.01")
+    ]
+    assert all(r.status == "skipped" for r in b0701_group)
+
+
+def test_b_07_01_group_fails_remaining_field_when_one_filled() -> None:
+    values = {**_VALID_VALUES, "b_07.01.0070": None}
+    result = _find(validate_fields(values), "b_07.01.0070", "COMPLETENESS_GROUP")
+    assert result.status == "fail"
+
+
+def test_b_05_02_has_no_completeness_group() -> None:
+    """B_05.02 has 0 active EBA business rules -- its fields are optional
+    and untouched by COMPLETENESS_GROUP entirely, unlike every other table
+    covered so far."""
+    results = validate_fields({})
+    b0502_results = [r for r in results if r.field_code.startswith("b_05.02")]
+    assert all(r.rule_id != "COMPLETENESS_GROUP" for r in b0502_results)
+
+
+# --- Full RoI Stage 2A: multi-value CONDITIONAL_REQUIRED ----------------
+
+
+def test_conditional_required_multi_value_first_trigger() -> None:
+    values = {**_VALID_VALUES, "b_07.01.0050": "Not substitutable"}
+    result = _find(validate_fields(values), "b_07.01.0060", "CONDITIONAL_REQUIRED")
+    assert result.status == "pass"  # b_07.01.0060 is already filled in _VALID_VALUES
+
+
+def test_conditional_required_multi_value_second_trigger() -> None:
+    values = {**_VALID_VALUES, "b_07.01.0050": "Highly complex substitutability"}
+    result = _find(validate_fields(values), "b_07.01.0060", "CONDITIONAL_REQUIRED")
+    assert result.status == "pass"
+
+
+def test_conditional_required_multi_value_second_trigger_fails_when_blank() -> None:
+    values = {
+        **_VALID_VALUES,
+        "b_07.01.0050": "Highly complex substitutability",
+        "b_07.01.0060": None,
+    }
+    result = _find(validate_fields(values), "b_07.01.0060", "CONDITIONAL_REQUIRED")
+    assert result.status == "fail"
+
+
+def test_conditional_required_skipped_for_non_trigger_value() -> None:
+    values = {**_VALID_VALUES, "b_07.01.0050": "Medium complexity in terms of substitutability"}
+    result = _find(validate_fields(values), "b_07.01.0060", "CONDITIONAL_REQUIRED")
+    assert result.status == "skipped"
+
+
+# --- Full RoI Stage 2A: shared "Type of ICT services" enum --------------
+
+
+def test_type_of_ict_services_enum_shared_across_three_fields() -> None:
+    values = {
+        **_VALID_VALUES,
+        "b_02.02.0060": "ICT Development",
+        "b_05.02.0020": "Data analysis",
+        "b_07.01.0040": "not a real category",
+    }
+    results = validate_fields(values)
+    assert _find(results, "b_02.02.0060", "ALLOWED_VALUE").status == "pass"
+    assert _find(results, "b_05.02.0020", "ALLOWED_VALUE").status == "pass"
+    assert _find(results, "b_07.01.0040", "ALLOWED_VALUE").status == "warning"

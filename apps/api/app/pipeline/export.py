@@ -49,6 +49,8 @@ _GROUP_LABELS: dict[str, str] = {
     "RT.02.02": "Contractual arrangements specific info",
     "RT.05.01": "ICT third-party providers",
     "RT.06.01": "Functions identification",
+    "RT.05.02": "ICT service supply chains",
+    "RT.07.01": "Assessment of ICT services",
 }
 
 

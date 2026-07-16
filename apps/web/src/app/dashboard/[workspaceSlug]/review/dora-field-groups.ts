@@ -38,6 +38,9 @@ const GROUP_LABELS: Record<string, string> = {
   "b_02.02": "Contractual arrangements — specific",
   "b_05.01": "ICT third-party providers",
   "b_06.01": "Functions identification",
+  // Full RoI Stage 2A (Project_Docs/Learnings/Phase_10_Full_RoI_Stage2A/).
+  "b_05.02": "ICT service supply chains",
+  "b_07.01": "Assessment of ICT services",
 };
 
 /** "b_02.01" -> "RT.02.01" */
