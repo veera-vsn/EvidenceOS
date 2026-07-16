@@ -82,7 +82,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">
               Your workspaces
             </div>
-            <h1 className="mt-2.5 mb-1.5 font-serif text-[32px] font-medium tracking-tight text-fg">
+            <h1 className="mt-2.5 mb-1.5 text-2xl font-semibold tracking-tight text-fg">
               Choose a workspace
             </h1>
             <p className="mb-7 max-w-lg text-[14.5px] text-fg-2">
@@ -98,7 +98,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   className="flex items-center justify-between rounded-xl border border-border bg-surface px-[22px] py-5 shadow-card hover:border-accent-line"
                 >
                   <div className="flex items-center gap-4">
-                    <span className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] bg-accent-soft font-serif text-base font-semibold text-accent">
+                    <span className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] bg-accent-soft text-base font-semibold text-accent">
                       {ws.name.charAt(0).toUpperCase()}
                     </span>
                     <div>
@@ -145,7 +145,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">
                 Welcome to EvidenceOS
               </div>
-              <h1 className="mt-2.5 mb-1.5 font-serif text-[32px] font-medium tracking-tight text-fg">
+              <h1 className="mt-2.5 mb-1.5 text-2xl font-semibold tracking-tight text-fg">
                 Create your first workspace
               </h1>
               <p className="mx-auto max-w-[420px] text-[14.5px] text-fg-2">

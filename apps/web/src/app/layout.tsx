@@ -9,12 +9,16 @@
  * See: Project_Docs/Learnings/Phase_0_Setup/02_frontend_scaffold.md
  */
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Newsreader } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 // Load Geist (variable font) and expose it as a CSS custom property so
 // Tailwind's --font-sans / --font-mono tokens can reference it in
 // `globals.css`. `subsets: ["latin"]` keeps the font file small.
+//
+// Sans-serif only, everywhere — no display serif pairing. Per the v2
+// compact/professional redesign (Anthropic-style product interface),
+// weight and size carry the type hierarchy instead of a second typeface.
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -23,14 +27,6 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-// Newsreader (serif) is reserved for large display headlines — paired
-// with Geist Sans for body/UI text, per the Phase 7 visual redesign.
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -54,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bg text-fg">
         {children}

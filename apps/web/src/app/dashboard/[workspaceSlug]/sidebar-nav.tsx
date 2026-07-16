@@ -15,8 +15,8 @@ interface SidebarNavProps {
   reviewQueueCount: number;
 }
 
-const ACTIVE = "flex items-center gap-2.5 rounded-lg bg-accent-soft px-2.5 py-2 text-[13.5px] font-semibold text-accent";
-const INACTIVE = "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-medium text-fg-2 hover:bg-surface-2 hover:text-fg";
+const ACTIVE = "flex items-center gap-2 rounded-md bg-accent-soft px-2.5 py-1.5 text-[13px] font-semibold text-accent";
+const INACTIVE = "flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-fg-2 hover:bg-surface-2 hover:text-fg";
 
 export function SidebarNav({ workspaceSlug, reviewQueueCount }: SidebarNavProps) {
   const pathname = usePathname();

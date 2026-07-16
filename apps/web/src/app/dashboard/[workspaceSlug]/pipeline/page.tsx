@@ -102,12 +102,12 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
     >();
 
   return (
-    <div className="mx-auto max-w-[1120px] px-10 py-[34px] pb-20">
+    <div className="mx-auto max-w-[1120px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-6">
         <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
           Processing
         </div>
-        <h1 className="mt-1.5 font-serif text-[28px] font-medium tracking-tight text-fg">
+        <h1 className="mt-1 text-xl font-semibold tracking-tight text-fg">
           Pipeline
         </h1>
       </div>
@@ -141,13 +141,13 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
                 }`}
               >
                 <summary
-                  className={`flex cursor-pointer list-none items-center justify-between px-5 py-4 ${
+                  className={`flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-3.5 sm:px-5 sm:py-4 ${
                     run.status === "running" ? "bg-accent-soft" : ""
                   }`}
                 >
                   <div className="flex flex-wrap items-center gap-3">
                     <span className={`inline-flex items-center gap-1.5 text-xs font-semibold capitalize ${RUN_STATUS_STYLES[run.status] ?? ""}`}>
-                      <span className={`h-2 w-2 rounded-full ${runDotColour(run.status)} ${run.status === "running" ? "animate-pulse" : ""}`} />
+                      <span className={`h-2 w-2 rounded-full ${runDotColour(run.status)}`} />
                       {run.status}
                     </span>
                     <span className="font-mono text-[12.5px] text-fg">run_{run.id.slice(0, 6)}</span>
@@ -161,34 +161,36 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
                   </span>
                 </summary>
 
-                <div className="border-t border-border-2 px-5">
+                <div className="border-t border-border-2 px-4 sm:px-5">
                   {/* stage grid */}
-                  <table className="mt-1.5 w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-border-2 font-mono text-[10px] tracking-wide text-fg-3 uppercase">
-                        <th className="pb-2 pt-2 text-left font-medium">Document</th>
-                        {STAGES.map((s) => (
-                          <th key={s.key} className="w-[68px] pb-2 pt-2 text-center font-medium">
-                            {s.label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {run.pipeline_run_documents.map((prd) => (
-                        <tr key={prd.document_version_id} className="border-b border-border-2 last:border-0">
-                          <td className="max-w-[220px] truncate py-2.5 pr-4 text-[13px] font-medium text-fg">
-                            {prd.document_versions?.documents?.name ?? "—"}
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="mt-1.5 w-full min-w-[420px] text-xs">
+                      <thead>
+                        <tr className="border-b border-border-2 font-mono text-[10px] tracking-wide text-fg-3 uppercase">
+                          <th className="pb-2 pt-2 text-left font-medium">Document</th>
                           {STAGES.map((s) => (
-                            <td key={s.key} className="py-2.5 text-center">
-                              <StagePip status={prd[s.key] as StageStatus} />
-                            </td>
+                            <th key={s.key} className="w-[68px] pb-2 pt-2 text-center font-medium">
+                              {s.label}
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {run.pipeline_run_documents.map((prd) => (
+                          <tr key={prd.document_version_id} className="border-b border-border-2 last:border-0">
+                            <td className="max-w-[220px] truncate py-2.5 pr-4 text-[13px] font-medium text-fg">
+                              {prd.document_versions?.documents?.name ?? "—"}
+                            </td>
+                            {STAGES.map((s) => (
+                              <td key={s.key} className="py-2.5 text-center">
+                                <StagePip status={prd[s.key] as StageStatus} />
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
                   {/* extracted fields */}
                   {run.pipeline_run_documents.map((prd) => {
@@ -274,7 +276,7 @@ function StagePip({ status }: { status: StageStatus }) {
   };
   const styles: Record<StageStatus, string> = {
     pending: "border-[1.5px] border-border text-transparent",
-    running: "bg-accent text-accent-fg animate-pulse",
+    running: "bg-accent text-accent-fg",
     completed: "bg-success text-white",
     failed: "bg-danger text-white",
     skipped: "bg-border text-fg-3",

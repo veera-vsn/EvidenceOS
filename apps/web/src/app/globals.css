@@ -6,26 +6,25 @@
  * is available as a utility class (e.g. `--color-accent` becomes
  * `bg-accent`, `text-accent`, etc.).
  *
- * Visual identity, v1 (Phase 7 UI redesign). Deep teal accent, a
- * Newsreader-serif/Geist-sans display pairing, and a three-step text
- * hierarchy (fg/fg-2/fg-3) instead of a single colour at varying
- * opacity — chosen to read as "audit-grade financial tool", not
- * consumer SaaS, for an audience of compliance officers evaluating a
- * product that will sit inside a regulatory filing workflow.
+ * Visual identity, v2 (compact/professional pass). Warm neutral palette
+ * and a single sans-serif typeface throughout, modelled on Anthropic's
+ * own product interface — calm, dense, minimal decoration — rather than
+ * the v1 cool-grey/serif-display "consumer SaaS" look. Same three-step
+ * text hierarchy (fg/fg-2/fg-3) as before.
  */
 @import "tailwindcss";
 
 :root {
-  --bg: #f6f7f7;
+  --bg: #faf9f6;
   --surface: #ffffff;
-  --surface-2: #fbfcfc;
+  --surface-2: #f5f3ef;
 
-  --fg: #191f24;
-  --fg-2: #586470;
-  --fg-3: #8b96a1;
+  --fg: #1c1a17;
+  --fg-2: #6b6560;
+  --fg-3: #9c948c;
 
-  --border: #e4e7ea;
-  --border-2: #eef0f1;
+  --border: #e8e4dd;
+  --border-2: #f0ede7;
 
   --accent: #0c6d6d;
   --accent-fg: #ffffff;
@@ -44,16 +43,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0e1317;
-    --surface: #141a20;
-    --surface-2: #191f26;
+    --bg: #1a1817;
+    --surface: #211f1d;
+    --surface-2: #262320;
 
-    --fg: #e9edf0;
-    --fg-2: #9aa4ae;
-    --fg-3: #68727c;
+    --fg: #eeebe6;
+    --fg-2: #a39a91;
+    --fg-3: #6f665e;
 
-    --border: #232c34;
-    --border-2: #1a222a;
+    --border: #34302b;
+    --border-2: #29251f;
 
     --accent: #3fb0a8;
     --accent-fg: #06110f;
@@ -104,5 +103,4 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-newsreader);
 }

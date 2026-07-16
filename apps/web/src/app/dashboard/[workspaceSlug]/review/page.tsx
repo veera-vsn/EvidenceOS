@@ -106,12 +106,12 @@ export default async function ReviewListPage({ params }: ReviewListPageProps) {
   const fullyReviewedCount = reviewable.filter((d) => d.reviewedCount >= d.totalCount).length;
 
   return (
-    <div className="mx-auto max-w-[1000px] px-10 py-[34px] pb-20">
+    <div className="mx-auto max-w-[1000px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-2">
         <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
           Human-in-the-loop
         </div>
-        <h1 className="mt-1.5 font-serif text-[28px] font-medium tracking-tight text-fg">
+        <h1 className="mt-1 text-xl font-semibold tracking-tight text-fg">
           Review queue
         </h1>
       </div>
@@ -124,15 +124,15 @@ export default async function ReviewListPage({ params }: ReviewListPageProps) {
       {reviewable.length > 0 && (
         <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-[11px] border border-border bg-surface px-[17px] py-[15px]">
-            <div className="font-serif text-[26px] text-fg">{reviewable.length}</div>
+            <div className="text-xl font-semibold text-fg">{reviewable.length}</div>
             <div className="mt-0.5 text-xs text-fg-2">documents in queue</div>
           </div>
           <div className="rounded-[11px] border border-border bg-surface px-[17px] py-[15px]">
-            <div className="font-serif text-[26px] text-warning">{totalFieldsAwaiting}</div>
+            <div className="text-xl font-semibold text-warning">{totalFieldsAwaiting}</div>
             <div className="mt-0.5 text-xs text-fg-2">fields awaiting your decision</div>
           </div>
           <div className="rounded-[11px] border border-border bg-surface px-[17px] py-[15px]">
-            <div className="font-serif text-[26px] text-success">{fullyReviewedCount}</div>
+            <div className="text-xl font-semibold text-success">{fullyReviewedCount}</div>
             <div className="mt-0.5 text-xs text-fg-2">fully reviewed, ready to export</div>
           </div>
         </div>

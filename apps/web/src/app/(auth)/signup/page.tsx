@@ -29,7 +29,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
           <span className="text-base font-semibold">EvidenceOS</span>
         </Link>
         <div className="max-w-sm">
-          <h2 className="font-serif text-[32px] leading-[1.12] font-medium tracking-tight text-fg">
+          <h2 className="text-2xl leading-[1.2] font-semibold tracking-tight text-fg">
             Start with one contract. Ship a filing-ready draft with a full
             evidence trail.
           </h2>
@@ -54,12 +54,12 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
       </div>
 
       {/* right: form */}
-      <div className="flex items-center justify-center px-10 py-10">
+      <div className="flex items-center justify-center px-6 py-8 sm:px-10 sm:py-10">
         <div className="w-full max-w-[380px]">
           <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">
             Get started
           </div>
-          <h1 className="mt-2.5 mb-1.5 font-serif text-[30px] font-medium tracking-tight text-fg">
+          <h1 className="mt-2.5 mb-1.5 text-[22px] font-semibold tracking-tight text-fg">
             Create your account
           </h1>
           <p className="mb-6 text-sm text-fg-2">
