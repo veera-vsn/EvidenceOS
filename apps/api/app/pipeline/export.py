@@ -30,6 +30,19 @@ import structlog
 from supabase import Client
 
 from app.core.supabase import get_service_client
+from app.pipeline.entity_export import (
+    build_b0101_csv,
+    build_b0102_csv,
+    build_b0103_csv,
+    build_b0203_csv,
+    build_b0301_csv,
+    build_b0302_csv,
+    build_b0303_csv,
+    build_b0401_csv,
+    fetch_entity_branches,
+    fetch_entity_profile,
+)
+from app.pipeline.export_types import ExportableDocument
 from app.pipeline.field_extractor import DORA_FIELDS
 from app.pipeline.revalidate import compute_effective_values
 
@@ -114,17 +127,6 @@ def is_fully_reviewed(
     field contributes once a document passes this gate.
     """
     return all(code in reviews for code in field_codes)
-
-
-@dataclass(frozen=True)
-class ExportableDocument:
-    """One document whose latest version is validated and fully reviewed."""
-
-    document_id: str
-    document_name: str
-    document_version_id: str
-    extracted: dict[str, str | None]
-    reviews: dict[str, Mapping[str, str | None]]
 
 
 @dataclass(frozen=True)
@@ -300,7 +302,9 @@ def _build_sources_csv(
     return out.getvalue()
 
 
-def _build_manifest(workspace_name: str, eligibility: ExportEligibility) -> str:
+def _build_manifest(
+    workspace_name: str, eligibility: ExportEligibility, *, entity_profile_configured: bool
+) -> str:
     lines = [
         f"EvidenceOS xBRL-CSV export (draft) -- {workspace_name}",
         f"Generated at: {datetime.now(UTC).isoformat()}",
@@ -309,6 +313,13 @@ def _build_manifest(workspace_name: str, eligibility: ExportEligibility) -> str:
         "",
         DISCLAIMER,
     ]
+    if not entity_profile_configured:
+        lines += [
+            "",
+            "Entity profile not configured -- B_01.01/B_01.02/B_01.03/B_03.01/"
+            "B_04.01 are empty. Add your organisation's profile in workspace "
+            "settings before filing.",
+        ]
     if eligibility.excluded:
         lines += ["", "Excluded documents:"]
         lines += [f"  - {d.document_name} ({d.reason})" for d in eligibility.excluded]
@@ -353,6 +364,14 @@ def build_export_zip(workspace_id: str) -> bytes:
     reviewer_names = _reviewer_display_names(eligibility.included, client)
     groups = build_template_groups()
 
+    # Full RoI Stage 2B (Phase 11) -- the filer's own entity identity.
+    # Independent of document eligibility: a workspace with no entity
+    # profile configured yet still gets a full export, just with these
+    # six CSVs empty (see entity_export.py's module docstring).
+    entity_profile = fetch_entity_profile(workspace_id, client)
+    entity_branches = fetch_entity_branches(workspace_id, client)
+    included_docs = eligibility.included
+
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
         for group in groups:
@@ -360,7 +379,37 @@ def build_export_zip(workspace_id: str) -> bytes:
         zf.writestr(
             "evidence_audit_trail.csv", _build_sources_csv(eligibility.included, reviewer_names)
         )
-        zf.writestr("disclaimer_manifest.txt", _build_manifest(workspace_name, eligibility))
+        zf.writestr(
+            "RT_01_01_entity_maintaining_the_register.csv", build_b0101_csv(entity_profile)
+        )
+        zf.writestr(
+            "RT_01_02_entities_within_scope_of_the_register.csv", build_b0102_csv(entity_profile)
+        )
+        zf.writestr("RT_01_03_branches.csv", build_b0103_csv(entity_profile, entity_branches))
+        zf.writestr(
+            "RT_02_03_intra_group_contractual_arrangements.csv", build_b0203_csv()
+        )
+        zf.writestr(
+            "RT_03_01_entities_signing_to_receive_services.csv",
+            build_b0301_csv(entity_profile, included_docs),
+        )
+        zf.writestr(
+            "RT_03_02_providers_signing_to_provide_services.csv",
+            build_b0302_csv(included_docs),
+        )
+        zf.writestr(
+            "RT_03_03_entities_signing_intra_group_to_provide_services.csv", build_b0303_csv()
+        )
+        zf.writestr(
+            "RT_04_01_entities_using_the_ict_services.csv",
+            build_b0401_csv(entity_profile, included_docs),
+        )
+        zf.writestr(
+            "disclaimer_manifest.txt",
+            _build_manifest(
+                workspace_name, eligibility, entity_profile_configured=entity_profile is not None
+            ),
+        )
 
     log.info(
         "export_built",

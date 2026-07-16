@@ -26,6 +26,7 @@ export function SidebarNav({ workspaceSlug, reviewQueueCount }: SidebarNavProps)
     { href: `/dashboard/${workspaceSlug}/pipeline`, label: "Pipeline", icon: "▷" },
     { href: `/dashboard/${workspaceSlug}/review`, label: "Review", icon: "✓", badge: reviewQueueCount },
     { href: `/dashboard/${workspaceSlug}/export`, label: "Export", icon: "↧" },
+    { href: `/dashboard/${workspaceSlug}/settings`, label: "Settings", icon: "⚙" },
   ];
 
   return (

@@ -54,7 +54,24 @@ lists exactly 14, with no `B_99.01`:
 | `B_06.01` | Functions identification |
 | `B_07.01` | Assessment of the ICT services |
 
-## What EvidenceOS covers today (Full RoI Stage 1 + 2A, shipped)
+## What EvidenceOS covers today — all 14 tables (Stage 1 + 2A + 2B, shipped)
+
+**All 14 real EBA RoI tables now have a path to being populated in an
+export.** Six via document extraction (below); the other eight via a new
+workspace "Entity profile" settings page (Full RoI Stage 2B, Phase 11) —
+`B_01.01`/`B_01.02`/`B_01.03` from a one-time form (your own
+organisation's LEI, name, country, type, competent authority, optional
+branches), and `B_02.03`/`B_03.01`/`B_03.02`/`B_03.03`/`B_04.01` derived
+automatically at export time from that profile plus data already in
+`extraction_results` — no second review step, since there's nothing to
+review (a company doesn't approve or reject its own LEI). `B_02.03` and
+`B_03.03` (intra-group tables) are always empty until real multi-entity
+group support exists — see below for why that's still deliberately out
+of scope. An export with no entity profile configured yet still produces
+every document-level CSV correctly; only the profile-dependent ones come
+back empty with a manifest note explaining why.
+
+### The 6 document-extracted tables (Stage 1 + 2A)
 
 **61 fields — every real column — across 6 of those 14 tables**:
 `B_02.01`/`B_02.02` (contractual arrangements), `B_05.01` (ICT provider
@@ -93,57 +110,63 @@ will show materially more `fail` badges than before — this is the rules
 working correctly (EBA's actual bar is genuinely that strict), not a
 regression.
 
-## Stage 2B (next): the entity/branch/group registry
+## The 8 entity-profile tables (Stage 2B, shipped)
 
-The remaining 8 tables — entity/branch/group registry (`B_01.01`–`B_01.03`),
-signing entities (`B_03.01`–`B_03.03`), intra-group arrangements
-(`B_02.03`), and entities using services (`B_04.01`) — are a genuinely
-different kind of work: they key off the **filer's own organisation**
-(its LEI, its branches, its group structure), not anything found in a
-vendor contract. `B_01.01` is "who are you" — workspace configuration
-entered once and reused across every document, not something to extract
-from a PDF. That is a different UX pattern (a workspace "Entity Profile"
-settings surface) from the per-document upload-and-review flow every
-table so far has used.
+`B_01.01`–`B_01.03`, `B_02.03`, `B_03.01`–`B_03.03`, `B_04.01` key off the
+**filer's own organisation** (its LEI, its branches, its group structure),
+not anything found in a vendor contract — a genuinely different kind of
+work from Stages 1/2A, built on this app's first workspace-settings page
+(`/dashboard/[workspaceSlug]/settings`, `entity_profiles`/
+`entity_branches` tables, migration `0010`).
 
-**The simplification that makes this tractable**: for a standalone
+**The simplification that made this tractable**: for a standalone
 financial entity (not part of a group — the primary target per this
-product's own positioning doc), most of these 8 tables collapse to
-near-trivial derivations from one entity-profile form: `B_01.02` mirrors
-`B_01.01` exactly, `B_02.03`/`B_03.03` are always empty (no intra-group
-arrangements without a group), and `B_03.01`/`B_03.02`/`B_04.01`
-auto-derive from the entity profile plus data already in
-`extraction_results`. Only `B_01.01` (one form) and optionally `B_01.03`
-(an add-a-branch list) need genuinely new input. Full multi-entity/group
-support stays deferred pending real signal — see the design sketch this
-plan's Stage 2B section left for the next implementation pass.
+product's own positioning doc), 6 of these 8 tables collapse to
+near-trivial derivations from one form. `B_01.02` mirrors `B_01.01`
+exactly (plus two genuinely new fields, total assets and its currency,
+which aren't on `B_01.01`); `B_02.03`/`B_03.03` are always empty (no
+intra-group arrangements can exist without a group); `B_03.01`/`B_03.02`/
+`B_04.01` auto-derive one row per exported document from the entity
+profile plus that document's own `B_02.01`/`B_05.01` fields, already
+sitting in `extraction_results`. Only `B_01.01` (one form) and optionally
+`B_01.03` (an add-a-branch list) needed genuinely new user input — see
+`Project_Docs/Learnings/Phase_11_Full_RoI_Stage2B/01_overview.md`.
 
-**Not started without real customer signal.** Per the product's own MVP
-discipline (`Project_Docs/Learnings/00_STACK_DECISIONS.md`
-§"solo-founder operability"), building out 8 more tables' worth of
-relational entity/group data speculatively — before knowing whether
-design partners' actual annual filings need real multi-entity groups —
-risks a lot of effort on the wrong 80%. The right trigger is a real
-customer's filing requirement, not a roadmap slide.
+**Deliberately still not built**: real multi-entity groups (a second real
+`B_01.02` row, real `B_02.03`/`B_03.03` intra-group arrangements,
+non-default `B_04.01` branch assignment per contract). Per the product's
+own MVP discipline (`Project_Docs/Learnings/00_STACK_DECISIONS.md`
+§"solo-founder operability"), building genuine group-hierarchy support
+speculatively — before knowing whether a design partner's actual filing
+needs it — risks effort on the wrong 80%. The right trigger is a real
+customer's filing requirement, not a roadmap slide. If that trigger
+arrives, it is scoped to that one gap, not a rebuild — the settings page,
+schema, and export derivation logic here don't need to change to add it.
 
 ## How to say this honestly in different contexts
 
 **On the landing page / to a prospective customer:** "EvidenceOS covers
-the ICT vendor contract layer of the DORA RoI — 61 fields across 6 real
-EBA templates, validated with the real EBA business rules for those
-tables (12 rule types, 42 EBA-sourced checks). The regulator's own bar is
-116 checks across the full 14-table register; we're staged toward that,
-starting with the highest-value layer first." This is true today and
-doesn't promise something not yet built.
+all 14 tables of the DORA RoI — 61 fields extracted from your ICT vendor
+contracts (validated with the real EBA business rules, 12 rule types, 42
+EBA-sourced checks) plus your own organisation's identity, entered once
+in workspace settings. The regulator's own bar is 116 individual data
+quality checks across the full register; our coverage is the structural
+14/14 tables, not yet every one of the 116 checks within them (some are
+technical/reception-layer checks outside what a RoI-drafting tool
+governs at all)." This is true today and doesn't promise something not
+yet built.
 
 **To an investor doing technical diligence:** the numbers above, plus the
-explicit staged plan and its trigger conditions. The differentiator to
-lead with is not "we implement 116 checks" (not true yet) — it's "we
-correctly understood the real regulatory structure and scoped a credible,
-independently-verifiable path to it," which is the harder, more defensible
-thing to demonstrate and exactly what `Phase_4_Validation/CHALLENGES.md`
-C6 and the `Phase_9`/`Phase_10` Full RoI docs document finding and fixing,
-repeatedly.
+staged build history and its trigger conditions for what's still
+deliberately deferred (multi-entity groups). The differentiator to lead
+with is not "we implement 116 checks" (not true, and not even the right
+framing — many of the 116 are file-format/technical checks a drafting
+tool doesn't decide) — it's "we correctly understood the real regulatory
+structure, built a credible, independently-verifiable path through all
+14 tables, and can point to exactly what's still simplified and why,"
+which is the harder, more defensible thing to demonstrate and exactly
+what `Phase_4_Validation/CHALLENGES.md` C6 and the `Phase_9`/`Phase_10`/
+`Phase_11` Full RoI docs document finding and fixing, repeatedly.
 
 **What never to say:** that EvidenceOS runs "116 checks" or is
 "116-check compliant" — it isn't, and a technically-diligent reader on

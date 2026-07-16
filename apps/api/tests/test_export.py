@@ -143,8 +143,15 @@ def test_build_manifest_includes_disclaimer_and_counts() -> None:
             ExcludedDocument("doc-2", "Doc B", "incomplete_review"),
         ],
     )
-    manifest = _build_manifest("Acme Bank", eligibility)
+    manifest = _build_manifest("Acme Bank", eligibility, entity_profile_configured=True)
     assert "Documents included: 1" in manifest
     assert "Documents excluded: 1" in manifest
     assert "Doc B (incomplete_review)" in manifest
     assert "NOT a taxonomy-validated xBRL-CSV filing" in manifest
+    assert "Entity profile not configured" not in manifest
+
+
+def test_build_manifest_notes_missing_entity_profile() -> None:
+    eligibility = ExportEligibility(included=[], excluded=[])
+    manifest = _build_manifest("Acme Bank", eligibility, entity_profile_configured=False)
+    assert "Entity profile not configured" in manifest
