@@ -110,12 +110,12 @@ export default async function ExportPage({ params }: ExportPageProps) {
   const zipFilename = `${workspaceSlug}-roi-draft_${new Date().toISOString().slice(0, 10)}.zip`;
 
   return (
-    <div className="mx-auto max-w-[940px] px-10 py-[34px] pb-20">
+    <div className="mx-auto max-w-[940px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-[22px]">
         <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
           Finish line
         </div>
-        <h1 className="mt-1.5 font-serif text-[28px] font-medium tracking-tight text-fg">
+        <h1 className="mt-1 text-xl font-semibold tracking-tight text-fg">
           Export the Register of Information
         </h1>
       </div>
@@ -135,10 +135,10 @@ export default async function ExportPage({ params }: ExportPageProps) {
               included.length > 0 ? "border-accent-line" : "border-border"
             }`}
           >
-            <div className="grid grid-cols-1 items-center gap-6 p-[26px] sm:grid-cols-[1fr_auto]">
+            <div className="grid grid-cols-1 items-center gap-5 p-5 sm:gap-6 sm:p-[26px] sm:grid-cols-[1fr_auto]">
               <div>
                 <div className="flex items-baseline gap-2.5">
-                  <span className="font-serif text-[44px] leading-none text-success">
+                  <span className="text-[32px] font-bold leading-none text-success">
                     {included.length}
                   </span>
                   <span className="text-[15px] font-medium text-fg">
@@ -170,19 +170,19 @@ export default async function ExportPage({ params }: ExportPageProps) {
               </div>
             </div>
 
-            <div className="border-t border-border-2 bg-surface-2 px-[26px] py-[18px]">
+            <div className="border-t border-border-2 bg-surface-2 px-5 py-[18px] sm:px-[26px]">
               <div className="mb-3 font-mono text-[10px] tracking-[0.1em] text-fg-3 uppercase">
                 What&apos;s inside the download
               </div>
               <div className="flex flex-col gap-1.5">
                 {ZIP_FILES.map((z) => (
-                  <div key={z.name} className="flex items-center gap-3 text-[13px]">
+                  <div key={z.name} className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px]">
                     <span
                       className={`w-11 flex-none rounded text-center font-mono text-[9.5px] ${ZIP_TAG_STYLES[z.kind]}`}
                     >
                       {z.tag}
                     </span>
-                    <span className="font-mono text-fg">{z.name}</span>
+                    <span className="break-all font-mono text-fg">{z.name}</span>
                     <span className="text-xs text-fg-3">{z.desc}</span>
                   </div>
                 ))}

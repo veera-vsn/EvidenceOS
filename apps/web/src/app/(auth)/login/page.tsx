@@ -33,7 +33,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <span className="text-base font-semibold">EvidenceOS</span>
         </Link>
         <div className="max-w-sm">
-          <h2 className="font-serif text-[32px] leading-[1.12] font-medium tracking-tight text-fg">
+          <h2 className="text-2xl leading-[1.2] font-semibold tracking-tight text-fg">
             The DORA Register of Information, extracted, validated, and
             human-approved.
           </h2>
@@ -58,12 +58,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       </div>
 
       {/* right: form */}
-      <div className="flex items-center justify-center px-10 py-10">
+      <div className="flex items-center justify-center px-6 py-8 sm:px-10 sm:py-10">
         <div className="w-full max-w-[380px]">
           <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">
             Welcome back
           </div>
-          <h1 className="mt-2.5 mb-1.5 font-serif text-[30px] font-medium tracking-tight text-fg">
+          <h1 className="mt-2.5 mb-1.5 text-[22px] font-semibold tracking-tight text-fg">
             Sign in to continue
           </h1>
           <p className="mb-6 text-sm text-fg-2">

@@ -63,13 +63,13 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
   });
 
   return (
-    <div className="mx-auto max-w-[1040px] px-10 py-[34px] pb-20">
-      <div className="mb-6 flex items-end justify-between">
+    <div className="mx-auto max-w-[1040px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-2 sm:mb-6">
         <div>
           <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
             Repository
           </div>
-          <h1 className="mt-1.5 font-serif text-[28px] font-medium tracking-tight text-fg">
+          <h1 className="mt-1 text-xl font-semibold tracking-tight text-fg">
             Documents
           </h1>
         </div>
@@ -82,8 +82,8 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
       <UploadZone workspaceId={workspace.id} workspaceSlug={workspaceSlug} />
 
       {docs.length > 0 ? (
-        <div className="mt-8">
-          <div className="grid grid-cols-[1fr_90px_90px_130px_40px] gap-3 border-b border-border-2 px-3.5 pb-2.5 font-mono text-[10.5px] tracking-[0.08em] text-fg-3 uppercase">
+        <div className="mt-6 sm:mt-8">
+          <div className="hidden border-b border-border-2 px-3.5 pb-2.5 font-mono text-[10.5px] tracking-[0.08em] text-fg-3 uppercase sm:grid sm:grid-cols-[1fr_90px_90px_130px_40px] sm:gap-3">
             <span>Document</span>
             <span>Type</span>
             <span>Size</span>
@@ -93,7 +93,7 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
           {docs.map((doc) => (
             <div
               key={doc.id}
-              className="grid grid-cols-[1fr_90px_90px_130px_40px] items-center gap-3 border-b border-border-2 px-3.5 py-3.5"
+              className="flex flex-col gap-1.5 border-b border-border-2 px-3.5 py-3 sm:grid sm:grid-cols-[1fr_90px_90px_130px_40px] sm:items-center sm:gap-3 sm:py-3.5"
             >
               <div className="flex min-w-0 items-center gap-2.5">
                 <span className="flex-none rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-fg-3">
@@ -101,12 +101,16 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
                 </span>
                 <span className="truncate text-[13.5px] font-medium text-fg">{doc.name}</span>
               </div>
-              <span className="text-[12.5px] text-fg-2">{doc.file_type}</span>
-              <span className="font-mono text-[12.5px] text-fg-2">
-                {doc.latest_version?.size_bytes ? formatBytes(doc.latest_version.size_bytes) : "—"}
-              </span>
-              <VersionBadge status={doc.latest_version?.upload_status ?? null} />
-              <DeleteDocumentButton documentId={doc.id} workspaceSlug={workspaceSlug} />
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:contents">
+                <span className="text-[12px] text-fg-2 sm:text-[12.5px]">{doc.file_type}</span>
+                <span className="font-mono text-[12px] text-fg-2 sm:text-[12.5px]">
+                  {doc.latest_version?.size_bytes ? formatBytes(doc.latest_version.size_bytes) : "—"}
+                </span>
+                <VersionBadge status={doc.latest_version?.upload_status ?? null} />
+              </div>
+              <div className="flex justify-end sm:contents">
+                <DeleteDocumentButton documentId={doc.id} workspaceSlug={workspaceSlug} />
+              </div>
             </div>
           ))}
         </div>

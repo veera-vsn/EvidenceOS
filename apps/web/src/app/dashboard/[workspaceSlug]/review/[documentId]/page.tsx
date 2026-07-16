@@ -111,13 +111,13 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
     <div className="mx-auto max-w-[920px]">
       {canReview && <ReviewKeyboardShortcuts fieldCodes={orderedFieldCodes} />}
 
-      <div className="sticky top-0 z-10 border-b border-border-2 bg-bg px-10 pt-[22px] pb-4">
+      <div className="sticky top-0 z-10 border-b border-border-2 bg-bg px-5 pt-4 pb-4 sm:px-10 sm:pt-[22px]">
         <Link href={`/dashboard/${workspaceSlug}/review`} className="text-[12.5px] text-fg-2">
           ← Review queue
         </Link>
         <div className="mt-2.5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="font-serif text-2xl font-medium tracking-tight text-fg">{doc.name}</h1>
+            <h1 className="text-lg font-semibold tracking-tight text-fg">{doc.name}</h1>
             <div className="mt-1 text-[12.5px] text-fg-2">
               <span className="font-semibold text-fg">{progress.reviewedCount}</span> of{" "}
               {progress.totalCount} fields reviewed
@@ -142,13 +142,13 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
         </div>
         <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-border-2">
           <div
-            className="h-full rounded-full bg-success transition-all duration-300"
+            className="h-full rounded-full bg-success transition-[width] duration-150"
             style={{ width: `${progress.percent}%` }}
           />
         </div>
       </div>
 
-      <div className="px-10 pt-6.5 pb-[90px]">
+      <div className="px-5 pt-5 pb-[90px] sm:px-10 sm:pt-6.5">
         {[...DORA_FIELD_GROUPS, OTHER_GROUP].map((group) => {
           const fields = version.extraction_results.filter(
             (f) => groupForFieldCode(f.field_code).code === group.code,

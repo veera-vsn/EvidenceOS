@@ -20,6 +20,7 @@ import { getCurrentWorkspaceRole } from "@/lib/supabase/workspace-role";
 import type { WorkspaceRow } from "@/lib/supabase/database.types";
 
 import { SidebarNav } from "./sidebar-nav";
+import { SidebarShell } from "./sidebar-shell";
 
 interface WorkspaceLayoutProps {
   children: React.ReactNode;
@@ -96,50 +97,50 @@ export default async function WorkspaceLayout({
   const userInitials = userLabel.slice(0, 2).toUpperCase();
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <aside className="flex h-full w-[236px] flex-none flex-col overflow-y-auto border-r border-border-2 bg-surface">
-        <div className="px-[18px] pt-[18px] pb-3.5">
-          <Link href="/dashboard" className="flex items-center gap-2.5 text-fg">
-            <span className="flex h-6 w-6 flex-none items-center justify-center rounded-md bg-accent">
-              <span className="h-[9px] w-[9px] rounded-sm border-2 border-accent-fg" />
+    <div className="flex h-screen flex-col overflow-hidden md:flex-row">
+      <SidebarShell>
+        <div className="px-3.5 pt-3.5 pb-3">
+          <Link href="/dashboard" className="flex items-center gap-2 text-fg">
+            <span className="flex h-5 w-5 flex-none items-center justify-center rounded-md bg-accent">
+              <span className="h-2 w-2 rounded-sm border-2 border-accent-fg" />
             </span>
-            <span className="text-[15px] font-semibold">EvidenceOS</span>
+            <span className="text-[14px] font-semibold">EvidenceOS</span>
           </Link>
         </div>
 
-        <div className="px-3 pt-2 pb-3.5">
-          <div className="flex items-center gap-2.5 rounded-[9px] border border-border bg-surface-2 px-2.5 py-2.5">
-            <span className="flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[7px] bg-accent-soft font-serif text-xs font-semibold text-accent">
+        <div className="px-2.5 pb-3">
+          <div className="flex items-center gap-2 rounded-md border border-border bg-surface-2 px-2 py-2">
+            <span className="flex h-[22px] w-[22px] flex-none items-center justify-center rounded-md bg-accent-soft text-[11px] font-semibold text-accent">
               {workspaceInitial}
             </span>
             <div className="min-w-0">
-              <div className="truncate text-[13px] font-semibold text-fg">{workspace.name}</div>
-              <div className="font-mono text-[10.5px] text-fg-3">{workspace.slug}</div>
+              <div className="truncate text-[12.5px] font-semibold text-fg">{workspace.name}</div>
+              <div className="font-mono text-[10px] text-fg-3">{workspace.slug}</div>
             </div>
           </div>
         </div>
 
         <SidebarNav workspaceSlug={workspaceSlug} reviewQueueCount={reviewQueueCount} />
 
-        <div className="mt-auto flex items-center gap-2.5 border-t border-border-2 px-[18px] py-3.5">
-          <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-accent-soft text-[11px] font-semibold text-accent">
+        <div className="mt-auto flex items-center gap-2 border-t border-border-2 px-3.5 py-3">
+          <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-accent-soft text-[10.5px] font-semibold text-accent">
             {userInitials}
           </span>
           <div className="min-w-0">
-            <div className="truncate text-[12.5px] font-medium text-fg">{userLabel}</div>
-            <div className="text-[11px] capitalize text-fg-3">{role ?? "member"}</div>
+            <div className="truncate text-[12px] font-medium text-fg">{userLabel}</div>
+            <div className="text-[10.5px] capitalize text-fg-3">{role ?? "member"}</div>
           </div>
           <form action={logout} className="ml-auto">
             <button
               type="submit"
-              className="rounded-md border border-border px-2 py-1 text-[11px] text-fg-2 hover:bg-surface-2"
+              className="rounded-md border border-border px-1.5 py-1 text-[10.5px] text-fg-2 hover:bg-surface-2"
               title="Sign out"
             >
               Sign out
             </button>
           </form>
         </div>
-      </aside>
+      </SidebarShell>
 
       <main className="h-full min-w-0 flex-1 overflow-y-auto">{children}</main>
     </div>

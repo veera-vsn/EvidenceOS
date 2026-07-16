@@ -14,21 +14,23 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-bg text-fg">
       {/* top bar */}
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-8 py-[22px]">
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-5 sm:px-8 py-[22px]">
         <div className="flex items-center gap-2.5">
           <span className="flex h-[26px] w-[26px] items-center justify-center rounded-md bg-accent">
             <span className="h-2.5 w-2.5 rounded-sm border-2 border-accent-fg" />
           </span>
           <span className="text-base font-semibold tracking-tight">EvidenceOS</span>
         </div>
-        <nav className="flex items-center gap-7">
-          <a href="#problem" className="text-sm text-fg-2">The problem</a>
-          <a href="#how" className="text-sm text-fg-2">How it works</a>
-          <a href="#trust" className="text-sm text-fg-2">Evidence</a>
+        <nav className="flex items-center gap-4 sm:gap-7">
+          <span className="hidden items-center gap-7 md:flex">
+            <a href="#problem" className="text-sm text-fg-2">The problem</a>
+            <a href="#how" className="text-sm text-fg-2">How it works</a>
+            <a href="#trust" className="text-sm text-fg-2">Evidence</a>
+          </span>
           <Link href="/login" className="text-sm font-medium text-fg">Sign in</Link>
           <Link
             href="/signup"
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-fg"
+            className="rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-fg sm:px-4"
           >
             Get started
           </Link>
@@ -36,13 +38,13 @@ export default function Home() {
       </header>
 
       {/* hero */}
-      <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-8 pt-12 pb-10 lg:grid-cols-[1.15fr_0.85fr]">
+      <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 sm:gap-14 px-5 sm:px-8 pt-12 pb-10 lg:grid-cols-[1.15fr_0.85fr]">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-[11px] py-1.5 font-mono text-[11px] tracking-[0.16em] text-accent uppercase">
             <span className="h-1.5 w-1.5 rounded-full bg-accent" />
             EvidenceOS
           </div>
-          <h1 className="mt-5 font-serif text-4xl leading-[1.04] font-medium tracking-tight text-fg sm:text-[56px]">
+          <h1 className="mt-4 text-3xl leading-[1.1] font-semibold tracking-tight text-fg sm:text-[40px]">
             The AI copilot for the DORA Register of Information
           </h1>
           <p className="mt-[22px] max-w-xl text-lg leading-[1.55] text-fg-2">
@@ -78,15 +80,15 @@ export default function Home() {
         </div>
 
         {/* stat card */}
-        <div className="rounded-2xl border border-border bg-surface p-8 shadow-card">
+        <div className="rounded-2xl border border-border bg-surface p-6 shadow-card sm:p-8">
           <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
             2024 EU-wide dry run · ESAs (EBA/ESMA/EIOPA)
           </div>
           <div className="mt-3.5 flex items-baseline gap-1.5">
-            <span className="font-serif text-[88px] leading-[0.9] font-semibold tracking-tight text-danger">
+            <span className="text-[56px] leading-[0.9] font-bold tracking-tight text-danger">
               93.5
             </span>
-            <span className="font-serif text-4xl font-medium text-danger">%</span>
+            <span className="text-2xl font-semibold text-danger">%</span>
           </div>
           <div className="mt-3.5 text-[15px] leading-normal font-medium text-fg">
             of EU financial firms did not pass every one of the 116 DORA
@@ -116,7 +118,7 @@ export default function Home() {
 
       {/* stats strip */}
       <section className="border-t border-b border-border-2 bg-surface-2">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-10 px-8 py-5 text-[13px] text-fg-2">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-5 py-5 text-[13px] text-fg-2 sm:gap-10 sm:px-5 sm:px-8">
           <span className="font-mono text-[11px] tracking-[0.12em] text-fg-3 uppercase">
             What EvidenceOS covers today
           </span>
@@ -128,9 +130,9 @@ export default function Home() {
       </section>
 
       {/* the problem */}
-      <section id="problem" className="mx-auto max-w-6xl px-8 py-[72px]">
+      <section id="problem" className="mx-auto max-w-6xl px-5 sm:px-8 py-12 sm:py-[72px]">
         <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">The problem</div>
-        <h2 className="mt-3 max-w-2xl font-serif text-4xl leading-[1.1] font-medium tracking-tight text-fg">
+        <h2 className="mt-3 max-w-2xl text-[26px] leading-[1.2] font-semibold tracking-tight text-fg">
           A spreadsheet can&apos;t satisfy 116 machine quality checks.
         </h2>
         <div className="mt-9 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -163,9 +165,9 @@ export default function Home() {
 
       {/* how it works */}
       <section id="how" className="border-t border-b border-border-2 bg-surface-2">
-        <div className="mx-auto max-w-6xl px-8 py-[72px]">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8 py-12 sm:py-[72px]">
           <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">How it works</div>
-          <h2 className="mt-3 mb-10 font-serif text-4xl leading-[1.1] font-medium tracking-tight text-fg">
+          <h2 className="mt-3 mb-10 text-[26px] leading-[1.2] font-semibold tracking-tight text-fg">
             Five steps. The human owns the decisive one.
           </h2>
           <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
@@ -217,10 +219,10 @@ export default function Home() {
       </section>
 
       {/* trust / evidence */}
-      <section id="trust" className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-8 py-[72px] lg:grid-cols-[0.9fr_1.1fr]">
+      <section id="trust" className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 sm:gap-14 px-5 sm:px-8 py-12 sm:py-[72px] lg:grid-cols-[0.9fr_1.1fr]">
         <div>
           <div className="font-mono text-[11px] tracking-[0.16em] text-accent uppercase">Evidence, not assertions</div>
-          <h2 className="mt-3 mb-4 font-serif text-4xl leading-[1.1] font-medium tracking-tight text-fg">
+          <h2 className="mt-3 mb-4 text-[26px] leading-[1.2] font-semibold tracking-tight text-fg">
             Every value traces back to where it came from.
           </h2>
           <p className="text-[15px] leading-[1.6] text-fg-2">
@@ -259,9 +261,9 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section id="cta" className="mx-auto max-w-6xl px-8 pb-20">
-        <div className="rounded-[18px] border border-border bg-surface p-[52px] text-center shadow-card">
-          <h2 className="mx-auto max-w-xl font-serif text-[40px] leading-[1.08] font-medium tracking-tight text-fg">
+      <section id="cta" className="mx-auto max-w-6xl px-5 sm:px-8 pb-20">
+        <div className="rounded-[18px] border border-border bg-surface p-8 text-center shadow-card sm:p-[52px]">
+          <h2 className="mx-auto max-w-xl text-[28px] leading-[1.15] font-semibold tracking-tight text-fg">
             See EvidenceOS on your own contracts.
           </h2>
           <p className="mx-auto mt-4 mb-7 max-w-lg text-base leading-[1.55] text-fg-2">
@@ -281,7 +283,7 @@ export default function Home() {
 
       {/* footer */}
       <footer className="border-t border-border-2">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-8 py-7">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 sm:px-8 py-7">
           <div className="flex items-center gap-2.5">
             <span className="h-5 w-5 rounded-[5px] bg-accent" />
             <span className="text-[13px] text-fg-2">© 2026 EvidenceOS</span>

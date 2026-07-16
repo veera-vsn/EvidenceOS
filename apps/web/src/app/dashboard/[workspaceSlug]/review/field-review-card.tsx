@@ -3,9 +3,13 @@
 /**
  * FieldReviewCard — the only interactive surface on the review detail page.
  *
- * Idle state shows a three-way segmented control (Approve / Edit / Reject).
- * Edit swaps the value for an inline input; Reject reveals a required
- * textarea (Submit is disabled until non-empty — a client-side mirror of
+ * Compact single-row layout: code, label, value, confidence, validation
+ * badges, decision, and the three action buttons all sit on one line
+ * (wrapping only on narrow viewports) — reviewing a 13+ field document no
+ * longer means scrolling past a tall card per field. Idle state shows a
+ * three-way segmented control (Approve / Edit / Reject). Edit swaps the
+ * value for an inline input; Reject expands a required textarea below
+ * the row (Submit is disabled until non-empty — a client-side mirror of
  * the field_reviews.rejected-requires-notes CHECK constraint). All three
  * paths call submitFieldReview inside useTransition, same shape as
  * start-run-form.tsx's inline error handling.
@@ -44,11 +48,11 @@ interface FieldReviewCardProps {
 }
 
 const ACTIVE =
-  "rounded-lg bg-accent px-3.5 py-2 text-[13px] font-semibold text-accent-fg transition hover:opacity-90 disabled:opacity-40";
+  "rounded-md bg-accent px-2 py-1 text-[12px] font-medium text-accent-fg hover:opacity-90 disabled:opacity-40";
 const INACTIVE =
-  "rounded-lg border border-border bg-surface px-3.5 py-2 text-[13px] font-medium text-fg hover:bg-surface-2 disabled:opacity-40";
+  "rounded-md border border-border bg-surface px-2 py-1 text-[12px] text-fg hover:bg-surface-2 disabled:opacity-40";
 const REJECT_INACTIVE =
-  "rounded-lg border border-border bg-surface px-3.5 py-2 text-[13px] font-medium text-danger hover:bg-surface-2 disabled:opacity-40";
+  "rounded-md border border-border bg-surface px-2 py-1 text-[12px] text-danger hover:bg-surface-2 disabled:opacity-40";
 
 export function FieldReviewCard({
   field,
@@ -96,10 +100,9 @@ export function FieldReviewCard({
     <div
       id={`field-${field.field_code}`}
       data-decision={decision ?? "pending"}
-      className={`rounded-[11px] border bg-surface p-4 shadow-card ${
-        mode === "rejecting" ? "border-danger" : "border-border"
-      }`}
+      className="rounded-md border bg-surface px-2.5 py-1.5"
       style={{
+        borderColor: mode === "rejecting" ? "var(--danger)" : "var(--border)",
         borderLeftWidth: 3,
         borderLeftColor:
           decision === "rejected"
@@ -109,22 +112,37 @@ export function FieldReviewCard({
               : "var(--border)",
       }}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="font-mono text-[11px] text-fg-3">{field.field_code}</span>
-            <span className="text-[13.5px] font-semibold text-fg">{field.field_label}</span>
-          </div>
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+        <span className="font-mono text-[10px] text-fg-3">{field.field_code}</span>
+        <span className="text-[12.5px] font-medium whitespace-nowrap text-fg">{field.field_label}</span>
+
+        {mode === "editing" ? (
+          <input
+            className="min-w-[10rem] flex-1 rounded border border-accent bg-surface-2 px-2 py-0.5 text-[12.5px] text-fg outline-none"
+            value={draftValue}
+            onChange={(e) => setDraftValue(e.target.value)}
+            disabled={isPending}
+            autoFocus
+          />
+        ) : displayValue ? (
+          <span className="flex min-w-0 items-baseline gap-1.5 text-[12.5px]">
+            {review?.decision === "edited" && (
+              <span className="font-mono text-[9px] tracking-wide text-success uppercase">edited</span>
+            )}
+            <span className="truncate font-medium text-fg">{displayValue}</span>
+            {review?.decision !== "edited" && <ConfidencePip confidence={field.confidence ?? 0} />}
+          </span>
+        ) : (
+          <span className="text-[12.5px] italic text-fg-3">Not extracted</span>
+        )}
+
+        <ValidationBadges results={validationResults} />
+
+        <span className="ml-auto flex flex-none items-center gap-2">
+          <ReviewDecisionBadge decision={decision} />
 
           {mode === "editing" ? (
-            <div className="mt-2.5 flex items-center gap-2">
-              <input
-                className="flex-1 rounded-lg border border-accent bg-surface-2 px-3 py-2 text-sm text-fg outline-none"
-                value={draftValue}
-                onChange={(e) => setDraftValue(e.target.value)}
-                disabled={isPending}
-                autoFocus
-              />
+            <span className="flex gap-1.5">
               <button
                 className={ACTIVE}
                 disabled={draftValue.trim() === "" || isPending}
@@ -135,50 +153,66 @@ export function FieldReviewCard({
               <button className={INACTIVE} disabled={isPending} onClick={() => setMode("idle")}>
                 Cancel
               </button>
-            </div>
-          ) : displayValue ? (
-            review?.decision === "edited" ? (
-              <div className="mt-2.5">
-                <div className="font-mono text-[9.5px] tracking-wide text-success uppercase">
-                  Corrected value
-                </div>
-                <div className="mt-0.5 text-[15px] font-medium text-fg">{displayValue}</div>
-              </div>
-            ) : (
-              <div className="mt-2.5 flex items-baseline gap-3">
-                <span className="text-[15px] font-medium text-fg">{displayValue}</span>
-                <ConfidencePip confidence={field.confidence ?? 0} />
-              </div>
-            )
+            </span>
           ) : (
-            <span className="mt-2.5 block text-[15px] italic text-fg-3">Not extracted</span>
+            canReview &&
+            mode === "idle" && (
+              <span className="flex gap-1.5">
+                <button
+                  data-field-code={field.field_code}
+                  data-action="approve"
+                  className={decision === "approved" ? ACTIVE : INACTIVE}
+                  disabled={isPending}
+                  onClick={() => submit({ decision: "approved" })}
+                >
+                  ✓
+                </button>
+                <button
+                  data-field-code={field.field_code}
+                  data-action="edit"
+                  className={decision === "edited" ? ACTIVE : INACTIVE}
+                  disabled={isPending}
+                  onClick={() => {
+                    setDraftValue(review?.edited_value ?? field.extracted_value ?? "");
+                    setMode("editing");
+                  }}
+                >
+                  ✎
+                </button>
+                <button
+                  data-field-code={field.field_code}
+                  data-action="reject"
+                  className={decision === "rejected" ? ACTIVE : REJECT_INACTIVE}
+                  disabled={isPending}
+                  onClick={() => setMode("rejecting")}
+                >
+                  ✕
+                </button>
+              </span>
+            )
           )}
-
-          <ValidationBadges results={validationResults} />
-        </div>
-
-        <ReviewDecisionBadge decision={decision} />
+        </span>
       </div>
 
       {mode === "rejecting" && (
-        <div className="mt-3.5 rounded-[9px] border border-danger bg-danger-soft p-3.5">
-          <div className="font-mono text-[9.5px] font-semibold tracking-wide text-danger uppercase">
+        <div className="mt-1.5 rounded border border-danger bg-danger-soft p-2">
+          <div className="font-mono text-[9px] font-semibold tracking-wide text-danger uppercase">
             Rejection reason — required · permanent audit record
           </div>
           <textarea
-            className="mt-2.5 min-h-[72px] w-full resize-y rounded-lg border border-danger bg-surface px-3 py-2.5 text-[13px] leading-relaxed text-fg outline-none"
+            className="mt-1.5 min-h-[52px] w-full resize-y rounded border border-danger bg-surface px-2 py-1.5 text-[12.5px] leading-relaxed text-fg outline-none"
             placeholder="Explain precisely why this value is wrong. An auditor or national regulator may read this later."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             disabled={isPending}
             autoFocus
           />
-          <div className="mt-2.5 flex justify-end gap-2">
+          <div className="mt-1.5 flex justify-end gap-1.5">
             <button className={INACTIVE} disabled={isPending} onClick={() => setMode("idle")}>
               Cancel
             </button>
             <button
-              className="rounded-lg bg-danger px-3.5 py-2 text-[12.5px] font-semibold text-white transition disabled:opacity-40"
+              className="rounded-md bg-danger px-2 py-1 text-[12px] font-medium text-white disabled:opacity-40"
               disabled={notes.trim() === "" || isPending}
               onClick={() => submit({ decision: "rejected", notes: notes.trim() })}
             >
@@ -189,44 +223,9 @@ export function FieldReviewCard({
       )}
 
       {error && (
-        <p role="alert" className="mt-3.5 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-sm">
+        <p role="alert" className="mt-1.5 rounded border border-danger bg-danger-soft px-2 py-1 text-[12px]">
           {error}
         </p>
-      )}
-
-      {canReview && mode === "idle" && (
-        <div className="mt-3.5 flex gap-2 border-t border-border-2 pt-3.5">
-          <button
-            data-field-code={field.field_code}
-            data-action="approve"
-            className={`flex-1 ${decision === "approved" ? ACTIVE : INACTIVE}`}
-            disabled={isPending}
-            onClick={() => submit({ decision: "approved" })}
-          >
-            ✓ Approve
-          </button>
-          <button
-            data-field-code={field.field_code}
-            data-action="edit"
-            className={`flex-1 ${decision === "edited" ? ACTIVE : INACTIVE}`}
-            disabled={isPending}
-            onClick={() => {
-              setDraftValue(review?.edited_value ?? field.extracted_value ?? "");
-              setMode("editing");
-            }}
-          >
-            ✎ Edit
-          </button>
-          <button
-            data-field-code={field.field_code}
-            data-action="reject"
-            className={`flex-1 ${decision === "rejected" ? ACTIVE : REJECT_INACTIVE}`}
-            disabled={isPending}
-            onClick={() => setMode("rejecting")}
-          >
-            ✕ Reject
-          </button>
-        </div>
       )}
     </div>
   );
@@ -235,14 +234,14 @@ export function FieldReviewCard({
 function ReviewDecisionBadge({ decision }: { decision: ReviewDecision | null }) {
   if (!decision) {
     return (
-      <span className="flex-none rounded-full bg-surface-2 px-2.5 py-1 text-[11.5px] font-semibold text-fg-2">
-        Pending review
+      <span className="hidden flex-none rounded-full bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-fg-2 sm:inline-block">
+        Pending
       </span>
     );
   }
   const colour = decision === "rejected" ? "bg-danger-soft text-danger" : "bg-success-soft text-success";
   return (
-    <span className={`inline-flex flex-none items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${colour}`}>
+    <span className={`hidden flex-none items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium sm:inline-flex ${colour}`}>
       <DecisionIcon decision={decision} />
       {reviewDecisionLabel(decision)}
     </span>
@@ -251,7 +250,7 @@ function ReviewDecisionBadge({ decision }: { decision: ReviewDecision | null }) 
 
 function DecisionIcon({ decision }: { decision: ReviewDecision }) {
   const shared = {
-    className: "h-3 w-3",
+    className: "h-2.5 w-2.5",
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
