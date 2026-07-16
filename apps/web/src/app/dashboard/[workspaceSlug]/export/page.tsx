@@ -42,9 +42,10 @@ interface ExportStatusDocument {
 // Mirrors the zip contents built by apps/api/app/pipeline/export.py —
 // keep this list in sync if a filename changes there.
 const ZIP_FILES = [
-  { tag: "CSV", name: "RT_01_01_contractual_arrangements.csv", desc: "— template 1", kind: "template" as const },
-  { tag: "CSV", name: "RT_02_01_ict_third-party_providers.csv", desc: "— template 2", kind: "template" as const },
-  { tag: "CSV", name: "RT_03_01_outsourced_functions.csv", desc: "— template 3", kind: "template" as const },
+  { tag: "CSV", name: "RT_02_01_contractual_arrangements_general_info.csv", desc: "— template 1", kind: "template" as const },
+  { tag: "CSV", name: "RT_02_02_contractual_arrangements_specific_info.csv", desc: "— template 2", kind: "template" as const },
+  { tag: "CSV", name: "RT_05_01_ict_third-party_providers.csv", desc: "— template 3", kind: "template" as const },
+  { tag: "CSV", name: "RT_06_01_functions_identification.csv", desc: "— template 4", kind: "template" as const },
   { tag: "CSV", name: "evidence_audit_trail.csv", desc: "— source, confidence & reviewer per field", kind: "audit" as const },
   { tag: "TXT", name: "disclaimer_manifest.txt", desc: "— draft-status statement", kind: "manifest" as const },
 ];

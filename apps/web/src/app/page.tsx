@@ -26,12 +26,12 @@ export default function Home() {
           <a href="#how" className="text-sm text-fg-2">How it works</a>
           <a href="#trust" className="text-sm text-fg-2">Evidence</a>
           <Link href="/login" className="text-sm font-medium text-fg">Sign in</Link>
-          <a
-            href="#cta"
+          <Link
+            href="/signup"
             className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-fg"
           >
-            Get a demo
-          </a>
+            Get started
+          </Link>
         </nav>
       </header>
 
@@ -62,12 +62,12 @@ export default function Home() {
             <span>Export</span>
           </div>
           <div className="mt-[34px] flex gap-3">
-            <a
-              href="#cta"
+            <Link
+              href="/signup"
               className="rounded-[9px] bg-accent px-[22px] py-3.5 text-[15px] font-medium text-accent-fg"
             >
-              Get a demo
-            </a>
+              Create your account
+            </Link>
             <a
               href="#how"
               className="rounded-[9px] border border-border bg-surface px-[22px] py-3.5 text-[15px] font-medium text-fg"
@@ -80,7 +80,7 @@ export default function Home() {
         {/* stat card */}
         <div className="rounded-2xl border border-border bg-surface p-8 shadow-card">
           <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
-            March 2026 · EBA quality checks
+            2024 EU-wide dry run · ESAs (EBA/ESMA/EIOPA)
           </div>
           <div className="mt-3.5 flex items-baseline gap-1.5">
             <span className="font-serif text-[88px] leading-[0.9] font-semibold tracking-tight text-danger">
@@ -89,8 +89,8 @@ export default function Home() {
             <span className="font-serif text-4xl font-medium text-danger">%</span>
           </div>
           <div className="mt-3.5 text-[15px] leading-normal font-medium text-fg">
-            of EU financial firms failed the DORA Register of Information
-            quality checks.
+            of EU financial firms did not pass every one of the 116 DORA
+            Register of Information data quality checks.
           </div>
           <div className="my-5 h-px bg-border-2" />
           <div className="flex h-2 gap-1.5 overflow-hidden rounded-full">
@@ -101,6 +101,16 @@ export default function Home() {
             <span className="text-danger">93.5% failed</span>
             <span className="text-success">6.5% passed</span>
           </div>
+          <div className="mt-3.5 text-[11px] leading-snug text-fg-3">
+            Source:{" "}
+            <a
+              href="https://www.eba.europa.eu/publications-and-media/press-releases/esas-dry-run-exercise-shows-goal-reporting-registers-information-under-digital-operational"
+              className="underline"
+            >
+              EBA — ESAs&apos; DORA RoI dry run exercise
+            </a>
+            , ~1,000 entities, 2024.
+          </div>
         </div>
       </section>
 
@@ -108,11 +118,11 @@ export default function Home() {
       <section className="border-t border-b border-border-2 bg-surface-2">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-10 px-8 py-5 text-[13px] text-fg-2">
           <span className="font-mono text-[11px] tracking-[0.12em] text-fg-3 uppercase">
-            Built for the RoI itself
+            What EvidenceOS covers today
           </span>
-          <span><strong className="font-semibold text-fg">116</strong> automated quality checks</span>
+          <span><strong className="font-semibold text-fg">7</strong> deterministic rule types</span>
           <span><strong className="font-semibold text-fg">13</strong> DORA fields per contract</span>
-          <span><strong className="font-semibold text-fg">3</strong> regulatory templates (RT.01–03)</span>
+          <span><strong className="font-semibold text-fg">4</strong> regulatory templates</span>
           <span><strong className="font-semibold text-fg">100%</strong> human-approved before export</span>
         </div>
       </section>
@@ -255,24 +265,17 @@ export default function Home() {
             See EvidenceOS on your own contracts.
           </h2>
           <p className="mx-auto mt-4 mb-7 max-w-lg text-base leading-[1.55] text-fg-2">
-            We&apos;re onboarding design partners ahead of the next filing
-            cycle. Book a walkthrough — we&apos;ll run one of your real
-            vendor contracts through the pipeline.
+            Create a free workspace and run your first vendor contract
+            through the pipeline in minutes — no sales call required.
           </p>
-          {/* TODO: wire to a real contact mechanism (mailto, contact form,
-              or booking link) before this page goes live — placeholder
-              anchors only for now. */}
           <div className="flex justify-center gap-3">
-            <a href="#cta" className="rounded-[9px] bg-accent px-6 py-3.5 text-[15px] font-medium text-accent-fg">
-              Get a demo
-            </a>
-            <a href="#cta" className="rounded-[9px] border border-border px-6 py-3.5 text-[15px] font-medium text-fg">
-              Join the waitlist
-            </a>
+            <Link href="/signup" className="rounded-[9px] bg-accent px-6 py-3.5 text-[15px] font-medium text-accent-fg">
+              Create your account
+            </Link>
+            <Link href="/login" className="rounded-[9px] border border-border px-6 py-3.5 text-[15px] font-medium text-fg">
+              Sign in
+            </Link>
           </div>
-          <p className="mt-5 font-mono text-[11px] text-fg-3">
-            No self-serve signup yet · talk to a human first
-          </p>
         </div>
       </section>
 

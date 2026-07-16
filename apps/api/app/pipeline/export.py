@@ -1,9 +1,9 @@
 """Workspace-wide draft xBRL-CSV export (Phase 6).
 
 Builds an in-memory zip containing one CSV per ESMA template
-(RT.01.01/RT.02.01/RT.03.01), an `evidence_audit_trail.csv` source trail, and
-a `disclaimer_manifest.txt` disclaimer -- for every document in a workspace
-whose latest version is both validated and *fully reviewed*.
+(RT.02.01/RT.02.02/RT.05.01/RT.06.01), an `evidence_audit_trail.csv` source
+trail, and a `disclaimer_manifest.txt` disclaimer -- for every document in a
+workspace whose latest version is both validated and *fully reviewed*.
 
 This is a structured draft aid, not a taxonomy-conformant xBRL-CSV filing.
 A real EBA/ESMA XBRL-CSV package needs a licensed DPM/taxonomy artefact and
@@ -45,9 +45,10 @@ DISCLAIMER = (
 )
 
 _GROUP_LABELS: dict[str, str] = {
-    "RT.01.01": "Contractual arrangements",
-    "RT.02.01": "ICT third-party providers",
-    "RT.03.01": "Outsourced functions",
+    "RT.02.01": "Contractual arrangements general info",
+    "RT.02.02": "Contractual arrangements specific info",
+    "RT.05.01": "ICT third-party providers",
+    "RT.06.01": "Functions identification",
 }
 
 
@@ -60,16 +61,16 @@ _GROUP_LABELS: dict[str, str] = {
 class TemplateGroup:
     """One ESMA RoI template, derived from a DORA_FIELDS code prefix."""
 
-    code: str  # "RT.01.01"
-    label: str  # "Contractual arrangements"
-    prefix: str  # "b_01.01"
+    code: str  # "RT.02.01"
+    label: str  # "Contractual arrangements general info"
+    prefix: str  # "b_02.01"
 
 
 def build_template_groups() -> list[TemplateGroup]:
     """Derive ESMA template groups from DORA_FIELDS code prefixes.
 
-    A field code like "b_01.01.0010" has prefix "b_01.01"; the ESMA
-    template code is "RT." + the prefix's numeric portion ("01.01"). This
+    A field code like "b_02.01.0010" has prefix "b_02.01"; the ESMA
+    template code is "RT." + the prefix's numeric portion ("02.01"). This
     is derived from the catalogue rather than hand-copied (as
     dora-field-groups.ts on the web side is) so a new field code is picked
     up automatically instead of requiring two lists to stay in sync.
@@ -235,7 +236,8 @@ def _reviewer_display_names(
 
 
 def _template_csv_name(group: TemplateGroup) -> str:
-    """"RT.01.01" + "Contractual arrangements" -> "RT_01_01_contractual_arrangements.csv"."""
+    """"RT.02.01" + "Contractual arrangements general info" ->
+    "RT_02_01_contractual_arrangements_general_info.csv"."""
     return f"{group.code.replace('.', '_')}_{group.label.lower().replace(' ', '_')}.csv"
 
 

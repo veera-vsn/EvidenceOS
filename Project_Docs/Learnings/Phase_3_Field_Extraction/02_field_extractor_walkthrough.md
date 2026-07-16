@@ -6,7 +6,7 @@ File: `apps/api/app/pipeline/field_extractor.py`
 
 ```python
 DORA_FIELDS: list[dict[str, str]] = [
-    {"code": "b_01.01.0010", "label": "Contractual arrangement reference number", "hint": "…"},
+    {"code": "b_02.01.0010", "label": "Contractual arrangement reference number", "hint": "…"},
     # … 12 more entries
 ]
 ```
@@ -62,7 +62,7 @@ field_lines = "\n".join(
 ```
 
 Each DORA field becomes a bullet line like:  
-`- b_01.01.0030: Start date of contractual arrangement — Date the contract became effective (ISO 8601: YYYY-MM-DD)`
+`- b_02.02.0070: Start date of contractual arrangement — Date the contract became effective (ISO 8601: YYYY-MM-DD)`
 
 This structured format helps GPT-4o-mini map between the output JSON keys and the source document — it sees both the formal code and a human-readable description with a formatting hint.
 
@@ -121,7 +121,7 @@ if code not in known_codes:
     continue
 ```
 
-Any `field_code` not in our catalogue is dropped. The model occasionally invents codes (e.g. `b_01.01.0080`) when it is uncertain. By checking against the known set, we prevent phantom fields from polluting the DB.
+Any `field_code` not in our catalogue is dropped. The model occasionally invents codes (e.g. `b_02.02.9999`) when it is uncertain. By checking against the known set, we prevent phantom fields from polluting the DB.
 
 ### Fill-in loop
 

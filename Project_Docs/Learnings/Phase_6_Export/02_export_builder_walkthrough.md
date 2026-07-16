@@ -12,8 +12,8 @@ def build_template_groups() -> list[TemplateGroup]:
     ...
 ```
 
-Derived from `DORA_FIELDS`' own code prefixes (`"b_01.01.0010".split(".")
-[:2]` joined back gives `"b_01.01"`) rather than hand-copied from the web
+Derived from `DORA_FIELDS`' own code prefixes (`"b_02.01.0010".split(".")
+[:2]` joined back gives `"b_02.01"`) rather than hand-copied from the web
 app's `dora-field-groups.ts`. A new field code with a new prefix is
 picked up automatically here; the TS side still needs its own list
 updated by hand, and `test_build_template_groups_matches_three_esma_templates`

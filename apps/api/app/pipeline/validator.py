@@ -49,17 +49,19 @@ class ValidationResult:
 # REQUIRED_FIELD.
 _OPTIONAL_FIELD_CODES: frozenset[str] = frozenset(
     {
-        "b_01.01.0040",  # End date — indefinite-term contracts have none.
-        "b_02.01.0020",  # LEI — not every provider has one issued yet.
+        "b_02.02.0080",  # End date — indefinite-term contracts have none.
+        "b_05.01.0010",  # LEI — not every provider has one issued yet.
     }
 )
 
-_DATE_FIELD_CODES = ("b_01.01.0030", "b_01.01.0040")
+_DATE_FIELD_CODES = ("b_02.02.0070", "b_02.02.0080")
 _START_DATE_CODE, _END_DATE_CODE = _DATE_FIELD_CODES
-_NOTICE_PERIOD_CODE = "b_01.01.0050"
-_COUNTRY_CODE_FIELDS = ("b_01.01.0070", "b_02.01.0030")
-_LEI_CODE = "b_02.01.0020"
-_CRITICALITY_CODE = "b_03.01.0020"
+# Two separate official fields (financial-entity side, provider side) —
+# EBA table B_02.02 columns 0100/0110, not one combined field.
+_NOTICE_PERIOD_CODES = ("b_02.02.0100", "b_02.02.0110")
+_COUNTRY_CODE_FIELDS = ("b_02.02.0120", "b_05.01.0080")
+_LEI_CODE = "b_05.01.0010"
+_CRITICALITY_CODE = "b_06.01.0050"
 
 _LEI_PATTERN = re.compile(r"^[A-Z0-9]{20}$")
 
@@ -229,44 +231,63 @@ def _check_date_logic(values: Mapping[str, str | None]) -> ValidationResult:
     )
 
 
-def _check_notice_period(values: Mapping[str, str | None]) -> ValidationResult:
-    """NOTICE_PERIOD — termination notice period must be a positive integer."""
-    value = values.get(_NOTICE_PERIOD_CODE)
-    if _is_blank(value):
-        return ValidationResult(
-            field_code=_NOTICE_PERIOD_CODE,
-            rule_id="NOTICE_PERIOD",
-            rule_label="Notice period must be a positive integer",
-            status="skipped",
-            message="No value to validate.",
-        )
+def _check_notice_period(values: Mapping[str, str | None]) -> list[ValidationResult]:
+    """NOTICE_PERIOD — termination notice period must be a positive integer.
 
-    assert value is not None
-    try:
-        days = int(value.strip())
-    except ValueError:
-        return ValidationResult(
-            field_code=_NOTICE_PERIOD_CODE,
-            rule_id="NOTICE_PERIOD",
-            rule_label="Notice period must be a positive integer",
-            status="fail",
-            message=f"'{value}' is not an integer.",
-        )
+    Runs once per side (financial entity, ICT provider) — these are two
+    separate official fields (EBA table B_02.02 columns 0100/0110), not one
+    combined value.
+    """
+    results: list[ValidationResult] = []
+    for code in _NOTICE_PERIOD_CODES:
+        value = values.get(code)
+        if _is_blank(value):
+            results.append(
+                ValidationResult(
+                    field_code=code,
+                    rule_id="NOTICE_PERIOD",
+                    rule_label="Notice period must be a positive integer",
+                    status="skipped",
+                    message="No value to validate.",
+                )
+            )
+            continue
 
-    if days <= 0:
-        return ValidationResult(
-            field_code=_NOTICE_PERIOD_CODE,
-            rule_id="NOTICE_PERIOD",
-            rule_label="Notice period must be a positive integer",
-            status="fail",
-            message=f"Notice period must be positive, got {days}.",
-        )
-    return ValidationResult(
-        field_code=_NOTICE_PERIOD_CODE,
-        rule_id="NOTICE_PERIOD",
-        rule_label="Notice period must be a positive integer",
-        status="pass",
-    )
+        assert value is not None
+        try:
+            days = int(value.strip())
+        except ValueError:
+            results.append(
+                ValidationResult(
+                    field_code=code,
+                    rule_id="NOTICE_PERIOD",
+                    rule_label="Notice period must be a positive integer",
+                    status="fail",
+                    message=f"'{value}' is not an integer.",
+                )
+            )
+            continue
+
+        if days <= 0:
+            results.append(
+                ValidationResult(
+                    field_code=code,
+                    rule_id="NOTICE_PERIOD",
+                    rule_label="Notice period must be a positive integer",
+                    status="fail",
+                    message=f"Notice period must be positive, got {days}.",
+                )
+            )
+        else:
+            results.append(
+                ValidationResult(
+                    field_code=code,
+                    rule_id="NOTICE_PERIOD",
+                    rule_label="Notice period must be a positive integer",
+                    status="pass",
+                )
+            )
+    return results
 
 
 def _check_country_codes(values: Mapping[str, str | None]) -> list[ValidationResult]:
@@ -391,7 +412,7 @@ def validate_fields(values: Mapping[str, str | None]) -> list[ValidationResult]:
     results.extend(_check_required_fields(values))
     results.extend(_check_date_format(values))
     results.append(_check_date_logic(values))
-    results.append(_check_notice_period(values))
+    results.extend(_check_notice_period(values))
     results.extend(_check_country_codes(values))
     results.append(_check_lei_format(values))
     results.append(_check_criticality_value(values))
