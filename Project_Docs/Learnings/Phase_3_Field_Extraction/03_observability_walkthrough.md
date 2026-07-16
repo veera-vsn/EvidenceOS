@@ -71,7 +71,7 @@ Experiment A: chunking for 200-page contracts
   → compare: cost ×3, accuracy ↑?
 
 Experiment B: GPT-4o for critical fields
-  → run gpt-4o on b_03.01.0020 (criticality) only
+  → run gpt-4o on b_06.01.0050 (criticality) only
   → compare: cost ↑ per field, accuracy ↑?
 
 Experiment C: few-shot examples in system prompt

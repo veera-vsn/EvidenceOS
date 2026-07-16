@@ -8,7 +8,7 @@ Every LLM call is fully traced in **Langfuse** (EU region, Frankfurt) with model
 
 ## Why it matters
 
-DORA Article 28(3) requires financial entities to maintain a Register of Information with 116+ structured fields across three ESMA ITS reporting templates (RT.01.01, RT.02.01, RT.03.01). Filling these manually from contract PDFs takes a compliance analyst 4–8 hours per vendor. We reduce that to a first-pass extraction in seconds, with human review for the final call.
+DORA Article 28(3) requires financial entities to maintain a Register of Information spanning 16 EBA DPM tables and checked against 116 EBA/ESMA/EIOPA data quality checks (confirmed real — [2024 ESAs Dry Run](https://www.eba.europa.eu/publications-and-media/press-releases/esas-dry-run-exercise-shows-goal-reporting-registers-information-under-digital-operational), 6.5% of firms passed all of them). We extract the 13 fields spanning 4 of those tables (RT.02.01, RT.02.02, RT.05.01, RT.06.01) covering contractual arrangements and ICT third-party providers — see `Project_Docs/Learnings/Phase_4_Validation/02_full_roi_coverage_roadmap.md` for the rest. Filling these manually from contract PDFs takes a compliance analyst 4–8 hours per vendor. We reduce that to a first-pass extraction in seconds, with human review for the final call.
 
 The **baseline-first** principle is critical: you cannot optimise what you cannot measure. By instrumenting every LLM call before touching the prompt, we know the starting cost, latency, and accuracy — and every future change is an experiment against that baseline.
 

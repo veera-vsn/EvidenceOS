@@ -39,9 +39,10 @@ correctly reviewable.
 
 ```ts
 export const DORA_FIELD_GROUPS: FieldGroup[] = [
-  { code: "RT.01.01", label: "Contractual arrangements", prefix: "b_01.01" },
-  { code: "RT.02.01", label: "ICT third-party providers", prefix: "b_02.01" },
-  { code: "RT.03.01", label: "Outsourced functions", prefix: "b_03.01" },
+  { code: "RT.02.01", label: "Contractual arrangements — general", prefix: "b_02.01" },
+  { code: "RT.02.02", label: "Contractual arrangements — specific", prefix: "b_02.02" },
+  { code: "RT.05.01", label: "ICT third-party providers", prefix: "b_05.01" },
+  { code: "RT.06.01", label: "Functions identification", prefix: "b_06.01" },
 ];
 ```
 

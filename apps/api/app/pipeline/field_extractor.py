@@ -16,8 +16,16 @@ models. The Langfuse dashboard at eu.cloud.langfuse.com shows cost trends,
 latency histograms, and per-field accuracy once human review scores are fed
 back in Phase 5.
 
-DORA field codes follow the ESMA ITS taxonomy — RT.01.01 (contractual
-arrangements), RT.02.01 (ICT TPP register), RT.03.01 (outsourced functions).
+DORA field codes follow the real EBA DPM 4.0 table structure — RT.02.01
+(contractual arrangements, general info), RT.02.02 (contractual
+arrangements, specific info), RT.05.01 (ICT third-party provider
+register), RT.06.01 (functions identification). Verified directly against
+EBA's own "Annotated Table Layout — DORA 4.0" reference and the "Overview
+of the RoI reporting technical checks and validation rules" workbook
+(April 2025) — not RT.01.01/RT.03.01 as an earlier, incorrect version of
+this catalogue assumed. See
+Project_Docs/Learnings/Phase_4_Validation/CHALLENGES.md for what that
+correction involved.
 
 Reference:
   ESMA/EBA/EIOPA Joint ITS on DORA RoI (2024)
@@ -45,73 +53,74 @@ log = structlog.get_logger(__name__)
 # ---------------------------------------------------------------------------
 
 DORA_FIELDS: list[dict[str, str]] = [
-    # RT.01.01 — Contractual arrangements
+    # RT.02.01 — Contractual arrangements, general information (EBA table B_02.01)
     {
-        "code": "b_01.01.0010",
+        "code": "b_02.01.0010",
         "label": "Contractual arrangement reference number",
         "hint": "Unique identifier or reference number for this contract",
     },
+    # RT.02.02 — Contractual arrangements, specific information (EBA table B_02.02)
     {
-        "code": "b_01.01.0020",
+        "code": "b_02.02.0060",
         "label": "Type of ICT services",
         "hint": "Category of ICT services (e.g. cloud, data analytics, software, network)",
     },
     {
-        "code": "b_01.01.0030",
+        "code": "b_02.02.0070",
         "label": "Start date of contractual arrangement",
         "hint": "Date the contract became effective (ISO 8601: YYYY-MM-DD)",
     },
     {
-        "code": "b_01.01.0040",
+        "code": "b_02.02.0080",
         "label": "End date of contractual arrangement",
         "hint": "Date the contract expires or was terminated (ISO 8601 if present)",
     },
     {
-        "code": "b_01.01.0050",
-        "label": "Notice period for termination (days)",
-        "hint": "Number of days notice required to terminate the contract",
+        "code": "b_02.02.0100",
+        "label": "Notice period for termination — financial entity (days)",
+        "hint": "Number of days notice the financial entity must give to terminate the contract",
     },
     {
-        "code": "b_01.01.0060",
-        "label": "Governing law",
-        "hint": "Jurisdiction whose law governs the contract (e.g. English law, Irish law)",
+        "code": "b_02.02.0110",
+        "label": "Notice period for termination — ICT provider (days)",
+        "hint": "Number of days notice the ICT provider must give to terminate the contract",
     },
     {
-        "code": "b_01.01.0070",
+        "code": "b_02.02.0120",
         "label": "Country of governing law",
-        "hint": "ISO 3166-1 alpha-2 country code of the governing law jurisdiction",
+        "hint": "ISO 3166-1 alpha-2 country code of the law governing the contract",
     },
-    # RT.02.01 — ICT third-party service providers
     {
-        "code": "b_02.01.0010",
+        "code": "b_02.02.0170",
+        "label": "Data sensitivity",
+        "hint": "Types of personal or sensitive data processed under this arrangement",
+    },
+    # RT.05.01 — ICT third-party service provider register (EBA table B_05.01)
+    {
+        "code": "b_05.01.0010",
+        "label": "ICT third-party service provider identification code",
+        "hint": "Legal Entity Identifier (20-character alphanumeric code) if present",
+    },
+    {
+        "code": "b_05.01.0050",
         "label": "ICT third-party service provider name",
         "hint": "Legal name of the company providing the ICT service",
     },
     {
-        "code": "b_02.01.0020",
-        "label": "ICT third-party service provider LEI",
-        "hint": "Legal Entity Identifier (20-character alphanumeric code) if present",
-    },
-    {
-        "code": "b_02.01.0030",
+        "code": "b_05.01.0080",
         "label": "Country of registration of ICT provider",
-        "hint": "ISO 3166-1 alpha-2 country code where the ICT provider is registered",
+        "hint": "ISO 3166-1 alpha-2 country code where the ICT provider is headquartered",
     },
-    # RT.03.01 — Functions outsourced
+    # RT.06.01 — Functions identification (EBA table B_06.01)
     {
-        "code": "b_03.01.0010",
+        "code": "b_06.01.0030",
         "label": "Function or service outsourced",
         "hint": "Description of the specific function or business process being outsourced",
     },
     {
-        "code": "b_03.01.0020",
+        "code": "b_06.01.0050",
         "label": "Criticality or importance assessment",
         "hint": "Whether the function is critical or important (yes/no or critical/non-critical)",
-    },
-    {
-        "code": "b_03.01.0030",
-        "label": "Data sensitivity",
-        "hint": "Types of personal or sensitive data processed under this arrangement",
     },
 ]
 

@@ -2,11 +2,14 @@
  * `/dashboard/[workspaceSlug]/review/[documentId]` — per-document review
  * workspace.
  *
- * Shows the document's latest validated version, grouped into the three
- * ESMA template sections, with one FieldReviewCard per DORA field. The
- * only Client Components on this page are the cards themselves (each
- * owns its own approve/edit/reject state) and `ReviewKeyboardShortcuts`,
- * which drives the A/E/R/↓ shortcuts advertised in the header.
+ * Shows the document's latest validated version, grouped into the ESMA
+ * template sections, with one FieldReviewCard per DORA field. Any field
+ * code that doesn't match a current group (e.g. a stale code left over
+ * from a previous catalogue version — see dora-field-groups.ts) renders
+ * under a final "Other" section rather than silently vanishing. The only
+ * Client Components on this page are the cards themselves (each owns its
+ * own approve/edit/reject state) and `ReviewKeyboardShortcuts`, which
+ * drives the A/E/R/↓ shortcuts advertised in the header.
  */
 
 import Link from "next/link";
@@ -20,7 +23,7 @@ import type {
   ValidationResultRow,
 } from "@/lib/supabase/database.types";
 
-import { DORA_FIELD_GROUPS, groupForFieldCode } from "../dora-field-groups";
+import { DORA_FIELD_GROUPS, OTHER_GROUP, groupForFieldCode } from "../dora-field-groups";
 import { computeReviewProgress } from "../review-utils";
 import { FieldReviewCard } from "../field-review-card";
 import { ReviewKeyboardShortcuts } from "../keyboard-shortcuts";
@@ -146,7 +149,7 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
       </div>
 
       <div className="px-10 pt-6.5 pb-[90px]">
-        {DORA_FIELD_GROUPS.map((group) => {
+        {[...DORA_FIELD_GROUPS, OTHER_GROUP].map((group) => {
           const fields = version.extraction_results.filter(
             (f) => groupForFieldCode(f.field_code).code === group.code,
           );
@@ -157,6 +160,11 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
                 <span className="font-mono text-xs font-semibold text-accent">{group.code}</span>
                 <span className="text-sm font-semibold text-fg">{group.label}</span>
                 <span className="text-xs text-fg-3">{fields.length} fields</span>
+                {group.code === "OTHER" && (
+                  <span className="text-xs text-warning">
+                    — from a previous field catalogue version, no longer tracked
+                  </span>
+                )}
               </div>
               <div className="flex flex-col gap-2.5">
                 {fields.map((field) => (

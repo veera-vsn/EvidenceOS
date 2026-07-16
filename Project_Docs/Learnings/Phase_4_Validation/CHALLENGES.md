@@ -33,7 +33,7 @@ special-casing them inside the loop.
 
 **Fix:** Pulled the exemption into a module-level
 `_OPTIONAL_FIELD_CODES: frozenset[str]`, checked once at the top of the
-loop body, rather than scattering `if field_code == "b_01.01.0040"` checks
+loop body, rather than scattering `if field_code == "b_02.02.0080"` checks
 across multiple functions. Every other `_check_*` rule that touches those
 same two fields (`DATE_FORMAT`, `LEI_FORMAT`) independently reports
 `skipped` (not `fail`, not silently omitted) when the value is blank —
@@ -133,3 +133,56 @@ renders, re-read every existing filter and conditional that touches that
 data, not just the new code path. "Missing" is not the same as "nothing to
 show" the moment a rule exists whose job is to flag that something is
 missing.
+
+---
+
+## C6: The field-code catalogue didn't match the real EBA table structure
+
+**What happened:** while researching the landing page's "116 quality
+checks" marketing claim (verifying it against a real source — it turned
+out to be real, the 2024 ESAs Dry Run), a deeper check surfaced that our
+own field codes were wrong. `DORA_FIELDS` used `b_01.01`/`b_02.01`/`b_03.01`
+prefixes, implying our 13 fields lived in EBA DPM tables `B_01.01`
+(contractual arrangements), `B_02.01` (ICT providers), `B_03.01`
+(outsourced functions). Cross-referencing EBA's own "Annotated Table
+Layout — DORA 4.0" (the official column-by-column table definitions)
+showed this was wrong on every count: `B_01.01` is actually "Entity
+maintaining the register of information" (metadata about the *filer*, not
+a contract), and our actual 13 fields are spread across `B_02.01`,
+`B_02.02`, `B_05.01`, and `B_06.01` instead.
+
+**Root cause:** the original catalogue invented a simplified 3-group
+numbering that *looked* plausible (it mirrors the shape of "RT.01/02/03")
+without ever being checked against the real DPM table layout. Nothing in
+the code, tests, or review caught this because every consumer
+(`validator.py`, `export.py`, `dora-field-groups.ts`) derived its grouping
+from the same self-consistent (but wrong) source — internal consistency
+gave false confidence.
+
+**Also found while fixing this:** the official schema splits our single
+"Notice period" field into two real fields (financial-entity side and
+ICT-provider side are tracked separately), and merges our two
+"Governing law" + "Country of governing law" fields into one official
+field (just the country code — no separate free-text field exists).
+
+**Fix:** relabelled all 13 fields to their real `B_02.01`/`B_02.02`/
+`B_05.01`/`B_06.01` codes and columns (verified against EBA's own
+reference workbook, not guessed), split the notice-period field in two,
+dropped the free-text governing-law field. Scope was deliberately limited
+to the mapping correction — the real EBA business validation rules for
+these 4 tables (34 of them) turned out to be mostly multi-column
+mutual-completeness checks against columns we don't extract, so
+implementing them against our narrower subset would have fabricated false
+rigor rather than added real rigor. See
+`02_full_roi_coverage_roadmap.md` for what genuine full coverage would
+require.
+
+**Interview lesson:** internal consistency is not the same as external
+correctness. A field-code scheme that every part of the codebase agrees
+on can still be entirely wrong if nothing ever checked it against the
+authoritative external source — the bug hides exactly where you'd
+normally stop looking, because everything *inside* the system lines up.
+For a compliance product specifically, this is the highest-value place to
+spend verification effort: the parts that face outward, get checked by
+someone who knows the domain (an investor's technical diligence, a
+customer's compliance team), not just the parts covered by unit tests.

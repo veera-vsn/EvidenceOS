@@ -40,7 +40,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
             </div>
             <div className="flex items-center gap-3 text-[13.5px] text-fg-2">
               <span className="h-[7px] w-[7px] flex-none rounded-full bg-success" />
-              116 quality checks run before you export
+              Deterministic checks flag issues before a human ever signs off
             </div>
             <div className="flex items-center gap-3 text-[13.5px] text-fg-2">
               <span className="h-[7px] w-[7px] flex-none rounded-full bg-success" />

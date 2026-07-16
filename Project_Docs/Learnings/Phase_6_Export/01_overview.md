@@ -3,8 +3,11 @@
 ## What we built
 
 A workspace-wide export: one zip containing a CSV per ESMA template
-(RT.01.01/RT.02.01/RT.03.01), an evidence-trail `sources.csv`, and a
-`manifest.txt` disclaimer. Only documents whose latest version is both
+(RT.02.01/RT.02.02/RT.05.01/RT.06.01 — corrected from an earlier,
+incorrect RT.01.01/RT.02.01/RT.03.01 scheme, see
+`Project_Docs/Learnings/Phase_4_Validation/CHALLENGES.md`), an
+evidence-trail `evidence_audit_trail.csv`, and a
+`disclaimer_manifest.txt` disclaimer. Only documents whose latest version is both
 validated and **fully reviewed** are included — every one of the 13
 fields must carry a reviewer decision (approve/edit/reject) before that
 document contributes a row to the export.
@@ -43,7 +46,7 @@ for.
 Documented here so a future phase doesn't have to rediscover this:
 
 - A licensed EBA/ESMA DORA DPM/taxonomy package (the actual concept
-  definitions, not a mnemonic scheme like `b_01.01.0010`).
+  definitions, not a mnemonic scheme like `b_02.01.0010`).
 - An XBRL processor — e.g. **Arelle** — to validate the generated report
   against that taxonomy before it could be called conformant.
 - A real `report.json`/`reportPackage` manifest per the xBRL-CSV

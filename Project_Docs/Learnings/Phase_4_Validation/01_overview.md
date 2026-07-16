@@ -19,10 +19,12 @@ would not reliably produce the same output. Phase 4 is the first piece of
 the pipeline that actually renders a compliance verdict, so it is the piece
 that has to be provably deterministic.
 
-It also closes the loop the March 2026 dry-run exposed: 93.5% of firms
-failed at least one of 116 ESMA quality checks. Phase 4 does not implement
-all 116 yet — it implements 8 checks across the 13 fields we currently
-extract — but it is the scaffold every future rule slots into.
+It also closes the loop the [2024 EU-wide ESAs dry run](https://www.eba.europa.eu/publications-and-media/press-releases/esas-dry-run-exercise-shows-goal-reporting-registers-information-under-digital-operational)
+exposed: only 6.5% of ~1,000 participating firms passed every one of the
+116 real DORA RoI data quality checks. Phase 4 does not implement all 116
+yet — it implements 7 rule types (producing 19 checks across the 13 fields
+we currently extract) — but it is the scaffold every future rule slots
+into.
 
 ## How it fits in the pipeline
 

@@ -21,9 +21,9 @@ as wrong.
 Phase 1  ✅  Upload → Supabase Storage + document_versions row
 Phase 2  ✅  OCR → plain text in document_text table
 Phase 3  ✅  AI extraction → 13 DORA fields in extraction_results table
-Phase 4  →   Validation → run 116 ESMA quality checks (deterministic, no LLM)
-Phase 5  →   Human review UI → approve / edit / reject each field
-Phase 6  →   xBRL-CSV export → the actual regulatory submission file
+Phase 4  ✅  Validation → 7 deterministic rule types, 19 checks/document (no LLM) — our 13-field subset of the regulator's full 116-check RoI validation
+Phase 5  ✅  Human review UI → approve / edit / reject each field
+Phase 6  ✅  xBRL-CSV export (draft) → structured RoI-shaped output, not a taxonomy-conformant filing
 Phase 7  →   RAG + recommendations → deep extraction + "why this field is wrong"
 ```
 
@@ -157,9 +157,10 @@ inside it cleanly.
 | Metric | Value |
 |---|---|
 | DORA fields we extract | 13 (from 3 ESMA ITS templates) |
-| ESMA quality checks (Phase 4) | 116 |
+| Our validation rule types (Phase 4) | 7, producing 19 checks/document over our 13 fields |
+| Full regulatory RoI quality checks (EBA/ESMA/EIOPA, all fields, not just ours) | 116 — [source](https://www.eba.europa.eu/publications-and-media/press-releases/esas-dry-run-exercise-shows-goal-reporting-registers-information-under-digital-operational) |
 | Text truncation limit | 12,000 characters |
 | Cost per extraction (Phase 3) | ~$0.001 |
 | Langfuse trace delay | 3–5 seconds (batching) |
 | EU submission frequency | Annual + quarterly updates |
-| Dry-run pass rate (March 2026) | 6.5% of firms |
+| 2024 EU-wide dry run: firms passing all 116 checks | 6.5% — [source](https://www.eba.europa.eu/publications-and-media/press-releases/esas-dry-run-exercise-shows-goal-reporting-registers-information-under-digital-operational) |

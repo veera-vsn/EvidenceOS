@@ -84,7 +84,7 @@ Updated continuously as phases complete.
 | Knowledge Area | Evidence |
 |---|---|
 | **DORA Regulation (EU 2022/2554)** — Article 28(3) Register of Information requirements | Core product rationale |
-| **ESMA ITS taxonomy** — RT.01.01, RT.02.01, RT.03.01 reporting templates; 116-field structure | `field_extractor.py` DORA_FIELDS catalogue |
+| **EBA DPM 4.0 taxonomy** — RT.02.01/RT.02.02/RT.05.01/RT.06.01 reporting templates; real 116-check regulatory bar (2024 ESAs Dry Run) | `field_extractor.py` DORA_FIELDS catalogue |
 | **xBRL-CSV export format** — the submission format required by NCAs | Target output (Phase 6+) |
 | **GDPR / EU data residency** — why all persistent data must stay in EU regions | Architecture decisions throughout |
 | **ICT third-party risk** — what the DORA RoI is measuring; vendor concentrations; criticality assessment | Domain model, PRD |

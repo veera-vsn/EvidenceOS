@@ -99,7 +99,7 @@ Trace: dora-field-extraction/aws_customer_agreement.pdf
     ├── Model: gpt-4o-mini
     ├── System prompt: "You are a DORA compliance analyst..."
     ├── User prompt: "Document name: aws_customer_agreement.pdf..."
-    └── Response: {"fields": [{"field_code": "b_01.01.0030", ...}]}
+    └── Response: {"fields": [{"field_code": "b_02.02.0070", ...}]}
 ```
 
 **What to check on a bad extraction:**
@@ -162,7 +162,7 @@ Filter by `metadata.experiment` in the Traces tab to compare baseline vs. experi
 |---|---|---|
 | `exp-A-few-shot` | Add 2 example (document→fields) pairs to system prompt | +10% accuracy on dates, -5% cost neutral |
 | `exp-B-chunking` | Split >12k chars into 3 overlapping chunks, merge results | Higher recall on long contracts |
-| `exp-C-gpt4o` | Use `gpt-4o` for critical fields only (b_03.01.0020) | +accuracy on criticality assessment at 10× cost |
+| `exp-C-gpt4o` | Use `gpt-4o` for critical fields only (b_06.01.0050) | +accuracy on criticality assessment at 10× cost |
 | `exp-D-structured-output` | Use OpenAI structured outputs (strict schema) | Eliminate hallucinated field codes |
 
 ### Comparing experiments
