@@ -94,9 +94,25 @@ def revalidate_document_version(document_version_id: str) -> int:
         }
         for r in results
     ]
-    client.table("validation_results").upsert(
-        rows, on_conflict="document_version_id,field_code,rule_id"
+
+    # Delete-then-insert, not upsert. validate_fields()'s rule set has
+    # changed shape twice now (Stage 1 moved several fields from flat
+    # REQUIRED_FIELD to COMPLETENESS_GROUP; Stage 2A added a field whose
+    # code coincidentally matched an old, pre-Phase-4 catalogue entry) --
+    # an upsert only ever adds or updates rows for (field_code, rule_id)
+    # pairs the *current* call returns, so a pair the rule set no longer
+    # produces lingers forever and can resurface with a stale message if
+    # a field code is ever reused. See
+    # Project_Docs/Learnings/Phase_9_Full_RoI_Stage1/CHALLENGES.md C5.
+    # Trades a small amount of atomicity (a crash between the two calls
+    # leaves this document_version's rows momentarily empty, read by the
+    # UI as "not yet validated" -- recoverable by re-running, not data
+    # loss) for guaranteed-correct state on every successful call.
+    client.table("validation_results").delete().eq(
+        "document_version_id", document_version_id
     ).execute()
+    if rows:
+        client.table("validation_results").insert(rows).execute()
 
     log.info("revalidation_completed", document_version_id=document_version_id, rows=len(rows))
     return len(rows)

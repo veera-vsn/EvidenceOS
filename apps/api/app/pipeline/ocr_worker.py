@@ -163,9 +163,17 @@ def run_ocr_for_pipeline(run_id: str) -> None:
                     }
                     for f in fields
                 ]
-                client.table("extraction_results").upsert(
-                    rows, on_conflict="document_version_id,field_code"
+                # Delete-then-insert, not upsert -- DORA_FIELDS has changed
+                # shape across Stages 1/2A/2B; an upsert never removes a row
+                # for a field_code the current catalogue no longer has, so
+                # re-running an older document version left stale rows from
+                # a previous catalogue version sitting alongside the current
+                # ones. See Phase_9_Full_RoI_Stage1/CHALLENGES.md C5.
+                client.table("extraction_results").delete().eq(
+                    "document_version_id", version_id
                 ).execute()
+                if rows:
+                    client.table("extraction_results").insert(rows).execute()
 
                 client.table("pipeline_run_documents").update(
                     {"extraction_status": "completed"}
@@ -211,9 +219,14 @@ def run_ocr_for_pipeline(run_id: str) -> None:
                     }
                     for r in results
                 ]
-                client.table("validation_results").upsert(
-                    rows, on_conflict="document_version_id,field_code,rule_id"
+                # Delete-then-insert -- same reasoning as extraction_results
+                # above, and the same fix applied in revalidate.py's other
+                # validation_results write path.
+                client.table("validation_results").delete().eq(
+                    "document_version_id", version_id
                 ).execute()
+                if rows:
+                    client.table("validation_results").insert(rows).execute()
 
                 client.table("pipeline_run_documents").update(
                     {"validation_status": "completed"}
