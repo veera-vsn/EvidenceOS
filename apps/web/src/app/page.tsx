@@ -122,8 +122,8 @@ export default function Home() {
           <span className="font-mono text-[11px] tracking-[0.12em] text-fg-3 uppercase">
             What EvidenceOS covers today
           </span>
-          <span><strong className="font-semibold text-fg">7</strong> deterministic rule types</span>
-          <span><strong className="font-semibold text-fg">13</strong> DORA fields per contract</span>
+          <span><strong className="font-semibold text-fg">12</strong> deterministic rule types</span>
+          <span><strong className="font-semibold text-fg">44</strong> DORA fields per contract</span>
           <span><strong className="font-semibold text-fg">4</strong> regulatory templates</span>
           <span><strong className="font-semibold text-fg">100%</strong> human-approved before export</span>
         </div>
@@ -235,7 +235,7 @@ export default function Home() {
         </div>
         <div className="rounded-2xl border border-border bg-surface p-[22px] shadow-card">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-xs text-fg-3">b_01.01.0010</span>
+            <span className="font-mono text-xs text-fg-3">b_02.01.0010</span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-[9px] py-1 text-[11px] font-semibold text-success">
               ✓ Approved
             </span>

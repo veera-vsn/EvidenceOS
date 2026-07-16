@@ -260,8 +260,8 @@ def _build_template_csv(group: TemplateGroup, docs: list[ExportableDocument]) ->
 def _build_sources_csv(
     docs: list[ExportableDocument], reviewer_names: Mapping[str, str]
 ) -> str:
-    """One row per (document, field_code) across all 13 fields -- the
-    evidence trail tying every cell to a source document, decision, and
+    """One row per (document, field_code) across every DORA_FIELDS entry --
+    the evidence trail tying every cell to a source document, decision, and
     reviewer identity."""
     out = io.StringIO()
     writer = csv.writer(out)
