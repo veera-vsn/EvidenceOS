@@ -183,11 +183,26 @@ C5-adjacent fix), but a coincidental *code reuse* like this one bypasses
 that safety net because the code is valid again, just carrying a stale
 row.
 
-**Fix:** not applied to the live dev database — the affected rows are
-test artefacts on one heavily-reused document, not a data-integrity risk
-for any document validated for the first time under the current code
-(which is what every real user's document will do). Left as a documented,
-known gap rather than an ad-hoc production-database edit.
+**Fix:** not applied at the time this was written — the affected rows
+were test artefacts on one heavily-reused document, not a data-integrity
+risk for any document validated for the first time under the current
+code. Left as a documented, known gap rather than an ad-hoc
+production-database edit.
+
+**Update (post-Phase 11):** fixed properly rather than left as permanent
+debt. `ocr_worker.py`'s `extraction_results`/`validation_results` writes
+and `revalidate.py`'s `validation_results` write all changed from
+`upsert` to delete-then-insert (delete every row for the
+`document_version_id`, then insert the fresh result set) — see the
+"Lesson" below, option 1. Verified against this exact document: before
+the fix, `extraction_results` had 71 rows (61 current + 10 stale) and
+`validation_results` had 109 (82 current + ~27 stale/duplicated across
+rule changes); re-running the pipeline after the fix brought both down to
+exactly the current, correct counts (61 and 82), and the stale
+`b_02.01.0030`/`REQUIRED_FIELD` row described above is confirmed gone.
+The Review page's `OTHER` group — which existed specifically to catch
+rows like these — is now empty for this document, as it should be for
+any document validated under a single, current catalogue.
 
 **Lesson:** an upsert-only write pattern is fine for a field catalogue
 that only ever grows, but silently accumulates dead rows whenever a rule
