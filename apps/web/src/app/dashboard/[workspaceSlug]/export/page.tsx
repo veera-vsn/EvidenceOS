@@ -46,6 +46,8 @@ const ZIP_FILES = [
   { tag: "CSV", name: "RT_02_02_contractual_arrangements_specific_info.csv", desc: "— template 2", kind: "template" as const },
   { tag: "CSV", name: "RT_05_01_ict_third-party_providers.csv", desc: "— template 3", kind: "template" as const },
   { tag: "CSV", name: "RT_06_01_functions_identification.csv", desc: "— template 4", kind: "template" as const },
+  { tag: "CSV", name: "RT_05_02_ict_service_supply_chains.csv", desc: "— template 5", kind: "template" as const },
+  { tag: "CSV", name: "RT_07_01_assessment_of_ict_services.csv", desc: "— template 6", kind: "template" as const },
   { tag: "CSV", name: "evidence_audit_trail.csv", desc: "— source, confidence & reviewer per field", kind: "audit" as const },
   { tag: "TXT", name: "disclaimer_manifest.txt", desc: "— draft-status statement", kind: "manifest" as const },
 ];

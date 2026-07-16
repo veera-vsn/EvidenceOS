@@ -16,14 +16,20 @@ Reference:
   the earlier hand-approximated rule set with the real EBA DORA validation
   rules, sourced directly from EBA's own validation-rules workbook (filtered
   to the DORA framework: 71 total rules, 58 active, 34 applying to the 4
-  tables this module covers). Most of those 34 resolve into one shape —
-  "if any column in this set is filled, every column in the set must be" —
-  which EBA expresses as N rotated per-column rules but which this module
-  implements once per table as a completeness group
+  original tables this module covers). Most of those 34 resolve into one
+  shape — "if any column in this set is filled, every column in the set
+  must be" — which EBA expresses as N rotated per-column rules but which
+  this module implements once per table as a completeness group
   (see _COMPLETENESS_GROUPS). A few are conditional pairs
   (_CONDITIONAL_PAIRS) or simple value/range checks. Enum "allowed value"
   sets come from EBA's own "List of possible values for all data fields
   with drop downs" workbook, not invented.
+
+  Full RoI Stage 2A (Project_Docs/Learnings/Phase_10_Full_RoI_Stage2A/)
+  added B_05.02 (0 active EBA rules) and B_07.01 (a completeness group
+  plus one conditional rule with more than one trigger value —
+  _CONDITIONAL_PAIRS' if_values is a frozenset of values, not a single
+  value, to accommodate that).
 """
 
 from __future__ import annotations
@@ -70,10 +76,20 @@ _OPTIONAL_FIELD_CODES: frozenset[str] = frozenset(
         "b_02.02.0160",  # Location of data processing — not always disclosed.
         "b_06.01.0040",  # LEI of the financial entity — same reason as above.
         "b_06.01.0010",  # Function identifier — an internal reference, not contract text.
+        # B_05.02 has 0 active EBA business rules (confirmed against the
+        # validation-rules workbook) — every column is optional here.
+        "b_05.02.0020",
+        "b_05.02.0030",
+        "b_05.02.0040",
+        "b_05.02.0050",
+        "b_05.02.0060",
+        "b_05.02.0070",
+        "b_07.01.0020",  # Provider ID code — redundant with the register, same as b_02.02.0030.
+        "b_07.01.0040",  # Type of ICT services — untouched by B_07.01's active rules.
     }
 )
 
-_DATE_FIELD_CODES = ("b_02.02.0070", "b_02.02.0080", "b_06.01.0070")
+_DATE_FIELD_CODES = ("b_02.02.0070", "b_02.02.0080", "b_06.01.0070", "b_07.01.0070")
 _START_DATE_CODE, _END_DATE_CODE = "b_02.02.0070", "b_02.02.0080"
 # Two separate official fields (financial-entity side, provider side) —
 # EBA table B_02.02 columns 0100/0110, not one combined field.
@@ -115,7 +131,55 @@ _NON_NEGATIVE_NUMERIC_CODES = ("b_02.01.0050",)
 # lower-cased for case-insensitive comparison. Warning, not fail, for the
 # same reason as CRITICALITY_VALUE below: these are LLM-extracted free
 # text and a reviewer may accept a phrasing outside the recognised set.
+# EBA's own 19-value "Type of ICT services" enum (workbook sheet B0502),
+# shared verbatim across every field that uses this concept.
+_TYPE_OF_ICT_SERVICES_VALUES: frozenset[str] = frozenset(
+    {
+        "cloud services: saas",
+        "cloud services: paas",
+        "cloud services: iaas",
+        "ict risk management",
+        "ict consulting",
+        "ict operation management (including maintenance)",
+        "software licencing (excluding saas)",
+        "hardware and physical devices",
+        "network infrastructure",
+        "telecom carrier",
+        "non-cloud data storage",
+        "computation",
+        "ict, facilities and hosting services (excluding cloud services)",
+        "data analysis",
+        "provision of data",
+        "ict security management services",
+        "ict help desk and first level support",
+        "ict development",
+        "ict project management",
+    }
+)
+
 _ALLOWED_VALUES: dict[str, frozenset[str]] = {
+    "b_02.02.0060": _TYPE_OF_ICT_SERVICES_VALUES,
+    "b_05.02.0020": _TYPE_OF_ICT_SERVICES_VALUES,
+    "b_07.01.0040": _TYPE_OF_ICT_SERVICES_VALUES,
+    "b_07.01.0050": frozenset(
+        {
+            "easily substitutable",
+            "medium complexity in terms of substitutability",
+            "highly complex substitutability",
+            "not substitutable",
+        }
+    ),
+    "b_07.01.0060": frozenset(
+        {
+            "lack of real alternatives",
+            "difficulties in migrating or reintegrating",
+            "lack of real alternatives and difficulties in migrating or reintegrating",
+        }
+    ),
+    "b_07.01.0080": frozenset({"yes", "no"}),
+    "b_07.01.0090": frozenset({"easy", "difficult", "highly complex", "not applicable"}),
+    "b_07.01.0100": frozenset({"low", "medium", "high", "assessment not performed"}),
+    "b_07.01.0110": frozenset({"yes", "no", "assessment not performed"}),
     "b_02.01.0020": frozenset(
         {
             "standalone arrangement",
@@ -201,16 +265,39 @@ _COMPLETENESS_GROUPS: dict[str, tuple[str, ...]] = {
         "b_06.01.0090",
         "b_06.01.0100",
     ),
+    # Full RoI Stage 2A. B_05.02 has no completeness group (0 active EBA
+    # rules for that table — see _OPTIONAL_FIELD_CODES above).
+    "B_07.01": (
+        "b_07.01.0030",
+        "b_07.01.0050",
+        "b_07.01.0060",
+        "b_07.01.0070",
+        "b_07.01.0080",
+        "b_07.01.0090",
+        "b_07.01.0100",
+        "b_07.01.0110",
+        "b_07.01.0120",
+    ),
 }
 _ALL_GROUPED_CODES: frozenset[str] = frozenset(
     code for codes in _COMPLETENESS_GROUPS.values() for code in codes
 )
 
-# The one clear conditional-pair rule for these 4 tables (v8805_m/v22912_m):
-# if the arrangement type is "subsequent or associated", the overarching
-# arrangement reference number becomes required.
-_CONDITIONAL_PAIRS: tuple[tuple[str, str, str], ...] = (
-    ("b_02.01.0020", "subsequent or associated arrangement", "b_02.01.0030"),
+# Conditional-pair rules: if `if_code`'s value (case-insensitive) is one of
+# `if_values`, `then_code` becomes required. `if_values` is a set rather
+# than a single value because Stage 2A's B_07.01 rule (v8825_m) has two
+# trigger values, not one like Stage 1's B_02.01 rule (v8805_m/v22912_m).
+_CONDITIONAL_PAIRS: tuple[tuple[str, frozenset[str], str], ...] = (
+    (
+        "b_02.01.0020",
+        frozenset({"subsequent or associated arrangement"}),
+        "b_02.01.0030",
+    ),
+    (
+        "b_07.01.0050",
+        frozenset({"not substitutable", "highly complex substitutability"}),
+        "b_07.01.0060",
+    ),
 )
 
 # ISO 3166-1 alpha-2 officially assigned country codes.
@@ -612,9 +699,9 @@ def _check_conditional_pairs(values: Mapping[str, str | None]) -> list[Validatio
     """
     results: list[ValidationResult] = []
     rule_label = "Required because of a related field's value"
-    for if_code, if_value, then_code in _CONDITIONAL_PAIRS:
+    for if_code, if_values, then_code in _CONDITIONAL_PAIRS:
         trigger = values.get(if_code)
-        if _is_blank(trigger) or trigger.strip().lower() != if_value:
+        if _is_blank(trigger) or trigger.strip().lower() not in if_values:
             results.append(
                 ValidationResult(
                     field_code=then_code,
