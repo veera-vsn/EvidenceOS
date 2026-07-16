@@ -31,3 +31,8 @@ export async function getCurrentWorkspaceRole(
 export function canReviewFields(role: WorkspaceRole | null): boolean {
   return role === "reviewer" || role === "admin" || role === "owner";
 }
+
+/** True for roles allowed to write entity_profiles/entity_branches (migration 0010). */
+export function canEditEntityProfile(role: WorkspaceRole | null): boolean {
+  return role === "admin" || role === "owner";
+}

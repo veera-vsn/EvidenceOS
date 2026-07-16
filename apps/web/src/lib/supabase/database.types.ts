@@ -139,6 +139,94 @@ export type Database = {
           },
         ];
       };
+      entity_branches: {
+        Row: {
+          branch_code: string;
+          country: string;
+          created_at: string;
+          id: string;
+          name: string;
+          workspace_id: string;
+        };
+        Insert: {
+          branch_code: string;
+          country: string;
+          created_at?: string;
+          id?: string;
+          name: string;
+          workspace_id: string;
+        };
+        Update: {
+          branch_code?: string;
+          country?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "entity_branches_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      entity_profiles: {
+        Row: {
+          competent_authority: string;
+          country: string;
+          created_at: string;
+          created_by: string;
+          entity_type: string;
+          id: string;
+          lei: string;
+          name: string;
+          total_assets: number | null;
+          total_assets_currency: string | null;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          competent_authority: string;
+          country: string;
+          created_at?: string;
+          created_by: string;
+          entity_type: string;
+          id?: string;
+          lei: string;
+          name: string;
+          total_assets?: number | null;
+          total_assets_currency?: string | null;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          competent_authority?: string;
+          country?: string;
+          created_at?: string;
+          created_by?: string;
+          entity_type?: string;
+          id?: string;
+          lei?: string;
+          name?: string;
+          total_assets?: number | null;
+          total_assets_currency?: string | null;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "entity_profiles_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: true;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       extraction_results: {
         Row: {
           confidence: number | null;
@@ -485,3 +573,5 @@ export type DocumentTextRow        = Database["public"]["Tables"]["document_text
 export type ExtractionResultRow    = Database["public"]["Tables"]["extraction_results"]["Row"];
 export type ValidationResultRow    = Database["public"]["Tables"]["validation_results"]["Row"];
 export type FieldReviewRow         = Database["public"]["Tables"]["field_reviews"]["Row"];
+export type EntityProfileRow       = Database["public"]["Tables"]["entity_profiles"]["Row"];
+export type EntityBranchRow        = Database["public"]["Tables"]["entity_branches"]["Row"];
