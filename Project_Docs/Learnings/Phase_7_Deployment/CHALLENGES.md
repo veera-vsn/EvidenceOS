@@ -147,6 +147,63 @@ directory silently supplies the context that the latter needs an explicit
 setting for. Worth setting Root Directory proactively for any monorepo
 project, rather than waiting for the first git-triggered build to fail.
 
+## C7 — Production env vars didn't exist at all, so the first real production deploy failed the same way the first Preview deploy did
+
+**Symptom:** the user merged `claude` into `main` directly on GitHub
+(their own action). Vercel correctly auto-triggered a **Production**
+build (Production tracks `main`) — and it failed with the exact same
+`Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL` error
+as C4, the very first Preview deploy.
+
+**Root cause:** environment variables were only ever added scoped to
+`preview` (`vercel env add ... preview`), deliberately, back when the
+plan was "stay on `claude`, don't touch `main`." Once the user made the
+independent decision to merge to `main`, nothing had ever populated the
+`production` scope — Preview and Production don't share values on
+Vercel, they're entirely separate variable sets even within the same
+project.
+
+**Fix:** added the same four `NEXT_PUBLIC_*` variables again, this time
+scoped to `production` (`vercel env add ... production`), then
+redeployed. Also updated the EC2 backend's `CORS_ORIGINS` to include the
+new production URL (`https://evidenceos-web.vercel.app`) alongside the
+existing staging one.
+
+**Lesson:** "add the env var" is not a one-time action for a multi-environment
+project — it's per-environment, and the failure mode for forgetting one
+is silent until something actually deploys to that environment. Setting
+Preview and Production env vars together at initial setup (even if
+Production isn't "supposed" to be used yet) would have caught this
+before a real production build failed on it.
+
+## C8 — CLI deploys broke after setting Root Directory: doubled path
+
+**Symptom:** after fixing C6 by setting the project's Root Directory to
+`apps/web`, a later `vercel deploy --prod` run from inside `apps/web`
+failed instantly: `Error: The provided path
+"~\Desktop\DORA_SAAS\EvidenceOS\apps\web\apps\web" does not exist.`
+
+**Root cause:** the CLI combines the Root Directory *project setting*
+with wherever it's actually being run from. Earlier CLI deploys worked
+specifically because they were run from `apps/web` *before* Root
+Directory was set — at that point the setting didn't exist yet, so
+there was nothing to double up. Once Root Directory = `apps/web` was
+saved (needed for GitHub-triggered builds, see C6), the same "run it from
+inside `apps/web`" habit now appends `apps/web` a second time.
+
+**Fix:** copy `apps/web/.vercel/project.json` to a new `.vercel/` folder
+at the repo root (already gitignored there, matching `apps/web`'s own
+`.gitignore` entry), then run `vercel deploy` commands from the repo
+root instead of from `apps/web`.
+
+**Lesson:** a Vercel CLI workflow that "just works" can silently depend
+on exactly where you happen to run it from and exactly what project
+settings exist at that moment — the same command sequence produced two
+different, both-explainable-in-hindsight behaviours purely because a
+project setting changed in between. Worth re-testing your normal deploy
+command after any change to Root Directory / Build settings, not
+assuming it still works the same way.
+
 ## What went right without incident
 
 Worth naming, not just the bumps: Python 3.13 was directly available via

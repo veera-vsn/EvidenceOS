@@ -12,16 +12,18 @@ for day-to-day use afterwards.
 
 | | Local dev | `claude` (staging) | `main` (production) |
 |---|---|---|---|
-| Frontend | `localhost:3000` | `evidenceos-web-git-claude-nani8790s-projects.vercel.app` (stable — same URL every deploy) | not deployed yet |
-| Backend | `localhost:8010` | `https://18.196.98.199.sslip.io` | not deployed yet |
+| Frontend | `localhost:3000` | `evidenceos-web-git-claude-nani8790s-projects.vercel.app` (stable — same URL every deploy) | `https://evidenceos-web.vercel.app` |
+| Backend | `localhost:8010` | `https://18.196.98.199.sslip.io` | **same EC2 box** — no separate production backend exists |
 | Database | same Supabase project for all three — no environment separation yet | | |
-| Deploys how | you run it | **frontend**: automatic on every push to `claude`. **backend**: manual, `apps/api/deploy.sh` | not set up |
+| Deploys how | you run it | **frontend**: automatic on every push to `claude`. **backend**: manual, `apps/api/deploy.sh` | **frontend**: automatic on every push/merge to `main`. **backend**: same manual script, same box, affects both staging and production at once |
 
-That "same Supabase project for all three" is worth remembering: local
-dev, the `claude` staging deploy, and (eventually) production all read
-and write the *same* database today. There's no test/prod data
-separation yet — a real document uploaded on staging is real data in the
-same place your local dev environment sees.
+That "same Supabase project" and "same EC2 box" are both worth
+remembering: local dev, staging, and production right now all read and
+write the *same* database and hit the *same* backend process. There's no
+environment separation yet — a real document uploaded from any of the
+three is real data visible to all of them, and restarting the backend
+(`deploy.sh`, or editing `/etc/evidenceos/api.env`) affects staging and
+production simultaneously since it's one process serving both.
 
 ---
 
@@ -49,36 +51,47 @@ starting fresh.
 **Normal path — just push:**
 
 ```bash
-git push origin claude
+git push origin claude   # -> Preview deployment
+git push origin main     # (or merge a PR) -> Production deployment
 ```
 
-That's it. Vercel is connected to GitHub (`veera-vsn/EvidenceOS`,
-Root Directory = `apps/web`) and auto-builds/deploys every push to
-`claude` as a **Preview** deployment. Watch it build at
-<https://vercel.com/nani8790s-projects/evidenceos-web/deployments>, or
-just wait ~30-60s and hit the stable URL.
+Vercel is connected to GitHub (`veera-vsn/EvidenceOS`, Root Directory =
+`apps/web`) and auto-builds/deploys on every push — `main` goes to
+**Production**, every other branch (including `claude`) goes to
+**Preview**. Watch it build at
+<https://vercel.com/nani8790s-projects/evidenceos-web/deployments>.
+
+**⚠️ `main` is real production now**, not a theoretical future thing —
+it was merged and deployed live during initial setup. Treat pushes/merges
+to `main` accordingly.
 
 **Manual path (if you need a deploy without a git push — e.g. testing an
-uncommitted change):**
+uncommitted change):** run from the **repo root**, not from inside
+`apps/web` — the project's Root Directory setting (`apps/web`) gets
+applied on top of wherever the CLI already is, so running it from inside
+`apps/web` doubles the path and fails with "path does not exist." This
+needs a `.vercel/project.json` at the repo root too (gitignored, matching
+the one already in `apps/web/.vercel/` — copy it there once if it's
+missing).
 
 ```bash
-cd apps/web
-npx vercel deploy          # Preview
-npx vercel deploy --prod   # Production — do NOT run this casually, see warning below
+cd EvidenceOS               # repo root, not apps/web
+npx vercel deploy           # Preview
+npx vercel deploy --prod    # Production — confirm with whoever's asking before running this
 ```
 
-**⚠️ `main`/Production is untouched by design.** Environments →
-Production tracks `main` specifically; `claude` (and any other branch)
-falls under Preview automatically. Don't run `vercel deploy --prod` or
-merge to `main` without deciding to do that on purpose.
-
 **Environment variables** live in the Vercel dashboard (Settings →
-Environment Variables), scoped to Preview only right now. To change one:
+Environment Variables), and must be set **separately for each
+environment** (Preview and Production don't share values — this is what
+broke the first production deploy, see `CHALLENGES.md` C4/C6). To change
+one everywhere it's used:
 
 ```bash
 cd apps/web
 npx vercel env rm NEXT_PUBLIC_API_BASE_URL preview
 echo "https://new-value" | npx vercel env add NEXT_PUBLIC_API_BASE_URL preview
+npx vercel env rm NEXT_PUBLIC_API_BASE_URL production
+echo "https://new-value" | npx vercel env add NEXT_PUBLIC_API_BASE_URL production
 ```
 
 A new deployment is needed to pick up an env var change — it's baked in
@@ -215,6 +228,8 @@ mattering (`git tag deployed-backend-$(date +%Y%m%d) && git push --tags`).
 | Backend code path on server | `/opt/evidenceos-api` |
 | Backend env file on server | `/etc/evidenceos/api.env` |
 | Frontend Preview URL (stable) | `https://evidenceos-web-git-claude-nani8790s-projects.vercel.app` |
+| Frontend Production URL | `https://evidenceos-web.vercel.app` |
 | Vercel project | `nani8790s-projects/evidenceos-web` |
 | Redeploy backend | `cd apps/api && ./deploy.sh` |
-| Redeploy frontend | `git push origin claude` (automatic) |
+| Redeploy frontend (Preview) | `git push origin claude` (automatic) |
+| Redeploy frontend (Production) | `git push origin main` (automatic) |
