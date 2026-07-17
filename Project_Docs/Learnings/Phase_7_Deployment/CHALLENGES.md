@@ -204,6 +204,79 @@ project setting changed in between. Worth re-testing your normal deploy
 command after any change to Root Directory / Build settings, not
 assuming it still works the same way.
 
+## C9 — Hardening `Settings` to fail fast crash-looped the EC2 backend, and `deploy.sh` hid why
+
+**Symptom:** three-part incident, in order:
+
+1. `apps/api/app/core/config.py`'s `Settings` claimed in its own
+   docstring that "a missing required var fails at startup," but every
+   field actually defaulted to `""` — so a missing Supabase/OpenAI/
+   encryption key would only surface later, mid-request, not at boot.
+   Made the load-bearing fields (`supabase_url`,
+   `supabase_service_role_key`, `supabase_anon_key`, `openai_api_key`,
+   `document_encryption_key`) genuinely required, matching the docstring.
+2. Running `./deploy.sh` (which syncs the local working tree, not git —
+   see C1's sibling note in `01_aws_setup_log.md` §8) shipped that change
+   straight to the EC2 box. `sudo systemctl restart evidenceos-api`
+   crash-looped immediately: `journalctl` showed a `pydantic_core.
+   ValidationError: Field required — document_encryption_key`, because
+   `/etc/evidenceos/api.env` (the actual `EnvironmentFile=` the systemd
+   unit reads, separate from the repo's `apps/api/.env`) had never had
+   that key added — the encryption feature's live testing had been done
+   against production Supabase from a local dev server, not through the
+   EC2 box, so this key had simply never been needed there before.
+3. `deploy.sh` itself masked the failure: `sudo systemctl is-active
+   evidenceos-api` exits non-zero for any state other than `active`
+   (e.g. `activating`, which is also what a *crash-looping* service
+   under `Restart=on-failure` reports moments after each failed start),
+   and the script has `set -e`. The script silently stopped right after
+   printing `activating`, never reaching the `curl` health check or any
+   error message — running it twice more produced the same bare
+   `activating` with no explanation, which is what actually prompted
+   investigation.
+
+**Root cause:** all three points above compounded. (1) was a correct fix
+in principle — the previous silently-defaulting `Settings` was itself a
+bug, matching the exact failure shape of C7 and
+`Phase_12_Encryption/CHALLENGES.md` C4. But shipping it without first
+confirming every newly-*required* field already existed in **every**
+place `Settings` gets constructed from — not just `apps/api/.env` used
+locally, but `/etc/evidenceos/api.env` on the actual server — turned a
+correctness fix into a production outage. (2) is why: this repo has two
+independent "env files that both need every var," and nothing keeps them
+in sync automatically. (3) turned a clear, single-line error
+(`journalctl` showed the exact missing field immediately) into a
+confusing "the script just stops" experience, costing three deploy
+attempts before the real cause was found.
+
+**Fix:**
+- Added `DOCUMENT_ENCRYPTION_KEY` to `/etc/evidenceos/api.env` (same
+  value as `apps/api/.env` and the Vercel env var — it must match across
+  all three, since it's a shared AES-256-GCM key, not a per-environment
+  secret). Restarted; `NRestarts` stopped climbing, `/health` returned
+  200, `journalctl` showed a clean `Application startup complete.`
+- Rewrote `deploy.sh`'s health-check step to poll the actual
+  `/health` endpoint (what the script is really trying to verify)
+  instead of gating on `systemctl is-active`'s exit code, and to dump
+  `systemctl is-active` + the last 30 journal lines on failure so the
+  real error is visible immediately instead of a bare script exit.
+
+**Lesson:** a "fail fast on missing config" change is, by definition, a
+change that can take a *currently working* deployment down the moment
+it's shipped somewhere that config was never fully populated — the
+correctness improvement and the deploy risk are the same change. Before
+shipping one, enumerate every place the config is actually loaded from
+in every real environment (not just the one you're sitting in), the same
+"grep the whole codebase, don't trust memory" discipline
+`Phase_12_Encryption/CHALLENGES.md` C1 already established for "which
+readers does this touch." Separately: a deploy script's own health
+check needs to be at least as reliable as the thing it's checking — a
+health check that can itself abort silently on a state it didn't
+anticipate (`activating`) is worse than no health check, because it
+looks like verification happened when it didn't.
+
+---
+
 ## What went right without incident
 
 Worth naming, not just the bumps: Python 3.13 was directly available via

@@ -80,6 +80,39 @@ leaking card-adjacent context into browser history.
 
 ---
 
+## Terms of Service / Privacy Policy consent gate
+
+Phase 12 added the `/terms` and `/privacy` pages (see
+`Phase_12_Encryption/01_overview.md`), but shipped them as standalone
+routes with nothing on `/signup` actually requiring the user to agree to
+either before an account was created — a real gap, found and closed in a
+later pass, not part of the original Phase 12 change.
+
+The fix is a `required` checkbox on the signup form, linking to both
+pages, enforced in two places:
+
+```tsx
+// app/(auth)/signup/page.tsx
+<input type="checkbox" name="accepted_terms" required ... />
+```
+
+```ts
+// app/(auth)/actions.ts — signup()
+if (formData.get("accepted_terms") !== "on") {
+  redirect(`/signup?error=${encodeURIComponent(
+    "You must agree to the Terms of Service and Privacy Policy to create an account.",
+  )}`);
+}
+```
+
+The HTML `required` attribute is a UX nicety, not the actual gate — it's
+trivial to bypass (disable JS, `curl` the Server Action directly), so the
+same check is repeated server-side before `supabase.auth.signUp()` is
+ever called. Same "don't trust the client" principle as `requireField()`
+a few lines below it in the same file.
+
+---
+
 ## Middleware: session refresh, not redirect
 
 `src/middleware.ts` calls `updateSession(request)` on every non-static

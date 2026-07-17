@@ -119,3 +119,39 @@ completeness group is genuinely, correctly satisfied except one
 conditionally-optional field") that sparse real documents never reach.
 Worth treating `nimbus_cloud_msa_v3.pdf` as a standing regression fixture
 for exactly this reason, not just a one-off pipeline smoke test.
+
+---
+
+## C4 — `DOCUMENT_ENCRYPTION_KEY` was never added to Vercel, so Pipeline and Review 500'd in production
+
+**Symptom:** `/dashboard/[workspaceSlug]/pipeline` and the Review page
+both threw `Error: Missing required environment variable:
+DOCUMENT_ENCRYPTION_KEY` in production (caught via Vercel's runtime error
+grouping, not a bug report) — every visit 500'd, since both pages call
+`decryptText()` unconditionally on page load.
+
+**Root cause:** this phase's commit added `DOCUMENT_ENCRYPTION_KEY` to
+`apps/web/.env.local` and `apps/api/.env` for local development and
+testing, but the Vercel dashboard's Production and Preview environment
+variable sets were never updated — the exact same failure shape as
+`Phase_7_Deployment/CHALLENGES.md` C7 (env var added locally, forgotten
+per-environment on Vercel), just recurring for a newer var. Confirmed via
+`get_logs`/`list_tables` against the live Supabase project that the
+Pipeline page's own queries were all returning 200 — the bug was purely
+in the decrypt step after a successful fetch, not the data layer.
+
+**Fix:** `vercel env add DOCUMENT_ENCRYPTION_KEY production` and
+`... preview`, using the same key value already in `apps/api/.env` (it
+has to be the *same* key the backend used to encrypt the existing rows,
+or decryption fails with an auth-tag mismatch — not a new key), then
+redeployed production. Confirmed via `get_runtime_errors` that no new
+occurrences appeared afterward.
+
+**Lesson:** this is the second time this exact failure mode has hit this
+project (see Phase 7 C7) — a env var landing in a local `.env` file is
+not evidence it's anywhere else. Any change that adds a new required env
+var should end with an explicit "is this set in every deploy target"
+check, not just a local smoke test. See
+`Phase_7_Deployment/CHALLENGES.md` C9 for the second half of this
+incident — fixing this side triggered a related, worse outage on the
+EC2 backend.
