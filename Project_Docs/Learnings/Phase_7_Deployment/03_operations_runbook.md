@@ -204,6 +204,17 @@ manually checking. If both monitors ever show anything other than green
 in the UptimeRobot dashboard, treat it as a live incident and start with
 `03_operations_runbook.md`'s "Common problems" section below.
 
+**First real alert, minutes after setup:** the backend monitor fired
+immediately with `405 Method Not Allowed`. UptimeRobot probes with a
+`HEAD` request (to save bandwidth), and `/health` was registered with
+`@router.get(...)` only — FastAPI/Starlette does not auto-add `HEAD`
+support to a `GET`-only route the way some other frameworks do, so every
+monitor check 405'd. Fixed in `app/api/health.py` by registering the
+route with `@router.api_route("/health", methods=["GET", "HEAD"], ...)`
+instead. Worth remembering for any future health/liveness endpoint in
+this codebase: **test it with `curl -I`, not just `curl`**, since GET-only
+is the FastAPI default and most external monitors reach for HEAD first.
+
 ---
 
 ## Common problems and what to check first
