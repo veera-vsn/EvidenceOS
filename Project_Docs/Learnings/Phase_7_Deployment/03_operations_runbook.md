@@ -182,6 +182,41 @@ in a browser.
 
 ---
 
+## External uptime monitoring
+
+Both the frontend and backend are watched by UptimeRobot (free tier,
+account is the founder's own — not wired to any API key in this repo):
+
+| Monitor | URL | Type | Interval | Alert |
+|---|---|---|---|---|
+| Frontend | `https://evidenceos-web.vercel.app` | HTTP(s) | 5 min | email |
+| Backend | `https://18.196.98.199.sslip.io/health` | Keyword: `"status":"ok"` | 5 min | email |
+
+The backend monitor checks for that exact string in the response body,
+not just a 2xx status — a health endpoint that answers but reports
+unhealthy JSON should still page, not pass silently.
+
+**Why this exists:** added after `CHALLENGES.md` C9 — the EC2 backend
+crash-looped in production for a stretch and nothing surfaced it; it was
+only found by chance while debugging something unrelated. Before this,
+there was no way to learn about an outage except a user reporting one or
+manually checking. If both monitors ever show anything other than green
+in the UptimeRobot dashboard, treat it as a live incident and start with
+`03_operations_runbook.md`'s "Common problems" section below.
+
+**First real alert, minutes after setup:** the backend monitor fired
+immediately with `405 Method Not Allowed`. UptimeRobot probes with a
+`HEAD` request (to save bandwidth), and `/health` was registered with
+`@router.get(...)` only — FastAPI/Starlette does not auto-add `HEAD`
+support to a `GET`-only route the way some other frameworks do, so every
+monitor check 405'd. Fixed in `app/api/health.py` by registering the
+route with `@router.api_route("/health", methods=["GET", "HEAD"], ...)`
+instead. Worth remembering for any future health/liveness endpoint in
+this codebase: **test it with `curl -I`, not just `curl`**, since GET-only
+is the FastAPI default and most external monitors reach for HEAD first.
+
+---
+
 ## Common problems and what to check first
 
 **"The frontend deployed but pages 500."**

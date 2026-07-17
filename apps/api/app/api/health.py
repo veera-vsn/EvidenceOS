@@ -35,13 +35,19 @@ class HealthResponse(BaseModel):
 router = APIRouter(tags=["health"])
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.api_route("/health", methods=["GET", "HEAD"], response_model=HealthResponse)
 def health() -> HealthResponse:
     """Return service liveness information.
 
     This handler does not touch the database or any external service.
     A 200 response only proves that the process is up and reachable.
     Readiness (dependency health) is a separate future endpoint.
+
+    Registered for both GET and HEAD -- uptime monitors (UptimeRobot
+    included) commonly probe with HEAD to save bandwidth, and FastAPI/
+    Starlette does not auto-add HEAD support to a GET-only route the way
+    some other frameworks do. A HEAD-only route would 405 every such
+    monitor.
     """
     settings: Settings = get_settings()
     return HealthResponse(
