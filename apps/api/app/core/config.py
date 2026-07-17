@@ -45,14 +45,14 @@ class Settings(BaseSettings):
     )
 
     # --- Supabase (wired Phase 0.5) --------------------------------------
-    supabase_url: str = ""
-    supabase_service_role_key: str = ""  # Backend only — bypasses RLS.
-    supabase_anon_key: str = ""  # Used for user-scoped calls.
+    supabase_url: str
+    supabase_service_role_key: str  # Backend only — bypasses RLS.
+    supabase_anon_key: str  # Used for user-scoped calls.
 
     # --- OpenAI (Phase 3+) ----------------------------------------------
-    openai_api_key: str = ""  # Required for field extraction + RAG.
+    openai_api_key: str  # Required for field extraction + RAG.
 
-    # --- Langfuse (Phase 3+) — LLM observability -----------------------
+    # --- Langfuse (Phase 3+) — LLM observability, optional -------------
     # Keys from https://eu.cloud.langfuse.com (EU region for GDPR).
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     # Base64-encoded 256-bit AES-GCM key, shared with the frontend (see
     # app/core/encryption.py). Generate with:
     #   python -c "import secrets,base64; print(base64.b64encode(secrets.token_bytes(32)).decode())"
-    document_encryption_key: str = ""
+    document_encryption_key: str
 
     # --- Pydantic settings config ----------------------------------------
     model_config = SettingsConfigDict(

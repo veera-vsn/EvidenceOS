@@ -51,6 +51,14 @@ export async function signup(formData: FormData) {
   const password = requireField(formData, "password");
   const displayName = formData.get("display_name");
 
+  if (formData.get("accepted_terms") !== "on") {
+    redirect(
+      `/signup?error=${encodeURIComponent(
+        "You must agree to the Terms of Service and Privacy Policy to create an account.",
+      )}`,
+    );
+  }
+
   const supabase = await createClient();
   const origin = await getSiteOrigin();
 
