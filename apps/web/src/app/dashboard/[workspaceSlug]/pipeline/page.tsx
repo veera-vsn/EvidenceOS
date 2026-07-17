@@ -12,6 +12,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { decryptText } from "@/lib/crypto/document-encryption";
 import type {
   DocumentRow,
   DocumentVersionRow,
@@ -100,6 +101,18 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
         })[];
       })[]
     >();
+
+  // extraction_results.extracted_value is encrypted at rest (see
+  // app/core/encryption.py) -- decrypt before render.
+  for (const run of runs ?? []) {
+    for (const prd of run.pipeline_run_documents ?? []) {
+      const results = prd.document_versions?.extraction_results;
+      if (!results) continue;
+      for (const f of results) {
+        f.extracted_value = decryptText(f.extracted_value);
+      }
+    }
+  }
 
   return (
     <div className="mx-auto max-w-[1120px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">

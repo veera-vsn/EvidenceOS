@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import structlog
 
+from app.core.encryption import encrypt_text
 from app.core.supabase import get_service_client
 from app.pipeline.extractor import extract
 from app.pipeline.field_extractor import ExtractionField, extract_fields
@@ -112,7 +113,12 @@ def run_ocr_for_pipeline(run_id: str) -> None:
             client.table("document_text").upsert(
                 {
                     "document_version_id": version_id,
-                    "content": clean_text,
+                    # Encrypted at the application layer -- see
+                    # app/core/encryption.py. word_count is computed from
+                    # the plaintext above, before encryption, so it stays
+                    # a meaningful figure without needing to decrypt to
+                    # read it.
+                    "content": encrypt_text(clean_text),
                     "word_count": result.word_count,
                     "extractor": result.extractor,
                 },
@@ -157,7 +163,12 @@ def run_ocr_for_pipeline(run_id: str) -> None:
                         "document_version_id": version_id,
                         "field_code": f.field_code,
                         "field_label": f.field_label,
-                        "extracted_value": f.extracted_value,
+                        # Encrypted at rest -- see app/core/encryption.py.
+                        # `fields` (plaintext, in memory) is what
+                        # validation below actually runs against, not
+                        # this DB row, so encrypting the write here has
+                        # no effect on Stage C's correctness.
+                        "extracted_value": encrypt_text(f.extracted_value),
                         "confidence": f.confidence,
                         "extraction_method": f.extraction_method,
                     }

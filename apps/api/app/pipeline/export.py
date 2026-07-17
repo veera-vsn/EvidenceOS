@@ -29,6 +29,7 @@ from datetime import UTC, datetime
 import structlog
 from supabase import Client
 
+from app.core.encryption import decrypt_text
 from app.core.supabase import get_service_client
 from app.pipeline.entity_export import (
     build_b0101_csv,
@@ -197,7 +198,11 @@ def determine_export_eligibility(
                 document_id=doc["id"],
                 document_name=doc["name"],
                 document_version_id=latest["id"],
-                extracted={r["field_code"]: r["extracted_value"] for r in extraction_rows},
+                # extracted_value is encrypted at rest (app/core/encryption.py).
+                extracted={
+                    r["field_code"]: decrypt_text(r["extracted_value"])
+                    for r in extraction_rows
+                },
                 reviews=reviews,
             )
         )

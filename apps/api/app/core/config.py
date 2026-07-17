@@ -58,6 +58,12 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://eu.cloud.langfuse.com"
 
+    # --- Document encryption (Phase 12+) ---------------------------------
+    # Base64-encoded 256-bit AES-GCM key, shared with the frontend (see
+    # app/core/encryption.py). Generate with:
+    #   python -c "import secrets,base64; print(base64.b64encode(secrets.token_bytes(32)).decode())"
+    document_encryption_key: str = ""
+
     # --- Pydantic settings config ----------------------------------------
     model_config = SettingsConfigDict(
         env_file=".env",

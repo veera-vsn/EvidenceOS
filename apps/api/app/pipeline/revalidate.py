@@ -23,6 +23,7 @@ from collections.abc import Mapping
 
 import structlog
 
+from app.core.encryption import decrypt_text
 from app.core.supabase import get_service_client
 from app.pipeline.validator import validate_fields
 
@@ -70,7 +71,12 @@ def revalidate_document_version(document_version_id: str) -> int:
         .eq("document_version_id", document_version_id)
         .execute()
     )
-    extracted = {r["field_code"]: r["extracted_value"] for r in extraction_resp.data or []}
+    # extracted_value is encrypted at rest (app/core/encryption.py) --
+    # decrypt before it enters validate_fields()'s comparisons.
+    extracted = {
+        r["field_code"]: decrypt_text(r["extracted_value"])
+        for r in extraction_resp.data or []
+    }
 
     review_resp = (
         client.table("field_reviews")
