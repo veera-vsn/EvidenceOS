@@ -16,6 +16,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { decryptText } from "@/lib/crypto/document-encryption";
 import { canReviewFields, getCurrentWorkspaceRole } from "@/lib/supabase/workspace-role";
 import type {
   ExtractionResultRow,
@@ -79,6 +80,15 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
     .single<RawDocument>();
 
   if (!doc) redirect(`/dashboard/${workspaceSlug}/review`);
+
+  // extraction_results.extracted_value is encrypted at rest (see
+  // app/core/encryption.py) -- decrypt before anything below reads it.
+  for (const v of doc.document_versions ?? []) {
+    v.extraction_results = v.extraction_results.map((f) => ({
+      ...f,
+      extracted_value: decryptText(f.extracted_value),
+    }));
+  }
 
   const eligible = (doc.document_versions ?? []).filter(
     (v) => v.validation_results.length > 0,

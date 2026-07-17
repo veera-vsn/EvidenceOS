@@ -293,6 +293,10 @@ export default function Home() {
             All data stored and processed in EU regions only — GDPR-aligned,
             no data leaves the EU.
           </div>
+          <div className="flex gap-5 text-[12.5px] text-fg-2">
+            <Link href="/privacy" className="hover:text-fg">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-fg">Terms of Service</Link>
+          </div>
         </div>
       </footer>
     </div>

@@ -76,6 +76,7 @@ Upload  →  OCR  →  AI Extraction  →  Validation  →  Recommend  →  Huma
 | 10 | **Full RoI Stage 2A** — 2 more tables (sub-outsourcing, risk assessment) | ✅ |
 | 11 | **Full RoI Stage 2B** — entity profile, closes all 14 real EBA RoI tables | ✅ |
 | — | **Data-integrity fix** — stale extraction/validation rows on re-run | ✅ |
+| 12 | **Application-layer encryption** — AES-256-GCM on document text + extracted fields, on top of Supabase's disk-level encryption | ✅ |
 | 7 (RAG) | Retrieval-augmented evidence for Review | 🗺️ planned, not started |
 
 77 backend tests passing, `ruff` clean, `mypy`-strict TypeScript (`npx tsc --noEmit` clean). Every phase above shipped with a real end-to-end verification pass (not just unit tests) against the live Supabase project — see [Engineering deep dives](#engineering-deep-dives) for what that caught.
