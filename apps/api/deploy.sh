@@ -25,9 +25,24 @@ ssh -i "$EC2_KEY" "$EC2_HOST" "cd $REMOTE_DIR && .venv/bin/pip install -q -r req
 
 echo "==> Restarting service"
 ssh -i "$EC2_KEY" "$EC2_HOST" "sudo systemctl restart evidenceos-api"
-sleep 2
-ssh -i "$EC2_KEY" "$EC2_HOST" "sudo systemctl is-active evidenceos-api"
 
 echo "==> Verifying health"
-curl -sf "$HEALTH_URL" && echo
-echo "==> Done."
+# `systemctl is-active` exits non-zero for any state but "active" (e.g.
+# "activating" while uvicorn is still binding), which under `set -e`
+# aborted the script right here with no explanation -- see
+# Project_Docs/Learnings/Phase_7_Deployment/CHALLENGES.md C9. Poll the
+# actual health endpoint instead, since that's what we really care about;
+# on failure, dump the service state and recent logs so the real error
+# (e.g. a crash-looping process) is visible immediately.
+for attempt in $(seq 1 10); do
+  if curl -sf "$HEALTH_URL"; then
+    echo
+    echo "==> Done."
+    exit 0
+  fi
+  sleep 1
+done
+
+echo "Health check failed after 10s. Service state and recent logs:" >&2
+ssh -i "$EC2_KEY" "$EC2_HOST" "sudo systemctl is-active evidenceos-api; sudo journalctl -u evidenceos-api -n 30 --no-pager" >&2
+exit 1

@@ -118,8 +118,12 @@ about 15-20 seconds.
 
 **If you change an environment variable** (a new API key, a changed
 `CORS_ORIGINS`, etc.), `deploy.sh` alone won't pick it up — that lives in
-`/etc/evidenceos/api.env` on the server, not in the repo. Edit it
-directly:
+`/etc/evidenceos/api.env` on the server, not in the repo, and is
+completely separate from `apps/api/.env` used locally. Adding a var to
+`apps/api/.env` and forgetting `/etc/evidenceos/api.env` is exactly what
+crash-looped the service in `CHALLENGES.md` C9 — if `apps/api/app/core/
+config.py`'s `Settings` gained a new *required* field, check this file
+has it **before** running `./deploy.sh`, not after. Edit it directly:
 
 ```bash
 ssh -i ~/.ssh/evidenceos-api-key.pem ec2-user@18.196.98.199
@@ -187,7 +191,8 @@ specific deployment (dashboard → the deployment → Logs). If it's a
 `NEXT_PUBLIC_API_BASE_URL` is set correctly and the EC2 backend is
 actually up (`curl` its `/health`).
 
-**"The backend won't start after a redeploy."**
+**"The backend won't start after a redeploy" / `deploy.sh` prints
+`activating` and stops with no further output.**
 ```bash
 ssh -i ~/.ssh/evidenceos-api-key.pem ec2-user@18.196.98.199
 sudo journalctl -u evidenceos-api -n 50
@@ -195,7 +200,15 @@ sudo journalctl -u evidenceos-api -n 50
 Most likely causes: a new dependency in `requirements.txt` that
 `deploy.sh`'s `pip install` step failed on (check for errors in that
 step's output), or a code error on import (missing env var the code now
-requires, syntax error, etc.).
+requires, syntax error, etc.) — this exact scenario crash-looped the
+service in `CHALLENGES.md` C9, where `journalctl` immediately showed the
+real `pydantic` error (`Field required — document_encryption_key`).
+`deploy.sh`'s health check now polls `/health` directly and dumps
+`systemctl is-active` + the last 30 journal lines on failure instead of
+aborting silently on a non-`active` state, so a fresh `./deploy.sh` run
+should surface this itself — but if you're on an older checkout of the
+script, or it still times out without a clear reason, run the two
+commands above by hand.
 
 **"Certbot renewal isn't working."**
 Check for an orphaned `certbot` process holding the lock (see

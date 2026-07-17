@@ -230,6 +230,35 @@ not proof the query is correct** — it could be RLS silently blocking.
 
 ---
 
+## 4. `/signup` created accounts with no ToS/Privacy consent, even after both pages existed
+
+**What happened.** Phase 12 added `/terms` and `/privacy` as real
+pages and linked them from the landing page footer, but nothing on the
+signup form itself required a user to actually agree to either before
+`supabase.auth.signUp()` ran. The pages existing was mistaken for the
+consent requirement being met — they're not the same thing.
+
+**Why it matters.** For a product whose whole premise is DORA/GDPR
+regulatory compliance, creating accounts with no recorded consent to a
+privacy policy is the kind of gap a due-diligence review would flag
+immediately, not a cosmetic UI miss.
+
+**The fix.** A `required` checkbox on `/signup`, linking to both pages,
+enforced both client-side (`required` on the `<input>`, cheap UX) and
+server-side in the `signup` Server Action (the actual gate — see
+`04_auth_pages.md` for the code). No schema change: Supabase Auth's
+`signUp()` call itself is the record that an account was created only
+after the check passed; the checkbox doesn't need its own DB column.
+
+**Interview lesson.** "The legal pages exist" and "users are required to
+agree to them" are two different claims — shipping the first is not
+proof of the second. Worth explicitly checking the actual enforcement
+path (here: the Server Action, not just the form markup) any time a
+consent or compliance requirement is added, the same way Challenge 3
+above shows that a query *returning* isn't proof it's *correct*.
+
+---
+
 ## What did not go wrong
 
 - The triggers. `handle_new_user` and `handle_new_workspace` fired

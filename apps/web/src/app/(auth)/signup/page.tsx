@@ -132,6 +132,26 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
               </span>
             </div>
 
+            <label className="flex items-start gap-2.5 text-[12.5px] leading-relaxed text-fg-2">
+              <input
+                type="checkbox"
+                name="accepted_terms"
+                required
+                className="mt-0.5 h-3.5 w-3.5 flex-none accent-accent"
+              />
+              <span>
+                I agree to the{" "}
+                <Link href="/terms" target="_blank" className="font-medium text-accent underline">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" target="_blank" className="font-medium text-accent underline">
+                  Privacy Policy
+                </Link>
+                .
+              </span>
+            </label>
+
             <button
               type="submit"
               className="mt-0.5 rounded-[9px] bg-accent px-3 py-3 text-sm font-semibold text-accent-fg transition hover:opacity-90"
