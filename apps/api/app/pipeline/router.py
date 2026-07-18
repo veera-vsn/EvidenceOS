@@ -12,21 +12,31 @@ POST /pipeline/documents/{document_version_id}/revalidate
     review edit. Runs synchronously -- the caller awaits it.
 GET /pipeline/workspaces/{workspace_id}/export
     Builds and returns a draft xBRL-CSV zip for every fully-reviewed
-    document in a workspace. Unauthenticated at this layer -- the caller
-    (a Next.js Route Handler) verifies workspace membership first.
+    document in a workspace. Per-workspace membership is verified in
+    Next.js before this is ever called (see export/download/route.ts).
+
+Every route below requires the `X-Internal-Api-Key` shared-secret header
+(see app/core/internal_auth.py) -- this backend is reachable from the
+public internet, so that header, not network position, is the actual
+authentication boundary as of the 2026-07-18 production audit fix.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from pydantic import BaseModel
 
+from app.core.internal_auth import require_internal_api_key
 from app.core.supabase import get_service_client
 from app.pipeline.export import build_export_zip
 from app.pipeline.ocr_worker import run_ocr_for_pipeline
 from app.pipeline.revalidate import revalidate_document_version
 
-router = APIRouter(prefix="/pipeline", tags=["pipeline"])
+router = APIRouter(
+    prefix="/pipeline",
+    tags=["pipeline"],
+    dependencies=[Depends(require_internal_api_key)],
+)
 
 
 class TriggerResponse(BaseModel):
@@ -59,15 +69,22 @@ async def trigger_pipeline_run(
     client = get_service_client()
 
     # Validate the run exists and is queued.
+    # maybe_single(), not single() -- single() raises a postgrest APIError
+    # (PGRST116) for zero rows instead of returning data=None, which would
+    # otherwise skip the not-found check below entirely and surface as an
+    # unhandled 500 instead of the intended 404 (same fix already applied
+    # in export.py's build_export_zip -- found here via the same class of
+    # bug, while testing the 2026-07-18 internal-auth fix against a
+    # nonexistent run_id).
     resp = (
         client.table("pipeline_runs")
         .select("id, status")
         .eq("id", run_id)
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    if not resp.data:
+    if not resp or not resp.data:
         raise HTTPException(status_code=404, detail=f"Pipeline run {run_id!r} not found.")
 
     current_status = resp.data["status"]

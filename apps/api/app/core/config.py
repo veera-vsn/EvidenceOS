@@ -64,6 +64,16 @@ class Settings(BaseSettings):
     #   python -c "import secrets,base64; print(base64.b64encode(secrets.token_bytes(32)).decode())"
     document_encryption_key: str
 
+    # --- Internal API auth (production audit 2026-07-18, S1) -------------
+    # Shared secret required on every /pipeline/* request (see
+    # app/core/internal_auth.py). This backend is reachable from the
+    # public internet (nginx terminates TLS for anyone, not just Vercel),
+    # so "only Next.js calls this" was previously an unenforced assumption,
+    # not an actual control. Generate with:
+    #   python -c "import secrets; print(secrets.token_urlsafe(32))"
+    # Must match apps/web's INTERNAL_API_SECRET exactly.
+    internal_api_secret: str
+
     # --- Pydantic settings config ----------------------------------------
     model_config = SettingsConfigDict(
         env_file=".env",

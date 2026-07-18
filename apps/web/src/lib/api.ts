@@ -9,7 +9,7 @@
  *   - Server-side calls skip Next.js's fetch cache with `no-store` —
  *     we do not want a stale "healthy" pill after the backend dies.
  */
-import { env } from "@/lib/env";
+import { env, requireEnv } from "@/lib/env";
 
 /** Shape returned by GET /health on the FastAPI backend. */
 export interface BackendHealth {
@@ -23,6 +23,28 @@ export interface BackendHealth {
 export type HealthResult =
   | { ok: true; env: string; version: string }
   | { ok: false; reason: string };
+
+/**
+ * Headers required on every server-side call to a `/pipeline/*` FastAPI
+ * route (everything except `/health`, which stays public). The backend
+ * is reachable from the public internet, so this shared secret -- not
+ * "only Next.js calls this" -- is the actual authentication boundary
+ * (2026-07-18 production audit fix, S1). Spread into every such fetch:
+ *
+ *   fetch(url, { method: "POST", headers: internalApiHeaders() })
+ *
+ * Reads INTERNAL_API_SECRET lazily via `requireEnv()`, the same pattern
+ * `document-encryption.ts` uses for DOCUMENT_ENCRYPTION_KEY -- NOT as a
+ * field on the shared `env` object above, which is also imported by
+ * client-side code (e.g. lib/supabase/client.ts). A secret evaluated
+ * eagerly there would be checked in the browser bundle too, where it's
+ * correctly never available -- this function is only ever called from
+ * Server Actions/Route Handlers, so evaluating it here, on call, keeps
+ * the secret out of any client-importable module entirely.
+ */
+export function internalApiHeaders(): HeadersInit {
+  return { "x-internal-api-key": requireEnv("INTERNAL_API_SECRET") };
+}
 
 /**
  * Fetch `/health` from the backend.

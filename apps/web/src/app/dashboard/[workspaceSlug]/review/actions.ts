@@ -15,6 +15,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { env } from "@/lib/env";
+import { internalApiHeaders } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 export type ReviewSubmission =
@@ -53,7 +54,7 @@ export async function submitFieldReview(
   try {
     const res = await fetch(
       `${env.API_BASE_URL}/pipeline/documents/${documentVersionId}/revalidate`,
-      { method: "POST" },
+      { method: "POST", headers: internalApiHeaders() },
     );
     if (!res.ok) {
       return { error: `Review saved, but re-validation failed: ${await res.text()}` };

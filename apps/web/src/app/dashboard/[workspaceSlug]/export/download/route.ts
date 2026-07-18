@@ -6,17 +6,21 @@
  * needs to return raw bytes with Content-Type/Content-Disposition headers
  * to the browser — a Server Action can't do that.
  *
- * Every FastAPI pipeline endpoint is unauthenticated at the HTTP layer and
- * trusts its caller's network position, not the request itself — so this
- * handler is the trust boundary: it verifies the user is signed in and a
- * member of the workspace (the same check `[workspaceSlug]/layout.tsx`
- * already does) *before* calling FastAPI server-to-server. There is no
- * direct browser link to FastAPI anywhere in this app.
+ * This handler is the *authorization* boundary: it verifies the user is
+ * signed in and a member of the workspace (the same check
+ * `[workspaceSlug]/layout.tsx` already does) before calling FastAPI
+ * server-to-server. It is not, on its own, the *authentication* boundary
+ * for the FastAPI call itself -- the backend is reachable from the public
+ * internet, so the shared-secret header from `internalApiHeaders()` is
+ * what actually stops someone from skipping this file and hitting FastAPI
+ * directly (2026-07-18 production audit fix, S1). There is no direct
+ * browser link to FastAPI anywhere in this app.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
 
 import { env } from "@/lib/env";
+import { internalApiHeaders } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 interface RouteParams {
@@ -48,6 +52,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   const apiRes = await fetch(
     `${env.API_BASE_URL}/pipeline/workspaces/${workspace.id}/export`,
+    { headers: internalApiHeaders() },
   );
 
   if (!apiRes.ok) {
