@@ -20,9 +20,34 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  useEffect(() => {
+  // Close on navigation. Deliberately *not* a useEffect: calling setState
+  // unconditionally in an effect body causes an extra render-then-commit
+  // cascade the react-hooks/set-state-in-effect rule now flags as an
+  // error. This is React's own documented pattern for "adjust state when
+  // a prop changes" instead — comparing against the previous render's
+  // value and calling setState directly during render, which React
+  // handles by re-rendering immediately before committing, no flicker.
+  // See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setIsOpen(false);
-  }, [pathname]);
+  }
+
+  // Close on Escape — a real useEffect is the right tool here: it
+  // subscribes to an external system (the document's keydown stream) and
+  // only calls setState from within that callback, not unconditionally
+  // in the effect body itself. Also closes the accessibility gap noted
+  // in Project_Docs/AUDIT_2026-07-18.md — previously the only way to
+  // dismiss the drawer was tapping the overlay or navigating away.
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsOpen(false);
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   return (
     <>
