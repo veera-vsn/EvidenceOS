@@ -67,6 +67,15 @@ happens again, bump to the next free port in both `.env` files and
 restart clean, don't assume a `curl` success means the code you just
 edited is what actually answered.
 
+**`pytest` now needs the local Supabase stack running.** Since
+`tests/test_pipeline_router.py` was added (2026-07-18), the backend test
+suite hits the real `/pipeline/*` HTTP routes against a real database
+via fixtures in `tests/conftest.py` — not mocks — so `npx supabase
+start` must be up before running `pytest`, same as local dev. Every
+fixture cleans up after itself (throwaway `auth.users`/`workspaces`
+rows, deleted at teardown), so the suite is safe to run repeatedly and
+leaves no residue in the local DB.
+
 **First-time-only local setup**, if `supabase/` has no running stack yet:
 
 ```bash
