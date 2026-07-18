@@ -290,8 +290,8 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2 text-[12.5px] text-fg-2">
             <span className="h-[7px] w-[7px] rounded-full bg-success" />
-            All data stored and processed in EU regions only — GDPR-aligned,
-            no data leaves the EU.
+            All persistent data stored in EU regions — GDPR-aligned. Full
+            subprocessor breakdown in our Privacy Policy.
           </div>
           <div className="flex gap-5 text-[12.5px] text-fg-2">
             <Link href="/privacy" className="hover:text-fg">Privacy Policy</Link>
