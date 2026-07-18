@@ -277,6 +277,61 @@ looks like verification happened when it didn't.
 
 ---
 
+## C10 — Local Supabase's replayed migrations don't include the hosted platform's own base grants
+
+**Symptom:** first end-to-end test against a fresh local Supabase stack
+(see `03_operations_runbook.md`'s "Running everything locally") — sign
+up, log in, both worked — then creating a workspace failed with
+`permission denied for table workspaces`, a plain Postgres privilege
+error, not an RLS rejection (RLS denials return zero rows, not an
+error — see `Phase_0.5_Auth_Foundation/CHALLENGES.md` #3 for that
+distinction).
+
+**Root cause:** `information_schema.role_table_grants` showed
+`authenticated` had `TRUNCATE`/`REFERENCES`/`TRIGGER` on
+`public.workspaces` but no `SELECT`/`INSERT`/`UPDATE`/`DELETE` — and the
+same gap existed on every table, for `anon` and `service_role` too. On
+the hosted Supabase platform, a new project is bootstrapped with base
+schema/table grants (`GRANT ... ON ALL TABLES IN SCHEMA public TO anon,
+authenticated, service_role` plus matching `ALTER DEFAULT PRIVILEGES`)
+before any user migration ever runs — this project's migration history
+starts from `0001_workspaces.sql` assuming that groundwork already
+existed, because on the cloud project it did. `supabase start` replays
+only the migrations in `supabase/migrations/`, not the hosted platform's
+own provisioning step, so a fresh local stack gets the tables and RLS
+policies but not the base privileges RLS is layered on top of.
+
+**Fix:** added `supabase/seed.sql`, which the CLI runs once after
+migrations on `start`/`db reset`. Deliberately scoped to tables and
+sequences only:
+
+```sql
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert, update, delete on all tables in schema public to anon, authenticated, service_role;
+grant usage on all sequences in schema public to anon, authenticated, service_role;
+alter default privileges in schema public grant select, insert, update, delete on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant usage on sequences to anon, authenticated, service_role;
+```
+
+Explicitly does **not** touch routines/functions — migrations 0002-0004
+spend real effort revoking Postgres' default `GRANT EXECUTE ... TO
+PUBLIC` on specific SECURITY DEFINER functions and re-granting it only
+to `authenticated` where needed (`Phase_0.5_Auth_Foundation/CHALLENGES.md`
+#1). A blanket routine grant in seed.sql would silently undo that
+hardening every time a local dev resets their database, re-opening
+exactly the vulnerability that phase closed — for a purely local-only
+gain, since the app never calls those functions directly.
+
+**Lesson:** "the migrations reproduce the schema" is not the same claim
+as "the migrations reproduce a *working* database" — anything the hosted
+platform set up for you once, outside your own migration history, is
+invisible until you try to run those migrations somewhere that platform
+never touched. First real signal that this pattern exists: check
+`information_schema.role_table_grants` for the app's roles before
+assuming an unfamiliar "permission denied" is an RLS bug.
+
+---
+
 ## What went right without incident
 
 Worth naming, not just the bumps: Python 3.13 was directly available via

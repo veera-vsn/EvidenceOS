@@ -31,11 +31,15 @@ next-env.d.ts
 
 # ---- Env & secrets ----
 # NEVER commit real .env files. .env.example is the shared template.
+# Wildcard, not just exact names -- catches backups like .env.cloud-backup
+# too (an exact-match-only pattern here almost let one slip through
+# untracked-but-visible during the local-Supabase-dev setup).
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*
 *.pem
 
 # ---- Logs ----

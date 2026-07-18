@@ -13,36 +13,71 @@ for day-to-day use afterwards.
 | | Local dev | `claude` (staging) | `main` (production) |
 |---|---|---|---|
 | Frontend | `localhost:3000` | `evidenceos-web-git-claude-nani8790s-projects.vercel.app` (stable — same URL every deploy) | `https://evidenceos-web.vercel.app` |
-| Backend | `localhost:8010` | `https://18.196.98.199.sslip.io` | **same EC2 box** — no separate production backend exists |
-| Database | same Supabase project for all three — no environment separation yet | | |
+| Backend | `localhost:8012` | `https://18.196.98.199.sslip.io` | **same EC2 box** — no separate production backend exists |
+| Database | **own local Supabase stack** (Docker, via the CLI — see below) | same cloud Supabase project for both | |
 | Deploys how | you run it | **frontend**: automatic on every push to `claude`. **backend**: manual, `apps/api/deploy.sh` | **frontend**: automatic on every push/merge to `main`. **backend**: same manual script, same box, affects both staging and production at once |
 
-That "same Supabase project" and "same EC2 box" are both worth
-remembering: local dev, staging, and production right now all read and
-write the *same* database and hit the *same* backend process. There's no
-environment separation yet — a real document uploaded from any of the
-three is real data visible to all of them, and restarting the backend
-(`deploy.sh`, or editing `/etc/evidenceos/api.env`) affects staging and
-production simultaneously since it's one process serving both.
+Local dev now runs against its **own** database — a local Supabase stack
+started with the CLI, not the cloud project — so local testing can no
+longer touch anything a design partner uploads. Staging and production
+still share one cloud Supabase project and one EC2 box, which remains
+worth remembering: restarting the backend (`deploy.sh`, or editing
+`/etc/evidenceos/api.env`) affects both simultaneously since it's one
+process serving both. Splitting *that* pair is a bigger lift (a second
+backend deployment, not just a database) — deferred until real paid
+usage justifies the cost.
 
 ---
 
 ## Running everything locally
 
 ```bash
+# Terminal 0 — local database (once per reboot; stays up until `supabase stop`)
+npx supabase start   # Docker must be running first. Prints local URLs/keys on first run.
+
 # Terminal 1 — backend
 cd apps/api
 .venv/Scripts/activate      # or source .venv/bin/activate on Mac/Linux
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8010
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8012
 
 # Terminal 2 — frontend
 cd apps/web
 npx next dev --webpack      # --webpack: Turbopack crashes on this Windows setup
 ```
 
-Both read their secrets from `apps/api/.env` and `apps/web/.env.local`
-respectively — never committed, copy from the matching `.env.example` if
-starting fresh.
+Both apps read their secrets from `apps/api/.env` and
+`apps/web/.env.local` respectively — never committed, copy from the
+matching `.env.example` if starting fresh. Since the local-Supabase
+switch, both point at `http://127.0.0.1:54321` with the CLI's local
+demo keys (printed by `supabase start`, also visible any time via
+`npx supabase status`) instead of the cloud project's URL/keys —
+`OPENAI_API_KEY`, `LANGFUSE_*`, and `DOCUMENT_ENCRYPTION_KEY` are
+unaffected and stay as they were (pipeline runs still call the real
+OpenAI API and cost real tokens even though the database is local).
+
+**Port 8012, not 8000/8010:** this machine has a recurring quirk where a
+backend port shows a `LISTENING` PID in `netstat` that doesn't exist in
+the process table (`tasklist` finds nothing) — a phantom listener that
+still answers requests, just with whatever code was loaded when it
+originally started, which can silently be stale. It happened on 8000
+during Phase 6, then again on 8010 during this local-Supabase setup
+(serving pre-encryption code, long after that fix shipped). The fix each
+time has been to move to a fresh port rather than fight it — if this
+happens again, bump to the next free port in both `.env` files and
+restart clean, don't assume a `curl` success means the code you just
+edited is what actually answered.
+
+**First-time-only local setup**, if `supabase/` has no running stack yet:
+
+```bash
+npx supabase init     # only if supabase/config.toml doesn't exist yet
+npx supabase start    # pulls Docker images (~5 min first time), applies
+                       # supabase/migrations/*.sql and supabase/seed.sql
+```
+
+`supabase/seed.sql` is not optional decoration — without it, every table
+403s for the app's `authenticated`/`anon` roles with "permission denied"
+even though RLS policies are correct. See `CHALLENGES.md` C10 for why.
 
 ---
 
