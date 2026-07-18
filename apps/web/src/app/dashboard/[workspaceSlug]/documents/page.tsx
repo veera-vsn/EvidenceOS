@@ -109,7 +109,11 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
                 <VersionBadge status={doc.latest_version?.upload_status ?? null} />
               </div>
               <div className="flex justify-end sm:contents">
-                <DeleteDocumentButton documentId={doc.id} workspaceSlug={workspaceSlug} />
+                <DeleteDocumentButton
+                  documentId={doc.id}
+                  documentName={doc.name}
+                  workspaceSlug={workspaceSlug}
+                />
               </div>
             </div>
           ))}

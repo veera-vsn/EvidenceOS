@@ -6,16 +6,28 @@ import { deleteDocument } from "./actions";
 
 interface DeleteDocumentButtonProps {
   documentId: string;
+  documentName: string;
   workspaceSlug: string;
 }
 
 export function DeleteDocumentButton({
   documentId,
+  documentName,
   workspaceSlug,
 }: DeleteDocumentButtonProps) {
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
+    // A misclick here used to be permanent and irreversible (see
+    // Project_Docs/AUDIT_2026-07-18.md's frontend finding on this
+    // button). The backend now soft-deletes rather than destroying the
+    // row, but a confirmation is still the right first line of defence
+    // -- most users should never need the recovery path at all.
+    const confirmed = window.confirm(
+      `Remove "${documentName}" from this workspace? Its evidence trail (extractions, validations, and reviews) is preserved, but it will no longer appear in Documents, Pipeline, Review, or Export.`,
+    );
+    if (!confirmed) return;
+
     startTransition(async () => {
       await deleteDocument(documentId, workspaceSlug);
     });

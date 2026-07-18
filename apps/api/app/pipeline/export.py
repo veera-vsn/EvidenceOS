@@ -171,6 +171,12 @@ def determine_export_eligibility(
             " )"
         )
         .eq("workspace_id", workspace_id)
+        # deleted_at IS NULL -- this client is service-role and bypasses
+        # RLS, which is what actually filters soft-deleted documents out
+        # for ordinary (user-session) reads. Without this, a document a
+        # user "removed" would still silently appear in their export.
+        # See supabase/migrations/0011_documents_soft_delete.sql.
+        .is_("deleted_at", "null")
         .execute()
     )
 
