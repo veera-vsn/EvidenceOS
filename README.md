@@ -206,7 +206,7 @@ The last stage in the canonical pipeline (`Recommend`, between `Validate` and `R
 - **Real multi-entity/group support** — see [Regulatory coverage](#regulatory-coverage--the-real-numbers) above. Waiting on real customer signal, not a roadmap slide.
 - **EU-only LLM inference** — extraction and (future) embedding calls currently go to OpenAI's standard API, not a guaranteed-EU-only endpoint. A real gap against this project's own EU-data-residency principle; not introduced by any single phase, worth its own resolution pass (Azure OpenAI EU deployment, or OpenAI's enterprise data-residency options).
 - **Taxonomy-conformant XBRL-CSV** — the current export is a structured draft aid, not a filing-ready package validated against the real EBA/ESMA DPM taxonomy. Genuine conformance needs a licensed taxonomy artefact and an XBRL processor (e.g. Arelle) — deliberately out of scope for an MVP; the disclaimer manifest included in every export says so explicitly.
-- **Environment separation** — staging and production currently share one backend process and one Supabase project. See [Deployment](#deployment).
+- **Environment separation (partial)** — local dev now runs its own Supabase stack (Docker), fully isolated. Staging and production still share one backend process and one Supabase project — splitting that pair needs a second backend deployment, deferred until real paid usage justifies it. See [Deployment](#deployment).
 
 ---
 
@@ -225,7 +225,8 @@ EvidenceOS/
 ├── Project_Docs/
 │   ├── (PRD, SDD, schema, roadmap, ...)
 │   └── Learnings/   # Phase-by-phase build log — read this to understand the code
-└── supabase/        # Supabase migrations + config
+└── supabase/        # Migrations, config.toml, seed.sql (local-dev-only
+                        # base grants — see Phase_7_Deployment/CHALLENGES.md C10)
 ```
 
 **Why this layout?** See [`Project_Docs/Learnings/01_MONOREPO_LAYOUT.md`](./Project_Docs/Learnings/01_MONOREPO_LAYOUT.md).
@@ -234,41 +235,50 @@ EvidenceOS/
 
 ## Quick start (local dev)
 
-**Prerequisites:** Node.js 20+, Python 3.13, a Supabase project (EU region).
+**Prerequisites:** Node.js 20+, Python 3.13, Docker Desktop. No cloud Supabase project needed — local dev runs its own Supabase stack (Postgres, Auth, Storage, PostgREST) entirely in Docker, fully isolated from staging/production.
 
 ```bash
-# 1. Clone and copy env templates
+# 1. Clone and copy env templates — the defaults already point at the
+#    local Supabase stack started in step 2, so this works out of the box
 cp apps/web/.env.example apps/web/.env.local
 cp apps/api/.env.example apps/api/.env
 
-# 2. Frontend
+# 2. Local database (once per reboot; stays up until `supabase stop`)
+npx supabase init    # only first time — creates supabase/config.toml
+npx supabase start   # pulls Docker images (~5 min first run), then applies
+                      # supabase/migrations/*.sql and supabase/seed.sql
+
+# 3. Frontend
 cd apps/web
 npm install
 npx next dev --webpack   # http://localhost:3000 — Turbopack (the default) crashes on some Windows setups
 
-# 3. Backend (new terminal)
+# 4. Backend (new terminal)
 cd apps/api
 python -m venv .venv
 .venv\Scripts\activate   # Windows; source .venv/bin/activate on Mac/Linux
 pip install -r requirements.txt
-uvicorn app.main:app --reload   # http://localhost:8000 (or whichever PORT is set in .env)
+uvicorn app.main:app --reload --port 8012   # http://localhost:8012
 ```
 
-**Windows-specific note**: this project has twice hit a Windows TCP-stack issue where a port reports as still listening (owned by a PID that no longer exists in the process table) after stopping `uvicorn` — if a restart fails to bind, move to a fresh port rather than debugging the stale listener; see [`Phase_6_Export/CHALLENGES.md`](./Project_Docs/Learnings/Phase_6_Export/CHALLENGES.md) C3.
+`OPENAI_API_KEY`, `LANGFUSE_*`, and `DOCUMENT_ENCRYPTION_KEY` in `apps/api/.env` still need real values (generate the encryption key with the one-liner in `.env.example`) — only the Supabase URL/keys are pre-filled with the local stack's fixed demo values.
 
-Full setup walkthrough: [`Project_Docs/Learnings/Phase_0_Setup/`](./Project_Docs/Learnings/Phase_0_Setup/). Day-to-day operations (redeploying, checking logs, troubleshooting): [`Project_Docs/Learnings/Phase_7_Deployment/03_operations_runbook.md`](./Project_Docs/Learnings/Phase_7_Deployment/03_operations_runbook.md).
+**Windows-specific note**: this project has repeatedly hit a Windows TCP-stack issue where a port reports as still listening (owned by a PID that no longer exists in the process table) after stopping a server — the code that answers can be silently stale. If a restart fails to bind, or `curl` succeeds but a fix you just made doesn't seem to apply, move to a fresh port rather than debugging the stale listener; see [`Phase_6_Export/CHALLENGES.md`](./Project_Docs/Learnings/Phase_6_Export/CHALLENGES.md) C3 and [`Phase_7_Deployment/CHALLENGES.md`](./Project_Docs/Learnings/Phase_7_Deployment/CHALLENGES.md) C10.
+
+Full setup walkthrough: [`Project_Docs/Learnings/Phase_0_Setup/`](./Project_Docs/Learnings/Phase_0_Setup/). Day-to-day operations (redeploying, checking logs, troubleshooting, the full local/staging/production breakdown): [`Project_Docs/Learnings/Phase_7_Deployment/03_operations_runbook.md`](./Project_Docs/Learnings/Phase_7_Deployment/03_operations_runbook.md).
 
 ---
 
 ## Deployment
 
-| | URL | Deploys on |
-|---|---|---|
-| Staging frontend | `evidenceos-web-git-claude-*.vercel.app` | every push to `claude` (automatic) |
-| Production frontend | `evidenceos-web.vercel.app` | every push/merge to `main` (automatic) |
-| Backend (shared by both, for now) | AWS EC2, `eu-central-1` | manual — `apps/api/deploy.sh` |
+| | Local dev | Staging (`claude`) | Production (`main`) |
+|---|---|---|---|
+| Frontend | `localhost:3000` | `evidenceos-web-git-claude-*.vercel.app` (automatic on push) | `evidenceos-web.vercel.app` (automatic on push/merge) |
+| Backend | `localhost:8012` | `18.196.98.199.sslip.io` (AWS EC2, `eu-central-1`) | **same EC2 box as staging** — manual redeploy, `apps/api/deploy.sh` |
+| Database | **own local Supabase stack** (Docker) — fully isolated | same cloud Supabase project as production | same cloud Supabase project as staging |
+| Monitoring | — | UptimeRobot (frontend + backend `/health`, 5 min interval) | same monitors cover both |
 
-Staging and production currently share one backend process and one Supabase project — there's no environment data separation yet. Full setup log, a plain-language glossary of every AWS/nginx/systemd term involved, every bug hit along the way, and a day-to-day operations runbook: [`Project_Docs/Learnings/Phase_7_Deployment/`](./Project_Docs/Learnings/Phase_7_Deployment/).
+Local dev is fully isolated from the other two — a bug in local testing can no longer touch real data. Staging and production still intentionally share one cloud Supabase project and one EC2 backend process; splitting that pair is a bigger lift (a second backend deployment, not just a database) and is deferred until real paid usage justifies the cost. Full setup log, a plain-language glossary of every AWS/nginx/systemd term involved, every bug hit along the way (including *why* local dev is separated but staging/production aren't yet), and a day-to-day operations runbook: [`Project_Docs/Learnings/Phase_7_Deployment/`](./Project_Docs/Learnings/Phase_7_Deployment/).
 
 ---
 
