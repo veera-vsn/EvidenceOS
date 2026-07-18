@@ -105,6 +105,8 @@ export type Database = {
         Row: {
           created_at: string;
           created_by: string;
+          deleted_at: string | null;
+          deleted_by: string | null;
           file_type: Database["public"]["Enums"]["document_type"];
           id: string;
           name: string;
@@ -114,6 +116,8 @@ export type Database = {
         Insert: {
           created_at?: string;
           created_by: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
           file_type: Database["public"]["Enums"]["document_type"];
           id?: string;
           name: string;
@@ -123,6 +127,8 @@ export type Database = {
         Update: {
           created_at?: string;
           created_by?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
           file_type?: Database["public"]["Enums"]["document_type"];
           id?: string;
           name?: string;
@@ -531,6 +537,10 @@ export type Database = {
       is_workspace_member: {
         Args: { target_workspace_id: string };
         Returns: boolean;
+      };
+      soft_delete_document: {
+        Args: { target_document_id: string };
+        Returns: undefined;
       };
     };
     Enums: {

@@ -129,14 +129,35 @@ export async function failUpload(
 }
 
 /**
- * Delete a document and all associated data.
+ * Soft-delete a document.
  *
- * Order of operations:
- *   1. Fetch all version storage paths so we can remove the files.
- *   2. Delete Storage objects (best-effort — DB delete proceeds even if
- *      Storage removal partially fails; orphaned files are harmless).
- *   3. Delete the documents row — cascades to document_versions,
- *      pipeline_run_documents, document_text, and extraction_results.
+ * Calls the soft_delete_document() RPC rather than a plain client-side
+ * `.update({ deleted_at: ... })` — PostgreSQL requires an UPDATE's
+ * resulting row to also satisfy the table's SELECT policy, and
+ * documents_select_member excludes rows where deleted_at is set, so a
+ * direct client update can never succeed for anyone, including an owner
+ * (it fails "new row violates row-level security policy" the instant
+ * deleted_at stops being null). The RPC is SECURITY DEFINER and performs
+ * the write as the table owner, which bypasses that check — see the
+ * function's own comment in
+ * supabase/migrations/0011_documents_soft_delete.sql for the full
+ * explanation and precedent.
+ *
+ * Not a real DELETE — see Project_Docs/AUDIT_2026-07-18.md D1. Every FK
+ * from documents used `on delete cascade`, so a real delete destroyed
+ * document_versions, extraction_results, validation_results, and
+ * field_reviews — the human review sign-off trail this product exists to
+ * preserve — permanently and irrecoverably. RLS now excludes
+ * deleted_at-set rows from every ordinary read, so the document
+ * disappears from the app exactly as before; only the underlying
+ * evidence is actually kept. Storage objects (the source PDF/DOCX/etc.)
+ * are deliberately left in place too, for the same reason — the source
+ * document is itself evidence.
+ *
+ * The database enforces who may do this (owner/admin only, via the
+ * `enforce_document_soft_delete_permission()` trigger the RPC's UPDATE
+ * still fires), not just this action — a member without that role gets a
+ * Postgres error, not a UI-only restriction.
  */
 export async function deleteDocument(
   documentId: string,
@@ -149,22 +170,9 @@ export async function deleteDocument(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Fetch storage paths for all versions of this document.
-  const { data: versions } = await supabase
-    .from("document_versions")
-    .select("storage_path")
-    .eq("document_id", documentId);
-
-  const paths = (versions ?? []).map((v) => v.storage_path).filter(Boolean);
-
-  if (paths.length > 0) {
-    await supabase.storage.from("documents").remove(paths);
-  }
-
-  const { error } = await supabase
-    .from("documents")
-    .delete()
-    .eq("id", documentId);
+  const { error } = await supabase.rpc("soft_delete_document", {
+    target_document_id: documentId,
+  });
 
   if (error) return { error: error.message };
 

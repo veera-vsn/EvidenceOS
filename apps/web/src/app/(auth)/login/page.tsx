@@ -48,7 +48,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </div>
             <div className="flex items-center gap-3 text-[13.5px] text-fg-2">
               <span className="h-[7px] w-[7px] flex-none rounded-full bg-success" />
-              All data stays in EU regions
+              All persistent data stored in EU regions
             </div>
           </div>
         </div>
