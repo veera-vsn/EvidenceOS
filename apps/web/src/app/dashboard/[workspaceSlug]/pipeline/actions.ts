@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { env } from "@/lib/env";
+import { internalApiHeaders } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 export async function startPipelineRun(
@@ -61,7 +62,7 @@ export async function startPipelineRun(
   try {
     const triggerRes = await fetch(
       `${env.API_BASE_URL}/pipeline/runs/${run.id}/trigger`,
-      { method: "POST" },
+      { method: "POST", headers: internalApiHeaders() },
     );
     if (!triggerRes.ok) {
       // Log but don't block the user — the run is queued and can be
