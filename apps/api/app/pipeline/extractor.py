@@ -2,9 +2,10 @@
 
 Supports four file types that match the DORA RoI evidence corpus:
 
-    pdf   — PyMuPDF (fitz): fast, no external binary, handles text-layer PDFs.
-             Scanned (image-only) PDFs return empty text; a future phase will
-             add Tesseract / Azure Document Intelligence for those.
+    pdf   — pdfplumber (pdfminer.six): no external binary, handles
+             text-layer PDFs. Scanned (image-only) PDFs return empty text;
+             a future phase will add Tesseract / Azure Document
+             Intelligence for those.
     docx  — python-docx: extracts paragraph text in reading order.
     xlsx  — openpyxl: reads all sheets, all rows, all cells (as strings).
     csv   — stdlib csv: reads all rows.
@@ -12,6 +13,34 @@ Supports four file types that match the DORA RoI evidence corpus:
 Each handler returns an :class:`ExtractionResult` with the raw text and
 a word count. The caller (OCR worker) is responsible for persisting this
 to the ``document_text`` table.
+
+PDF library note (2026-07-19): this used to be PyMuPDF (`fitz`), swapped
+out for pdfplumber per the 2026-07-19 production audit's dependency
+finding (Project_Docs/AUDIT_2026-07-18.md, Dependency Audit) --
+PyMuPDF/`fitz` is AGPL v3/commercial dual-licensed by Artifex Software,
+and using AGPL code in a closed-source commercial SaaS backend without
+either open-sourcing the connected codebase or buying a commercial
+license is a real compliance problem. pdfplumber (built on pdfminer.six)
+and its dependencies are all MIT/BSD/Apache-2.0 -- no such issue.
+
+Verified before swapping, not assumed: ran both extractors side-by-side
+against tests/fixtures/nimbus_cloud_msa_v3.pdf (the demo contract built
+specifically to exercise this exact code path -- see that fixture's own
+generator docstring for the ligature-corruption bug it was built to
+catch). Output was functionally identical -- same word count, every
+DORA field value present in both (including the exact
+ligature-sensitive strings, "Difficult" / "difficulties in migrating or
+reintegrating", that were the whole reason that fixture's generator
+does not use PyMuPDF's `fitz.Story` HTML/CSS engine). The only
+difference was cosmetic: a repeated page-footer disclaimer line ordered
+top-of-page by PyMuPDF vs. bottom-of-page (its actual visual position)
+by pdfplumber -- no contract content affected either way. See
+tests/test_extractor.py for the regression test that locks this in.
+
+The old PyMuPDF implementation is kept immediately below `extract_pdf`,
+commented out rather than deleted -- in case a future page/table-heavy
+PDF surfaces an accuracy gap pdfplumber doesn't handle as well, this is
+the fastest path back.
 """
 
 from __future__ import annotations
@@ -27,28 +56,58 @@ class ExtractionResult:
 
     text: str
     word_count: int
-    extractor: str  # which handler produced this ('pymupdf', 'python-docx', …)
+    extractor: str  # which handler produced this ('pdfplumber', 'python-docx', …)
+
+
+# Superseded 2026-07-19 -- PyMuPDF is AGPL/commercial dual-licensed, not
+# safe to use unmodified in a closed-source commercial backend. Kept
+# here, not deleted, as the fastest path back if pdfplumber ever proves
+# less accurate on some future document. See this module's docstring
+# and Project_Docs/AUDIT_2026-07-18.md's Dependency Audit for the full
+# reasoning, and tests/test_extractor.py for the accuracy comparison
+# that justified the swap.
+#
+# def extract_pdf(content: bytes) -> ExtractionResult:
+#     """Extract text from a PDF binary using PyMuPDF.
+#
+#     PyMuPDF reads the text layer embedded in the PDF (not pixel OCR).
+#     Multi-page documents are concatenated with double newlines between pages.
+#     """
+#     import fitz  # PyMuPDF — imported lazily to keep startup fast
+#
+#     doc = fitz.open(stream=content, filetype="pdf")
+#     pages: list[str] = []
+#     for page in doc:
+#         pages.append(page.get_text())
+#     doc.close()
+#
+#     text = "\n\n".join(pages).strip()
+#     return ExtractionResult(
+#         text=text,
+#         word_count=len(text.split()),
+#         extractor="pymupdf",
+#     )
 
 
 def extract_pdf(content: bytes) -> ExtractionResult:
-    """Extract text from a PDF binary using PyMuPDF.
+    """Extract text from a PDF binary using pdfplumber.
 
-    PyMuPDF reads the text layer embedded in the PDF (not pixel OCR).
-    Multi-page documents are concatenated with double newlines between pages.
+    pdfplumber (built on pdfminer.six) reads the text layer embedded in
+    the PDF (not pixel OCR) -- same fundamental approach as the PyMuPDF
+    implementation it replaces, just a different, permissively-licensed
+    parser. Multi-page documents are concatenated with double newlines
+    between pages, matching the previous implementation's convention.
     """
-    import fitz  # PyMuPDF — imported lazily to keep startup fast
+    import pdfplumber  # imported lazily to keep startup fast
 
-    doc = fitz.open(stream=content, filetype="pdf")
-    pages: list[str] = []
-    for page in doc:
-        pages.append(page.get_text())
-    doc.close()
+    with pdfplumber.open(io.BytesIO(content)) as pdf:
+        pages = [page.extract_text() or "" for page in pdf.pages]
 
     text = "\n\n".join(pages).strip()
     return ExtractionResult(
         text=text,
         word_count=len(text.split()),
-        extractor="pymupdf",
+        extractor="pdfplumber",
     )
 
 

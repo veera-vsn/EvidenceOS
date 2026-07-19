@@ -102,9 +102,11 @@ def run_ocr_for_pipeline(run_id: str) -> None:
             doc_log.info("extracting_text", file_type=file_type)
             result = extract(file_type, file_bytes)
 
-            # PostgreSQL text columns reject null bytes (U+0000). PyMuPDF emits
-            # them for embedded-font or image-heavy PDFs. Strip before any DB
-            # write or LLM call.
+            # PostgreSQL text columns reject null bytes (U+0000). PDF text
+            # extractors can emit them for embedded-font or image-heavy
+            # PDFs (observed with PyMuPDF; kept as a defensive strip
+            # regardless of which library extractor.py uses). Strip
+            # before any DB write or LLM call.
             clean_text = result.text.replace("\x00", "")
             extracted_text = clean_text
 
