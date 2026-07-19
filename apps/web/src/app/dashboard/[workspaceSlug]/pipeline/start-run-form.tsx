@@ -43,7 +43,11 @@ export function StartRunForm({
   function toggle(versionId: string) {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(versionId) ? next.delete(versionId) : next.add(versionId);
+      if (next.has(versionId)) {
+        next.delete(versionId);
+      } else {
+        next.add(versionId);
+      }
       return next;
     });
   }

@@ -46,13 +46,13 @@ export function UploadZone({ workspaceId, workspaceSlug }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [entries, setEntries] = useState<FileEntry[]>([]);
 
-  function updateEntry(id: string, patch: Partial<FileEntry>) {
+  const updateEntry = useCallback((id: string, patch: Partial<FileEntry>) => {
     setEntries((prev) =>
       prev.map((e) => (e.id === id ? { ...e, ...patch } : e)),
     );
-  }
+  }, []);
 
-  async function uploadFile(entry: FileEntry) {
+  const uploadFile = useCallback(async (entry: FileEntry) => {
     const fileType = extensionToDocumentType(entry.file.name);
     if (!fileType) {
       updateEntry(entry.id, {
@@ -106,9 +106,9 @@ export function UploadZone({ workspaceId, workspaceSlug }: UploadZoneProps) {
     }
 
     updateEntry(entry.id, { status: "done" });
-  }
+  }, [workspaceId, workspaceSlug, updateEntry]);
 
-  function enqueueFiles(files: File[]) {
+  const enqueueFiles = useCallback((files: File[]) => {
     const newEntries: FileEntry[] = files.map((f) => ({
       id: crypto.randomUUID(),
       file: f,
@@ -122,7 +122,7 @@ export function UploadZone({ workspaceId, workspaceSlug }: UploadZoneProps) {
       (chain, entry) => chain.then(() => uploadFile(entry)),
       Promise.resolve(),
     ).then(() => router.refresh());
-  }
+  }, [uploadFile, router]);
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -142,7 +142,7 @@ export function UploadZone({ workspaceId, workspaceSlug }: UploadZoneProps) {
       );
       if (files.length) enqueueFiles(files);
     },
-    [workspaceId, workspaceSlug],
+    [enqueueFiles],
   );
 
   const onInputChange = useCallback(
@@ -152,7 +152,7 @@ export function UploadZone({ workspaceId, workspaceSlug }: UploadZoneProps) {
       // Reset so the same file can be re-picked after a failure.
       e.target.value = "";
     },
-    [workspaceId, workspaceSlug],
+    [enqueueFiles],
   );
 
   return (
@@ -166,7 +166,16 @@ export function UploadZone({ workspaceId, workspaceSlug }: UploadZoneProps) {
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
-        onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
+        onKeyDown={(e) => {
+          // role="button" must activate on both Enter and Space per the
+          // WAI-ARIA button convention; Space alone previously just
+          // scrolled the page instead (Project_Docs/AUDIT_2026-07-18.md,
+          // Accessibility Audit).
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         className={[
           "flex cursor-pointer flex-col items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-dashed px-6 py-[30px] text-center transition",
           isDragging
