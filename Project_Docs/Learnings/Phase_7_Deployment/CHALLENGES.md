@@ -332,6 +332,46 @@ assuming an unfamiliar "permission denied" is an RLS bug.
 
 ---
 
+## C11 — `pip install -r requirements.txt` doesn't remove packages deleted from the lockfile
+
+**Symptom:** after swapping PyMuPDF for pdfplumber (an AGPL licensing
+fix — removed `pymupdf` from `requirements.in`/`.txt` entirely, see
+`Project_Docs/AUDIT_2026-07-18.md`'s Dependency Audit), `deploy.sh` ran
+clean and the health check passed. Checking the EC2 box directly
+afterward (`pip list`), `pymupdf` was still installed — the exact
+package the whole point of the fix was to remove from the production
+environment.
+
+**Root cause:** `deploy.sh`'s dependency step was `pip install -q -r
+requirements.txt`. `pip install` is purely additive: it installs
+anything newly listed and upgrades anything with a version bump, but
+never uninstalls a package that simply isn't in the file anymore — pip
+has no concept of "reconcile the environment to exactly this list"
+built into plain `install`. The AGPL package sat there, unused by any
+imported code but still physically present, until someone thought to
+check.
+
+**Fix:** `deploy.sh` now does `rm -rf .venv && python3.13 -m venv .venv
+&& .venv/bin/pip install -q -r requirements.txt` — a fresh virtualenv
+every deploy, guaranteed to contain exactly what `requirements.txt`
+says and nothing else. Confirmed via `pip list --format=freeze` on the
+box, diffed byte-for-byte against the committed `requirements.txt`
+(only difference: the venv's own bootstrapped `pip`, expected and
+harmless). Costs an extra ~15-20 seconds per deploy — worth it for the
+guarantee.
+
+**Lesson:** "removed from the lockfile" and "removed from the running
+environment" are two different claims, and the gap between them is
+invisible unless you specifically check for it — a health check
+passing proves the *code* still runs, not that the *dependency set* is
+what you think it is. This is the same category of gap as C9
+(`/etc/evidenceos/api.env` not being kept in sync automatically) and
+C10 (migrations not reproducing the hosted platform's own bootstrap
+grants): things nothing automatically keeps honest, so they drift
+silently until directly verified.
+
+---
+
 ## What went right without incident
 
 Worth naming, not just the bumps: Python 3.13 was directly available via

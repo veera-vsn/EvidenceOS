@@ -155,10 +155,18 @@ cd apps/api
 ```
 
 What it does, in order: copies the current `apps/api` folder to the
-server (excluding `.venv`/`.env`/caches), reinstalls dependencies (no-op
-if `requirements.txt` didn't change), restarts the `evidenceos-api`
-systemd service, and checks `/health` to confirm it came back up. Takes
-about 15-20 seconds.
+server (excluding `.venv`/`.env`/caches), **recreates `.venv` from
+scratch** and installs `requirements.txt` into it, restarts the
+`evidenceos-api` systemd service, and checks `/health` to confirm it
+came back up. Takes about 30-40 seconds — a bit slower than a plain
+`pip install -r requirements.txt` into the existing venv, deliberately:
+that command is purely additive and never removes a package deleted
+from the lockfile, which left an AGPL-licensed package (PyMuPDF)
+physically installed on the box for a while after it was removed from
+`requirements.txt` (found 2026-07-19 verifying the pdfplumber swap —
+see `CHALLENGES.md`). Recreating the venv every deploy is the only way
+to guarantee the box always matches the lockfile exactly, not "the
+lockfile plus whatever every past deploy ever added."
 
 **If you change an environment variable** (a new API key, a changed
 `CORS_ORIGINS`, etc.), `deploy.sh` alone won't pick it up — that lives in
