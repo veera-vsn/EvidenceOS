@@ -36,12 +36,14 @@ Phase 7  →   RAG + recommendations → deep extraction + "why this field is wr
 1. Worker downloads the binary file from Supabase Storage using the service-role
    client (bypasses RLS — the worker is a trusted internal process).
 2. Dispatches to the correct handler based on `file_type`:
-   - PDF → PyMuPDF (`import fitz`)
+   - PDF → pdfplumber (`import pdfplumber`) — was PyMuPDF until 2026-07-19,
+     swapped for an AGPL licensing concern; see extractor.py's docstring
+     and `Project_Docs/AUDIT_2026-07-18.md`'s Dependency Audit.
    - DOCX → python-docx
    - XLSX → openpyxl
    - CSV → stdlib `csv`
-3. Strips null bytes (`\x00`) — PyMuPDF emits them for certain embedded fonts
-   and PostgreSQL rejects them with error 22P05.
+3. Strips null bytes (`\x00`) — some PDF text extractors emit them for
+   certain embedded fonts and PostgreSQL rejects them with error 22P05.
 4. Upserts plain text + word count into `document_text`.
 5. Marks `pipeline_run_documents.ocr_status = 'completed'`.
 

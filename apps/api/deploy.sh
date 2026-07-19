@@ -20,8 +20,19 @@ tar --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
     --exclude='.ruff_cache' --exclude='deploy.sh' \
     -czf - -C "$LOCAL_DIR" . | ssh -i "$EC2_KEY" "$EC2_HOST" "tar -xzf - -C $REMOTE_DIR"
 
-echo "==> Installing dependencies (no-op if requirements.txt is unchanged)"
-ssh -i "$EC2_KEY" "$EC2_HOST" "cd $REMOTE_DIR && .venv/bin/pip install -q -r requirements.txt"
+echo "==> Installing dependencies (fresh venv every deploy)"
+# `pip install -r requirements.txt` is purely additive -- it installs
+# whatever's newly listed but never removes a package that was deleted
+# from the lockfile. Found the hard way (2026-07-19): the PyMuPDF ->
+# pdfplumber swap (dropped for an AGPL licensing concern) left the old
+# AGPL package still physically installed on this box after a normal
+# deploy, silently defeating the point of removing it. Recreating the
+# venv from scratch every time is slower than an incremental install
+# but is the only way to guarantee the box always matches
+# requirements.txt exactly, not "requirements.txt plus whatever every
+# past deploy ever added." See
+# Project_Docs/Learnings/Phase_7_Deployment/CHALLENGES.md.
+ssh -i "$EC2_KEY" "$EC2_HOST" "cd $REMOTE_DIR && rm -rf .venv && python3.13 -m venv .venv && .venv/bin/pip install -q -r requirements.txt"
 
 echo "==> Restarting service"
 ssh -i "$EC2_KEY" "$EC2_HOST" "sudo systemctl restart evidenceos-api"

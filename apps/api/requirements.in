@@ -29,7 +29,10 @@ openai               # OpenAI API — field extraction, recommendations, RAG.
 langfuse>=2,<3       # LLM observability — v2 uses REST API (v3+ switched to OTEL, unstable).
 
 # --- OCR / text extraction (Phase 2+) ---
-pymupdf              # PDF text extraction (no external binaries needed).
+pdfplumber           # PDF text extraction (no external binaries needed).
+                     # Was PyMuPDF until 2026-07-19 -- AGPL/commercial
+                     # dual-licensed, not safe unmodified in a closed-
+                     # source backend. See extractor.py's docstring.
 python-docx          # DOCX text extraction.
 openpyxl             # XLSX cell reading.
 # CSV uses Python stdlib — no extra package needed.

@@ -22,9 +22,20 @@ corrupts exact-match EBA enum values that happen to contain "ff"/"ffi"
 low-level API places glyphs without that shaping pass, so the embedded
 text layer matches the source string exactly -- confirmed by round-
 tripping the output through `app.pipeline.extractor.extract()` and
-diffing key phrases. PyMuPDF is already a pipeline dependency (OCR
-extraction), so this adds no new package for what is otherwise a one-off
-fixture generator, not an app dependency.
+diffing key phrases.
+
+Note (2026-07-19): PyMuPDF is no longer a pipeline dependency --
+extractor.py's extract_pdf() was swapped to pdfplumber (AGPL licensing
+concern with PyMuPDF, see that module's docstring and
+Project_Docs/AUDIT_2026-07-18.md's Dependency Audit). pdfplumber is
+read-only and can't generate PDFs, so it isn't a substitute for what
+this script needs. This generator is a one-off dev tool that already
+produced its committed output (nimbus_cloud_msa_v3.pdf) -- it is not run
+routinely and is not part of the served application, so PyMuPDF was
+deliberately left out of requirements.txt rather than kept installed in
+production for a script that never runs there. If this ever needs
+regenerating, `pip install pymupdf` first (ad hoc, not a standing
+project dependency).
 
 Run: python tests/fixtures/generate_demo_contract.py
 Output: tests/fixtures/nimbus_cloud_msa_v3.pdf

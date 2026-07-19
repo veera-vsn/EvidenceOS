@@ -47,7 +47,7 @@ Upload  →  OCR  →  AI Extraction  →  Validation  →  Recommend  →  Huma
 ```
 
 - **Upload** — drag-and-drop, direct browser → Supabase Storage upload (no file streams through the API).
-- **OCR** — PyMuPDF (PDF), python-docx, openpyxl, or plain CSV parsing, dispatched by file type.
+- **OCR** — pdfplumber (PDF), python-docx, openpyxl, or plain CSV parsing, dispatched by file type.
 - **AI Extraction** — GPT-4o-mini reads the document text and returns a JSON object with every DORA field it can find, each with a 0.0–1.0 confidence score. Every call is traced in Langfuse (EU region) with tokens, cost, and latency.
 - **Validation** — a pure, deterministic rule engine (**zero LLM calls**) checks every extracted value against the real EBA business rules: required fields, date logic, LEI format, ISO country codes, enum values, and multi-column completeness rules sourced directly from EBA's own validation-rules workbook.
 - **Recommend** — not yet built. See [Future work](#future-work).
