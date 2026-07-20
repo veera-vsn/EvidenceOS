@@ -1,0 +1,54 @@
+---
+title: "A practical checklist: preparing your ICT third-party contracts for DORA RoI reporting"
+description: "Nine concrete things to check in your ICT vendor contracts and internal records before you attempt a DORA Register of Information filing — grounded in where the 2024 dry run showed firms actually tripping up."
+date: "2026-07-14"
+author: "The EvidenceOS Team"
+tags: ["DORA", "Checklist", "ICT Third-Party Risk"]
+excerpt: "Before you start extracting fields for a Register of Information filing, these nine checks against your actual contract set will catch most of the problems that caused the 2024 dry run's high failure rate — and they're all things you can verify today, without any tooling."
+---
+
+The earlier posts in this series covered what the DORA Register of Information is and why the 2024 dry run's 93.5% failure rate reflects a process problem more than a diligence problem. This one is deliberately narrower and more immediately actionable: nine concrete things to check in your actual contract set and internal records, before you attempt a filing, that address the specific failure categories the dry run exposed.
+
+None of these require new tooling to check today. They're audit questions you can walk through against your existing contract repository this week.
+
+## 1. Do you have a single, current list of every ICT third-party arrangement?
+
+This sounds too basic to list first, but it's the most common real gap. "ICT third-party arrangement" under DORA is broader than most firms' existing vendor lists — it includes cloud infrastructure, SaaS tools, managed security services, and critically, arrangements your primary vendor has with *their own* subcontractors, if those subcontractors support a function you've classified as critical or important. If your vendor list was built for procurement or spend-management purposes, it almost certainly under-counts what DORA considers in scope.
+
+## 2. Does every contract have a valid, current LEI for the counterparty?
+
+A Legal Entity Identifier is a global, permanent identifier — but it's also something that lapses if not renewed, and it's routinely mistyped when re-entered by hand across multiple internal systems. Check every ICT vendor's LEI against the public GLEIF registry, not against whatever value is sitting in your vendor master file, since that's often where the drift happened.
+
+## 3. Are entity names spelled identically everywhere they appear?
+
+This is the single highest-frequency cause of cross-template consistency failures (covered in detail in the previous post). "Nimbus Cloud Services Ltd," "Nimbus Cloud Services Limited," and "Nimbus Cloud" are three different strings to an automated consistency check, even though they're obviously the same company to a human. Pick one canonical form per entity and use it everywhere — ideally by referencing a single source record rather than re-typing the name in each template.
+
+## 4. Do your criticality classifications actually match your internal risk assessments?
+
+DORA requires you to classify whether each arrangement supports a "critical or important function." If your ICT risk team maintains its own internal criticality assessment (most do, for other regulatory or internal risk-management reasons), check that the RoI filing's classification actually matches it. A mismatch here isn't just a data quality failure — it's the kind of inconsistency that invites a regulator to ask why your public filing and your internal risk register disagree.
+
+## 5. Do contract dates actually make sense against each other?
+
+Start dates before end dates, renewal dates that postdate the current contract term, amendment dates that predate the original agreement — these are exactly the kind of value-level business rule violations that are trivial to check once you know to look, and easy to miss when a contract has been amended two or three times and each amendment lives as a separate attachment.
+
+## 6. Can you trace every subcontractor in your supply chain back to a specific clause?
+
+For arrangements supporting critical functions, DORA wants visibility into the supply chain beneath your direct vendor — subcontractors your vendor relies on to deliver the service to you. This information is often buried in a subcontracting or "permitted subcontractors" clause deep in the contract, sometimes only in an appendix, and frequently goes stale as vendors add subcontractors without a formal amendment. Check whether your records reflect the contract's actual current subcontractor list, not the list from when the contract was first signed.
+
+## 7. Is your own entity identity data (LEI, country, competent authority) complete and internally consistent?
+
+Several RoI templates reference your own entity's identifying information, not just your vendors'. If your organisation has multiple legal entities or branches — common in banking and insurance groups — check that each entity's own identity fields (its LEI, registered country, designated competent authority) are complete and don't contradict each other across templates. This is a common gap specifically at firms with recent restructuring, mergers, or new branch registrations that internal records haven't fully caught up with yet.
+
+## 8. Do you know, right now, who would answer for a specific field if asked?
+
+This isn't a data field, but it's the practice that makes every other check meaningful in the long run. Ask, for any five random fields in your draft filing: who extracted or entered this value, when, and from what source? If the honest answer is "we'd have to go dig through email and shared drives to reconstruct that," you don't have an audit trail — you have a filing that happens to currently be correct, which is a much weaker and more fragile position to be in.
+
+## 9. Have you actually run a consistency check across templates before submission — not just within each one?
+
+This is the practice, more than any single data point, that the dry run showed most firms skipping. Checking each template in isolation for internal correctness is necessary but not sufficient; the checks that caused the most failures are the ones comparing values *across* templates. If your current process reviews each template separately and never explicitly reconciles them against each other, that's the highest-leverage single change you can make before your next filing attempt.
+
+## Where this leads
+
+Every item on this list is, at its core, the same underlying problem: information that should be one consistent fact (a vendor's name, a contract's dates, a function's criticality) ends up recorded slightly differently in different places, because it was entered independently by different people at different times with no single source of truth forcing agreement.
+
+That's precisely the gap EvidenceOS closes — extracting every field directly from the source contract once, running the same category of deterministic checks the regulator runs before you ever submit, and keeping every value traceable to its source document and the reviewer who approved it. If you want to see what that looks like against one of your own contracts, creating a workspace and running a single document through the pipeline takes a few minutes and no sales call.

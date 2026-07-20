@@ -11,13 +11,13 @@
  * this layout only needs to handle the workspace-membership check.
  */
 
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/(auth)/actions";
 import { getCurrentWorkspaceRole } from "@/lib/supabase/workspace-role";
 import type { WorkspaceRow } from "@/lib/supabase/database.types";
+import { Logo } from "@/components/ui/logo";
 
 import { SidebarNav } from "./sidebar-nav";
 import { SidebarShell } from "./sidebar-shell";
@@ -100,12 +100,7 @@ export default async function WorkspaceLayout({
     <div className="flex h-screen flex-col overflow-hidden md:flex-row">
       <SidebarShell>
         <div className="px-3.5 pt-3.5 pb-3">
-          <Link href="/dashboard" className="flex items-center gap-2 text-fg">
-            <span className="flex h-5 w-5 flex-none items-center justify-center rounded-md bg-accent">
-              <span className="h-2 w-2 rounded-sm border-2 border-accent-fg" />
-            </span>
-            <span className="text-[14px] font-semibold">EvidenceOS</span>
-          </Link>
+          <Logo href="/dashboard" size="sm" />
         </div>
 
         <div className="px-2.5 pb-3">

@@ -66,6 +66,17 @@ Full context: `Project_Docs/Learnings/00_STACK_DECISIONS.md`,
 - **Env vars.** Never `process.env.X` directly in components. Route
   through `apps/web/src/lib/env.ts`. Same rule in Python — go through
   `app.core.config.get_settings()`.
+- **Shared UI primitives.** Use `apps/web/src/components/ui/` (`Logo`,
+  `Button`, `Input`/`Select`/`FieldLabel`, `Alert`, `Badge`, `Card`,
+  `EmptyState`, `Skeleton`) instead of hand-rolling a new button/input/
+  alert/status-pill inline — that duplication (the same logo mark in 5
+  files, buttons with three different paddings) is exactly what
+  `Project_Docs/Learnings/Phase_13_Design_System_and_Blog/` consolidated.
+  Extend an existing primitive or add a new one there before reaching
+  for a one-off `className` string, unless the visual role is
+  genuinely different (see that phase's notes on what was deliberately
+  left alone, e.g. the Review page's segmented approve/edit/reject
+  control).
 
 ---
 

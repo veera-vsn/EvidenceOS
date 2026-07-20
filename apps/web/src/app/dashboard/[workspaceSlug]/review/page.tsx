@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import type { DocumentRow } from "@/lib/supabase/database.types";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface ReviewListPageProps {
   params: Promise<{ workspaceSlug: string }>;
@@ -152,13 +153,12 @@ export default async function ReviewListPage({ params }: ReviewListPageProps) {
           </ul>
         </>
       ) : (
-        <p className="text-sm text-fg-3">
-          No documents ready for review yet — validate one in{" "}
-          <Link href={`/dashboard/${workspaceSlug}/pipeline`} className="text-accent">
-            Pipeline
-          </Link>{" "}
-          first.
-        </p>
+        <EmptyState
+          icon="✓"
+          title="Nothing to review yet"
+          description="Run a document through the Pipeline first — it'll show up here once it's validated."
+          action={{ label: "Go to Pipeline", href: `/dashboard/${workspaceSlug}/pipeline` }}
+        />
       )}
     </div>
   );

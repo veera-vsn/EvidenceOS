@@ -1,0 +1,48 @@
+---
+title: "The 116 DORA RoI data quality checks: what they actually check, and where firms trip up"
+description: "A category-by-category walkthrough of the kind of data quality checks the ESAs run against a DORA Register of Information filing, and which categories caused the most trouble in the 2024 dry run."
+date: "2026-06-16"
+author: "The EvidenceOS Team"
+tags: ["DORA", "Register of Information", "Data Quality"]
+excerpt: "116 checks sounds like a lot until you group them by what they're actually testing. Most fall into a handful of categories — and one category in particular accounts for a disproportionate share of dry-run failures: cross-template consistency."
+---
+
+"116 data quality checks" is the number everyone quotes about the DORA Register of Information, but it's rarely unpacked. Taken as a flat list it looks intimidating — as a set of categories, it's a lot more tractable, and it tells you exactly where to focus if you want a filing that passes cleanly the first time.
+
+Broadly, the checks the European Supervisory Authorities run against a submitted Register fall into four families. None of them require judgment calls; all of them are deterministic, meaning a given input either passes or fails the same way every time. That's a deliberate design choice on the regulator's part, and it's worth understanding why, because it's the same property that makes the checks automatable on your side too.
+
+## 1. Format and reference-data validity
+
+The most basic layer: is a Legal Entity Identifier actually a valid, correctly-formatted LEI? Is a country code one of the recognised ISO codes? Is a date parseable and within a sane range? Is a currency code real?
+
+These sound trivial, and individually they are — but at the scale of a real filing, with hundreds of contracts each carrying several identifier fields, a single fat-fingered LEI digit or a date typed in the wrong format is common. This category is high-volume and low-severity in complexity, but it's also the easiest category to eliminate entirely with automated validation at the point of data entry, rather than catching it downstream.
+
+## 2. Mandatory field completeness
+
+Certain fields are required whenever a given condition is true elsewhere in the filing — for instance, a contractual arrangement supporting a "critical or important function" triggers additional mandatory fields around that function's criticality assessment that a non-critical arrangement doesn't need. Completeness checks verify that conditionally-required fields are actually populated when their trigger condition is met, and that fields which shouldn't apply aren't left dangling with stale values from an unrelated arrangement.
+
+This category is where a spreadsheet-based process quietly accumulates the most risk over time. A contract that starts out non-critical and later gets reclassified needs someone to remember to go back and fill in the now-mandatory fields — and "someone remembers to update a downstream field when an upstream classification changes" is exactly the kind of manual dependency that erodes under staff turnover and quarter-end pressure.
+
+## 3. Value-level business rules
+
+Beyond "is this field present and correctly formatted," a number of checks encode substantive rules about what a *sensible* value looks like given the rest of the filing — a contract's start date can't be after its end date, a total-assets figure has to be denominated in a currency that's actually declared elsewhere in the same entity's identity fields, a function's criticality tier has to be one of a defined set of values consistent with how DORA's own technical standards define criticality.
+
+These checks are still fully deterministic (they don't require a human to decide whether something is "right," only whether it's internally consistent), but they require the checking logic to actually understand the relationships between fields, not just validate each field in isolation. This is where naive spreadsheet validation (a dropdown list, a format mask) tends to run out of runway, and where a purpose-built rule engine earns its keep.
+
+## 4. Cross-template consistency — the category that dominates dry-run failures
+
+This is the one that matters most, and by most industry commentary on the 2024 dry run, the one responsible for a disproportionate share of the failures behind that 93.5% figure.
+
+The RoI isn't one template — it's six, each covering a different facet of the same underlying picture (general contract information, contract specifics, the ICT third-party providers themselves, the business functions those providers support, the supply chain beneath each provider, and a risk assessment per arrangement). The same contract reference, the same provider LEI, the same function identifier has to appear identically everywhere it's referenced across all six templates. A provider named "Nimbus Cloud Services Ltd" on one template and "Nimbus Cloud Services Limited" on another isn't a formatting nitpick to these checks — it's a broken cross-reference, because the regulator's tooling is matching on the literal identifier, not on human judgment about whether two names probably refer to the same entity.
+
+This is the structural reason a manual, spreadsheet-based process struggles here specifically: each template is often owned or populated by a different person or team (legal owns contract terms, procurement owns provider details, IT owns the criticality assessment), and nothing forces those three people to reconcile identifiers against each other before submission — except, eventually, the regulator's own checks.
+
+## What this means for how you should build your filing process
+
+If you only have the resources to harden one part of your process before it matters, harden this one. Concretely:
+
+- **Extract identifiers once, from the source document, and reuse them everywhere** rather than letting each template's owner re-type the same provider name or contract reference independently. Re-keying the same value multiple times is exactly how "Nimbus Cloud Services Ltd" and "Nimbus Cloud Services Limited" end up in the same filing.
+- **Run the cross-template consistency checks before submission, not as a discovery mechanism during submission.** This is the single highest-leverage automatable step, because unlike the value-level business rules, cross-template checks are pure comparison — they don't require deep domain logic, just discipline about actually running them.
+- **Keep a visible link from every field back to its source** — the specific contract, the specific clause — so that when a consistency check does fail, fixing it is a lookup, not an investigation.
+
+EvidenceOS's validation engine runs all four of these categories as deterministic rules against every extracted field before a human reviewer ever sees it — the same category of check the regulator itself runs, surfaced during review rather than during the actual filing. The AI does the reading and the flagging; a named person still makes every final call, which is exactly the separation a careful compliance process should insist on. More on why that separation matters, rather than trying to fully automate the decision, in the next post.

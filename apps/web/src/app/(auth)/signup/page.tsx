@@ -9,6 +9,11 @@
 
 import Link from "next/link";
 
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { FieldLabel, Input } from "@/components/ui/input";
+import { Logo } from "@/components/ui/logo";
+
 import { signup } from "../actions";
 
 interface SignupPageProps {
@@ -22,12 +27,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
       {/* left: brand rail */}
       <div className="hidden flex-col justify-between border-r border-border-2 bg-surface-2 px-12 py-10 md:flex">
-        <Link href="/" className="flex items-center gap-2.5 text-fg">
-          <span className="flex h-[26px] w-[26px] items-center justify-center rounded-md bg-accent">
-            <span className="h-2.5 w-2.5 rounded-sm border-2 border-accent-fg" />
-          </span>
-          <span className="text-base font-semibold">EvidenceOS</span>
-        </Link>
+        <Logo />
         <div className="max-w-sm">
           <h2 className="text-2xl leading-[1.2] font-semibold tracking-tight text-fg">
             Start with one contract. Ship a filing-ready draft with a full
@@ -67,70 +67,48 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
           </p>
 
           {error && (
-            <div
-              role="alert"
-              className="mb-4 flex gap-2.5 rounded-[10px] border border-danger bg-danger-soft px-3.5 py-3"
-            >
-              <span className="text-[15px] leading-tight text-danger">!</span>
-              <div>
-                <div className="text-[13.5px] font-semibold text-danger">
-                  Couldn&apos;t create your account
-                </div>
-                <div className="mt-0.5 text-[12.5px] leading-relaxed text-fg-2">
-                  {error}
-                </div>
-              </div>
-            </div>
+            <Alert variant="error" title="Couldn't create your account" className="mb-4">
+              {error}
+            </Alert>
           )}
 
           <form action={signup} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-fg">Full name</span>
-              <input
-                type="text"
-                name="display_name"
-                autoComplete="name"
-                placeholder="M. Okafor"
-                className="w-full rounded-[9px] border border-border bg-surface px-3.5 py-2.5 text-sm text-fg outline-none focus:border-accent"
-              />
+              <FieldLabel>Full name</FieldLabel>
+              <Input type="text" name="display_name" autoComplete="name" placeholder="M. Okafor" />
               <span className="text-[11.5px] text-fg-3">
                 Shown on the audit trail of every field you review.
               </span>
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-fg">Work email</span>
-              <input
+              <FieldLabel>Work email</FieldLabel>
+              <Input
                 type="email"
                 name="email"
                 required
                 autoComplete="email"
                 placeholder="you@yourfirm.eu"
-                className="w-full rounded-[9px] border border-border bg-surface px-3.5 py-2.5 text-sm text-fg outline-none focus:border-accent"
               />
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-fg">Password</span>
-              <input
+              <FieldLabel>Password</FieldLabel>
+              <Input
                 type="password"
                 name="password"
                 required
                 autoComplete="new-password"
                 minLength={8}
                 placeholder="At least 8 characters"
-                className="w-full rounded-[9px] border border-border bg-surface px-3.5 py-2.5 text-sm text-fg outline-none focus:border-accent"
               />
               <span className="text-[11.5px] text-fg-3">Minimum 8 characters.</span>
             </label>
 
-            <div className="flex gap-2.5 rounded-[9px] border border-border-2 bg-surface-2 px-3.5 py-2.5">
-              <span className="text-[13px] leading-tight text-accent">✉</span>
-              <span className="text-[12.5px] leading-relaxed text-fg-2">
-                We&apos;ll send a confirmation link before your account is
-                active — check your inbox after this step.
-              </span>
-            </div>
+            <Alert variant="info">
+              We&apos;ll send a confirmation link before your account is active —
+              check your inbox after this step.
+            </Alert>
 
             <label className="flex items-start gap-2.5 text-[12.5px] leading-relaxed text-fg-2">
               <input
@@ -152,12 +130,9 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
               </span>
             </label>
 
-            <button
-              type="submit"
-              className="mt-0.5 rounded-[9px] bg-accent px-3 py-3 text-sm font-semibold text-accent-fg transition hover:opacity-90"
-            >
+            <Button type="submit" className="mt-0.5">
               Create account
-            </button>
+            </Button>
           </form>
 
           <div className="my-[22px] h-px bg-border-2" />

@@ -1,0 +1,50 @@
+---
+title: "What is the DORA Register of Information — and why 93.5% of the 2024 dry run failed"
+description: "A plain-language walkthrough of the DORA Register of Information, and what the ESAs' 2024 EU-wide dry run actually found when nearly 1,000 financial entities tried to file it."
+date: "2026-06-02"
+author: "The EvidenceOS Team"
+tags: ["DORA", "Register of Information", "Regulation"]
+excerpt: "The European Supervisory Authorities ran a dry run of the DORA Register of Information across ~1,000 EU financial entities in 2024. 93.5% failed at least one of 116 data quality checks. Here's what the RoI actually is, and why that number isn't as damning — or as surprising — as it sounds."
+---
+
+If you work in ICT risk or compliance at an EU financial institution, you've probably heard the number by now: **93.5%**. That's the share of roughly 1,000 entities that failed at least one of the 116 data quality checks the European Supervisory Authorities (the EBA, ESMA, and EIOPA — collectively the ESAs) ran during the 2024 EU-wide dry run of the DORA Register of Information.
+
+It's a startling figure on its own. It's more useful once you understand what the Register of Information actually is, why it's structured the way it is, and why a near-universal failure rate on a first attempt says more about the nature of the task than about any one firm's competence.
+
+## What the Register of Information actually is
+
+The Digital Operational Resilience Act (DORA) is the EU's response to a fairly obvious but historically under-regulated risk: financial institutions don't just depend on their own systems anymore. They depend on cloud providers, SaaS vendors, managed security providers, data centres, and a long tail of subcontractors underneath all of them. A failure or breach several layers down that chain can still take down a bank's ability to process payments.
+
+The Register of Information (RoI) is DORA's answer to "does the regulator actually know what this dependency chain looks like?" It's a structured, machine-readable inventory that every in-scope financial entity must maintain and, on request or on a periodic basis, submit. It isn't a free-text vendor list. It's a set of prescribed templates — currently six regulatory templates covering contractual arrangements, the ICT third-party providers themselves, the functions those providers support, the supply chain beneath them, and a risk assessment of each arrangement — cross-referenced against each other by identifiers that have to match exactly.
+
+That cross-referencing is where the difficulty lives. A contract reference on template RT_02.01 has to match the same reference wherever it appears on RT_02.02. A provider's Legal Entity Identifier (LEI) has to be valid and consistent everywhere that provider is named. A function's criticality classification has to be internally consistent with how it's described elsewhere in the filing. None of this is conceptually hard in isolation. It becomes hard at the scale of a real institution's actual vendor estate — hundreds of contracts, each with several fields, all needing to agree with each other perfectly.
+
+## What the dry run measured
+
+In 2024, the ESAs ran a voluntary EU-wide dry run ahead of the RoI's live reporting obligations, inviting financial entities to submit a test Register and get feedback before the real deadline. Roughly a thousand entities participated. Their submissions were run through 116 automated data quality checks — the same category of check a real regulator would run against a live filing.
+
+93.5% of participating entities failed at least one check. 6.5% passed everything cleanly.
+
+It's worth sitting with what that does and doesn't mean. It doesn't mean 93.5% of EU financial institutions have unmanaged ICT risk, or don't know who their vendors are. Most of these failures are exactly the kind of cross-reference and consistency errors described above: a mismatched identifier here, an inconsistent date there, a field populated with a value that's valid on its own but doesn't reconcile with a related template. These are data *quality* checks, not risk assessments. The entity that failed on a mismatched LEI and the entity with no vendor risk management programme at all would both show up as "failed" — but they are not the same problem.
+
+What the number does show, reliably, is that **manually assembling and cross-checking a Register of this size, by hand, in a spreadsheet, is extremely error-prone** — even for institutions that take the underlying compliance work seriously. That's a process problem, not a diligence problem, and process problems have process solutions.
+
+## Why this happens even at careful, well-resourced firms
+
+Three structural reasons come up again and again when you look at where dry-run failures actually clustered:
+
+**The source of truth is scattered.** The information the RoI needs — contract terms, entity identifiers, service descriptions, criticality classifications — usually lives across legal's contract repository, procurement's vendor database, and IT's own asset inventory, none of which were built with DORA's specific field structure in mind. Someone has to reconcile all three, by hand, into one consistent filing.
+
+**No single analyst can hold 116 rules in their head across hundreds of contracts.** Deterministic rule-checking is exactly the kind of task computers are good at and humans are bad at under volume — not because the rules are individually hard, but because the failure mode is a single missed cross-reference buried in row 340 of a spreadsheet with no earlier warning that it was wrong.
+
+**There's no confidence signal until the regulator's own checks run.** In a manual process, the first time you find out a field is wrong is often the first time anyone runs the actual 116 checks against it — which, before the dry run existed, meant the live filing itself. That's a genuinely bad time to discover a data quality problem.
+
+## What "doing better" actually looks like
+
+None of this is an argument that the RoI is unreasonable, or that the ESAs should relax the checks. The checks exist because a regulator genuinely needs a reliable map of systemic ICT dependency across the EU financial system, and a soft, inconsistent version of that map isn't useful to anyone in a real incident.
+
+The practical takeaway for a compliance team is narrower and more actionable: **the failure mode the dry run exposed is structural, and structural problems get fixed by changing the structure of the process, not by asking analysts to be more careful.** That means extracting field values directly from source contracts rather than re-keying them, running the same class of deterministic cross-reference checks *before* submission rather than discovering them at submission, and keeping a clear record of where every value came from and who signed off on it — so that when a check does fail, the fix is a five-minute correction to a known source, not an open-ended investigation into which of several disconnected spreadsheets is actually current.
+
+That's the specific gap EvidenceOS is built to close: AI-assisted extraction from the actual contract documents, the same deterministic checks the regulator runs, and a human reviewer who approves, corrects, or rejects every single field before anything is exported — with a full evidence trail attached. Not a shortcut around the 116 checks, but a way to find out you've failed one of them on a Tuesday afternoon during review, instead of during the filing itself.
+
+*If you want to see what the check catalogue looks like in more detail, the next post in this series goes through what the 116 checks actually check, category by category, and where the dry run showed firms tripping up most often.*

@@ -1,11 +1,16 @@
 /**
  * Generated TypeScript types for the Supabase Postgres schema.
  *
- * DO NOT EDIT BY HAND. Regenerate via the Supabase MCP:
- *   generate_typescript_types(project_id="skqhmivmnrksypoxnoaq")
+ * DO NOT EDIT BY HAND (except the convenience aliases at the bottom of
+ * this file, which are hand-maintained on purpose). Regenerate via the
+ * local Supabase CLI, now that local dev runs against Docker rather
+ * than the cloud project directly:
+ *   npx supabase gen types typescript --local > apps/web/src/lib/supabase/database.types.ts
  *
  * Any change to `supabase/migrations/*.sql` should be followed by a
- * fresh regeneration and a commit that touches only this file.
+ * fresh regeneration and a commit that touches only this file (plus
+ * re-adding the convenience aliases section if a full regen overwrites
+ * it -- see 2026-07-20's CHALLENGES.md entry on this).
  */
 
 export type Json =
@@ -14,547 +19,719 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
 export type Database = {
-  __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       document_text: {
         Row: {
-          content: string;
-          document_version_id: string;
-          extracted_at: string;
-          extractor: string;
-          id: string;
-          word_count: number;
-        };
+          content: string
+          document_version_id: string
+          extracted_at: string
+          extractor: string
+          id: string
+          word_count: number
+        }
         Insert: {
-          content: string;
-          document_version_id: string;
-          extracted_at?: string;
-          extractor: string;
-          id?: string;
-          word_count?: number;
-        };
+          content: string
+          document_version_id: string
+          extracted_at?: string
+          extractor: string
+          id?: string
+          word_count?: number
+        }
         Update: {
-          content?: string;
-          document_version_id?: string;
-          extracted_at?: string;
-          extractor?: string;
-          id?: string;
-          word_count?: number;
-        };
+          content?: string
+          document_version_id?: string
+          extracted_at?: string
+          extractor?: string
+          id?: string
+          word_count?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "document_text_document_version_id_fkey";
-            columns: ["document_version_id"];
-            isOneToOne: true;
-            referencedRelation: "document_versions";
-            referencedColumns: ["id"];
+            foreignKeyName: "document_text_document_version_id_fkey"
+            columns: ["document_version_id"]
+            isOneToOne: true
+            referencedRelation: "document_versions"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       document_versions: {
         Row: {
-          checksum: string | null;
-          created_at: string;
-          document_id: string;
-          id: string;
-          size_bytes: number | null;
-          storage_path: string;
-          upload_status: Database["public"]["Enums"]["upload_status"];
-          uploaded_by: string;
-          version_number: number;
-        };
+          checksum: string | null
+          created_at: string
+          document_id: string
+          id: string
+          size_bytes: number | null
+          storage_path: string
+          upload_status: Database["public"]["Enums"]["upload_status"]
+          uploaded_by: string
+          version_number: number
+        }
         Insert: {
-          checksum?: string | null;
-          created_at?: string;
-          document_id: string;
-          id?: string;
-          size_bytes?: number | null;
-          storage_path: string;
-          upload_status?: Database["public"]["Enums"]["upload_status"];
-          uploaded_by: string;
-          version_number: number;
-        };
+          checksum?: string | null
+          created_at?: string
+          document_id: string
+          id?: string
+          size_bytes?: number | null
+          storage_path: string
+          upload_status?: Database["public"]["Enums"]["upload_status"]
+          uploaded_by: string
+          version_number: number
+        }
         Update: {
-          checksum?: string | null;
-          created_at?: string;
-          document_id?: string;
-          id?: string;
-          size_bytes?: number | null;
-          storage_path?: string;
-          upload_status?: Database["public"]["Enums"]["upload_status"];
-          uploaded_by?: string;
-          version_number?: number;
-        };
+          checksum?: string | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          upload_status?: Database["public"]["Enums"]["upload_status"]
+          uploaded_by?: string
+          version_number?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "document_versions_document_id_fkey";
-            columns: ["document_id"];
-            isOneToOne: false;
-            referencedRelation: "documents";
-            referencedColumns: ["id"];
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       documents: {
         Row: {
-          created_at: string;
-          created_by: string;
-          deleted_at: string | null;
-          deleted_by: string | null;
-          file_type: Database["public"]["Enums"]["document_type"];
-          id: string;
-          name: string;
-          updated_at: string;
-          workspace_id: string;
-        };
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          deleted_by: string | null
+          file_type: Database["public"]["Enums"]["document_type"]
+          id: string
+          name: string
+          updated_at: string
+          workspace_id: string
+        }
         Insert: {
-          created_at?: string;
-          created_by: string;
-          deleted_at?: string | null;
-          deleted_by?: string | null;
-          file_type: Database["public"]["Enums"]["document_type"];
-          id?: string;
-          name: string;
-          updated_at?: string;
-          workspace_id: string;
-        };
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_type: Database["public"]["Enums"]["document_type"]
+          id?: string
+          name: string
+          updated_at?: string
+          workspace_id: string
+        }
         Update: {
-          created_at?: string;
-          created_by?: string;
-          deleted_at?: string | null;
-          deleted_by?: string | null;
-          file_type?: Database["public"]["Enums"]["document_type"];
-          id?: string;
-          name?: string;
-          updated_at?: string;
-          workspace_id?: string;
-        };
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_type?: Database["public"]["Enums"]["document_type"]
+          id?: string
+          name?: string
+          updated_at?: string
+          workspace_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "documents_workspace_id_fkey";
-            columns: ["workspace_id"];
-            isOneToOne: false;
-            referencedRelation: "workspaces";
-            referencedColumns: ["id"];
+            foreignKeyName: "documents_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       entity_branches: {
         Row: {
-          branch_code: string;
-          country: string;
-          created_at: string;
-          id: string;
-          name: string;
-          workspace_id: string;
-        };
+          branch_code: string
+          country: string
+          created_at: string
+          id: string
+          name: string
+          workspace_id: string
+        }
         Insert: {
-          branch_code: string;
-          country: string;
-          created_at?: string;
-          id?: string;
-          name: string;
-          workspace_id: string;
-        };
+          branch_code: string
+          country: string
+          created_at?: string
+          id?: string
+          name: string
+          workspace_id: string
+        }
         Update: {
-          branch_code?: string;
-          country?: string;
-          created_at?: string;
-          id?: string;
-          name?: string;
-          workspace_id?: string;
-        };
+          branch_code?: string
+          country?: string
+          created_at?: string
+          id?: string
+          name?: string
+          workspace_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "entity_branches_workspace_id_fkey";
-            columns: ["workspace_id"];
-            isOneToOne: false;
-            referencedRelation: "workspaces";
-            referencedColumns: ["id"];
+            foreignKeyName: "entity_branches_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       entity_profiles: {
         Row: {
-          competent_authority: string;
-          country: string;
-          created_at: string;
-          created_by: string;
-          entity_type: string;
-          id: string;
-          lei: string;
-          name: string;
-          total_assets: number | null;
-          total_assets_currency: string | null;
-          updated_at: string;
-          workspace_id: string;
-        };
+          competent_authority: string
+          country: string
+          created_at: string
+          created_by: string
+          entity_type: string
+          id: string
+          lei: string
+          name: string
+          total_assets: number | null
+          total_assets_currency: string | null
+          updated_at: string
+          workspace_id: string
+        }
         Insert: {
-          competent_authority: string;
-          country: string;
-          created_at?: string;
-          created_by: string;
-          entity_type: string;
-          id?: string;
-          lei: string;
-          name: string;
-          total_assets?: number | null;
-          total_assets_currency?: string | null;
-          updated_at?: string;
-          workspace_id: string;
-        };
+          competent_authority: string
+          country: string
+          created_at?: string
+          created_by: string
+          entity_type: string
+          id?: string
+          lei: string
+          name: string
+          total_assets?: number | null
+          total_assets_currency?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
         Update: {
-          competent_authority?: string;
-          country?: string;
-          created_at?: string;
-          created_by?: string;
-          entity_type?: string;
-          id?: string;
-          lei?: string;
-          name?: string;
-          total_assets?: number | null;
-          total_assets_currency?: string | null;
-          updated_at?: string;
-          workspace_id?: string;
-        };
+          competent_authority?: string
+          country?: string
+          created_at?: string
+          created_by?: string
+          entity_type?: string
+          id?: string
+          lei?: string
+          name?: string
+          total_assets?: number | null
+          total_assets_currency?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "entity_profiles_workspace_id_fkey";
-            columns: ["workspace_id"];
-            isOneToOne: true;
-            referencedRelation: "workspaces";
-            referencedColumns: ["id"];
+            foreignKeyName: "entity_profiles_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       extraction_results: {
         Row: {
-          confidence: number | null;
-          document_version_id: string;
-          extracted_at: string;
-          extracted_value: string | null;
-          extraction_method: string;
-          field_code: string;
-          field_label: string;
-          id: string;
-        };
+          confidence: number | null
+          document_version_id: string
+          extracted_at: string
+          extracted_value: string | null
+          extraction_method: string
+          field_code: string
+          field_label: string
+          id: string
+        }
         Insert: {
-          confidence?: number | null;
-          document_version_id: string;
-          extracted_at?: string;
-          extracted_value?: string | null;
-          extraction_method?: string;
-          field_code: string;
-          field_label: string;
-          id?: string;
-        };
+          confidence?: number | null
+          document_version_id: string
+          extracted_at?: string
+          extracted_value?: string | null
+          extraction_method?: string
+          field_code: string
+          field_label: string
+          id?: string
+        }
         Update: {
-          confidence?: number | null;
-          document_version_id?: string;
-          extracted_at?: string;
-          extracted_value?: string | null;
-          extraction_method?: string;
-          field_code?: string;
-          field_label?: string;
-          id?: string;
-        };
+          confidence?: number | null
+          document_version_id?: string
+          extracted_at?: string
+          extracted_value?: string | null
+          extraction_method?: string
+          field_code?: string
+          field_label?: string
+          id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "extraction_results_document_version_id_fkey";
-            columns: ["document_version_id"];
-            isOneToOne: false;
-            referencedRelation: "document_versions";
-            referencedColumns: ["id"];
+            foreignKeyName: "extraction_results_document_version_id_fkey"
+            columns: ["document_version_id"]
+            isOneToOne: false
+            referencedRelation: "document_versions"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       field_reviews: {
         Row: {
-          decision: string;
-          document_version_id: string;
-          edited_value: string | null;
-          field_code: string;
-          id: string;
-          notes: string | null;
-          reviewed_at: string;
-          reviewed_by: string;
-        };
+          decision: string
+          document_version_id: string
+          edited_value: string | null
+          field_code: string
+          id: string
+          notes: string | null
+          reviewed_at: string
+          reviewed_by: string
+        }
         Insert: {
-          decision: string;
-          document_version_id: string;
-          edited_value?: string | null;
-          field_code: string;
-          id?: string;
-          notes?: string | null;
-          reviewed_at?: string;
-          reviewed_by: string;
-        };
+          decision: string
+          document_version_id: string
+          edited_value?: string | null
+          field_code: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string
+          reviewed_by: string
+        }
         Update: {
-          decision?: string;
-          document_version_id?: string;
-          edited_value?: string | null;
-          field_code?: string;
-          id?: string;
-          notes?: string | null;
-          reviewed_at?: string;
-          reviewed_by?: string;
-        };
+          decision?: string
+          document_version_id?: string
+          edited_value?: string | null
+          field_code?: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string
+          reviewed_by?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "field_reviews_document_version_id_fkey";
-            columns: ["document_version_id"];
-            isOneToOne: false;
-            referencedRelation: "document_versions";
-            referencedColumns: ["id"];
+            foreignKeyName: "field_reviews_document_version_id_fkey"
+            columns: ["document_version_id"]
+            isOneToOne: false
+            referencedRelation: "document_versions"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
+      newsletter_subscribers: {
+        Row: {
+          email: string
+          id: string
+          subscribed_at: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          subscribed_at?: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          subscribed_at?: string
+        }
+        Relationships: []
+      }
       pipeline_run_documents: {
         Row: {
-          created_at: string;
-          document_version_id: string;
-          extraction_status: Database["public"]["Enums"]["stage_status"];
-          normalisation_status: Database["public"]["Enums"]["stage_status"];
-          ocr_status: Database["public"]["Enums"]["stage_status"];
-          pipeline_run_id: string;
-          recommendation_status: Database["public"]["Enums"]["stage_status"];
-          updated_at: string;
-          validation_status: Database["public"]["Enums"]["stage_status"];
-        };
+          created_at: string
+          document_version_id: string
+          extraction_status: Database["public"]["Enums"]["stage_status"]
+          normalisation_status: Database["public"]["Enums"]["stage_status"]
+          ocr_status: Database["public"]["Enums"]["stage_status"]
+          pipeline_run_id: string
+          recommendation_status: Database["public"]["Enums"]["stage_status"]
+          updated_at: string
+          validation_status: Database["public"]["Enums"]["stage_status"]
+        }
         Insert: {
-          created_at?: string;
-          document_version_id: string;
-          extraction_status?: Database["public"]["Enums"]["stage_status"];
-          normalisation_status?: Database["public"]["Enums"]["stage_status"];
-          ocr_status?: Database["public"]["Enums"]["stage_status"];
-          pipeline_run_id: string;
-          recommendation_status?: Database["public"]["Enums"]["stage_status"];
-          updated_at?: string;
-          validation_status?: Database["public"]["Enums"]["stage_status"];
-        };
+          created_at?: string
+          document_version_id: string
+          extraction_status?: Database["public"]["Enums"]["stage_status"]
+          normalisation_status?: Database["public"]["Enums"]["stage_status"]
+          ocr_status?: Database["public"]["Enums"]["stage_status"]
+          pipeline_run_id: string
+          recommendation_status?: Database["public"]["Enums"]["stage_status"]
+          updated_at?: string
+          validation_status?: Database["public"]["Enums"]["stage_status"]
+        }
         Update: {
-          created_at?: string;
-          document_version_id?: string;
-          extraction_status?: Database["public"]["Enums"]["stage_status"];
-          normalisation_status?: Database["public"]["Enums"]["stage_status"];
-          ocr_status?: Database["public"]["Enums"]["stage_status"];
-          pipeline_run_id?: string;
-          recommendation_status?: Database["public"]["Enums"]["stage_status"];
-          updated_at?: string;
-          validation_status?: Database["public"]["Enums"]["stage_status"];
-        };
+          created_at?: string
+          document_version_id?: string
+          extraction_status?: Database["public"]["Enums"]["stage_status"]
+          normalisation_status?: Database["public"]["Enums"]["stage_status"]
+          ocr_status?: Database["public"]["Enums"]["stage_status"]
+          pipeline_run_id?: string
+          recommendation_status?: Database["public"]["Enums"]["stage_status"]
+          updated_at?: string
+          validation_status?: Database["public"]["Enums"]["stage_status"]
+        }
         Relationships: [
           {
-            foreignKeyName: "pipeline_run_documents_document_version_id_fkey";
-            columns: ["document_version_id"];
-            isOneToOne: false;
-            referencedRelation: "document_versions";
-            referencedColumns: ["id"];
+            foreignKeyName: "pipeline_run_documents_document_version_id_fkey"
+            columns: ["document_version_id"]
+            isOneToOne: false
+            referencedRelation: "document_versions"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pipeline_run_documents_pipeline_run_id_fkey";
-            columns: ["pipeline_run_id"];
-            isOneToOne: false;
-            referencedRelation: "pipeline_runs";
-            referencedColumns: ["id"];
+            foreignKeyName: "pipeline_run_documents_pipeline_run_id_fkey"
+            columns: ["pipeline_run_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_runs"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       pipeline_runs: {
         Row: {
-          completed_at: string | null;
-          created_at: string;
-          created_by: string;
-          id: string;
-          started_at: string | null;
-          status: Database["public"]["Enums"]["pipeline_run_status"];
-          updated_at: string;
-          workspace_id: string;
-        };
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["pipeline_run_status"]
+          updated_at: string
+          workspace_id: string
+        }
         Insert: {
-          completed_at?: string | null;
-          created_at?: string;
-          created_by: string;
-          id?: string;
-          started_at?: string | null;
-          status?: Database["public"]["Enums"]["pipeline_run_status"];
-          updated_at?: string;
-          workspace_id: string;
-        };
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["pipeline_run_status"]
+          updated_at?: string
+          workspace_id: string
+        }
         Update: {
-          completed_at?: string | null;
-          created_at?: string;
-          created_by?: string;
-          id?: string;
-          started_at?: string | null;
-          status?: Database["public"]["Enums"]["pipeline_run_status"];
-          updated_at?: string;
-          workspace_id?: string;
-        };
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["pipeline_run_status"]
+          updated_at?: string
+          workspace_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "pipeline_runs_workspace_id_fkey";
-            columns: ["workspace_id"];
-            isOneToOne: false;
-            referencedRelation: "workspaces";
-            referencedColumns: ["id"];
+            foreignKeyName: "pipeline_runs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       profiles: {
         Row: {
-          created_at: string;
-          display_name: string | null;
-          id: string;
-          updated_at: string;
-        };
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
         Insert: {
-          created_at?: string;
-          display_name?: string | null;
-          id: string;
-          updated_at?: string;
-        };
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
         Update: {
-          created_at?: string;
-          display_name?: string | null;
-          id?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       validation_results: {
         Row: {
-          document_version_id: string;
-          field_code: string;
-          id: string;
-          message: string | null;
-          rule_id: string;
-          rule_label: string;
-          status: string;
-          validated_at: string;
-        };
+          document_version_id: string
+          field_code: string
+          id: string
+          message: string | null
+          rule_id: string
+          rule_label: string
+          status: string
+          validated_at: string
+        }
         Insert: {
-          document_version_id: string;
-          field_code: string;
-          id?: string;
-          message?: string | null;
-          rule_id: string;
-          rule_label: string;
-          status: string;
-          validated_at?: string;
-        };
+          document_version_id: string
+          field_code: string
+          id?: string
+          message?: string | null
+          rule_id: string
+          rule_label: string
+          status: string
+          validated_at?: string
+        }
         Update: {
-          document_version_id?: string;
-          field_code?: string;
-          id?: string;
-          message?: string | null;
-          rule_id?: string;
-          rule_label?: string;
-          status?: string;
-          validated_at?: string;
-        };
+          document_version_id?: string
+          field_code?: string
+          id?: string
+          message?: string | null
+          rule_id?: string
+          rule_label?: string
+          status?: string
+          validated_at?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "validation_results_document_version_id_fkey";
-            columns: ["document_version_id"];
-            isOneToOne: false;
-            referencedRelation: "document_versions";
-            referencedColumns: ["id"];
+            foreignKeyName: "validation_results_document_version_id_fkey"
+            columns: ["document_version_id"]
+            isOneToOne: false
+            referencedRelation: "document_versions"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       workspace_members: {
         Row: {
-          joined_at: string;
-          role: Database["public"]["Enums"]["workspace_role"];
-          user_id: string;
-          workspace_id: string;
-        };
+          joined_at: string
+          role: Database["public"]["Enums"]["workspace_role"]
+          user_id: string
+          workspace_id: string
+        }
         Insert: {
-          joined_at?: string;
-          role?: Database["public"]["Enums"]["workspace_role"];
-          user_id: string;
-          workspace_id: string;
-        };
+          joined_at?: string
+          role?: Database["public"]["Enums"]["workspace_role"]
+          user_id: string
+          workspace_id: string
+        }
         Update: {
-          joined_at?: string;
-          role?: Database["public"]["Enums"]["workspace_role"];
-          user_id?: string;
-          workspace_id?: string;
-        };
+          joined_at?: string
+          role?: Database["public"]["Enums"]["workspace_role"]
+          user_id?: string
+          workspace_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "workspace_members_workspace_id_fkey";
-            columns: ["workspace_id"];
-            isOneToOne: false;
-            referencedRelation: "workspaces";
-            referencedColumns: ["id"];
+            foreignKeyName: "workspace_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       workspaces: {
         Row: {
-          created_at: string;
-          created_by: string;
-          id: string;
-          name: string;
-          slug: string;
-        };
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          slug: string
+        }
         Insert: {
-          created_at?: string;
-          created_by: string;
-          id?: string;
-          name: string;
-          slug: string;
-        };
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          slug: string
+        }
         Update: {
-          created_at?: string;
-          created_by?: string;
-          id?: string;
-          name?: string;
-          slug?: string;
-        };
-        Relationships: [];
-      };
-    };
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
       has_workspace_role: {
         Args: {
-          required_role: Database["public"]["Enums"]["workspace_role"];
-          target_workspace_id: string;
-        };
-        Returns: boolean;
-      };
+          required_role: Database["public"]["Enums"]["workspace_role"]
+          target_workspace_id: string
+        }
+        Returns: boolean
+      }
       is_workspace_member: {
-        Args: { target_workspace_id: string };
-        Returns: boolean;
-      };
+        Args: { target_workspace_id: string }
+        Returns: boolean
+      }
       soft_delete_document: {
-        Args: { target_document_id: string };
-        Returns: undefined;
-      };
-    };
+        Args: { target_document_id: string }
+        Returns: undefined
+      }
+    }
     Enums: {
-      document_type: "pdf" | "docx" | "xlsx" | "csv";
-      pipeline_run_status: "queued" | "running" | "completed" | "failed";
-      stage_status: "pending" | "running" | "completed" | "failed" | "skipped";
-      upload_status: "uploading" | "uploaded" | "failed";
-      workspace_role: "owner" | "admin" | "reviewer" | "viewer";
-    };
+      document_type: "pdf" | "docx" | "xlsx" | "csv"
+      pipeline_run_status: "queued" | "running" | "completed" | "failed"
+      stage_status: "pending" | "running" | "completed" | "failed" | "skipped"
+      upload_status: "uploading" | "uploaded" | "failed"
+      workspace_role: "owner" | "admin" | "reviewer" | "viewer"
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
-};
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {
+      document_type: ["pdf", "docx", "xlsx", "csv"],
+      pipeline_run_status: ["queued", "running", "completed", "failed"],
+      stage_status: ["pending", "running", "completed", "failed", "skipped"],
+      upload_status: ["uploading", "uploaded", "failed"],
+      workspace_role: ["owner", "admin", "reviewer", "viewer"],
+    },
+  },
+} as const
 
 // ---------------------------------------------------------------------------
 // Convenience row-type aliases — import these in components instead of the
@@ -585,3 +762,5 @@ export type ValidationResultRow    = Database["public"]["Tables"]["validation_re
 export type FieldReviewRow         = Database["public"]["Tables"]["field_reviews"]["Row"];
 export type EntityProfileRow       = Database["public"]["Tables"]["entity_profiles"]["Row"];
 export type EntityBranchRow        = Database["public"]["Tables"]["entity_branches"]["Row"];
+export type NewsletterSubscriberRow = Database["public"]["Tables"]["newsletter_subscribers"]["Row"];
+
