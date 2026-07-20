@@ -16,11 +16,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app import __version__
 from app.api.health import router as health_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
+from app.core.rate_limit import limiter
 from app.pipeline.router import router as pipeline_router
 
 
@@ -75,6 +78,12 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
+
+    # Rate limiting — see app/core/rate_limit.py. Applied per-route via
+    # @limiter.limit(...) (currently just the LLM-billed trigger
+    # endpoint); this registers the limiter + its 429 error handler.
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # Routers — mount here as they are added.
     app.include_router(health_router)

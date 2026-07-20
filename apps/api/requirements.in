@@ -24,6 +24,9 @@ supabase             # Postgres + Auth + Storage SDK. Wraps postgrest, gotrue, s
 # --- Logging ---
 structlog            # Structured JSON logs — required for observability + audit.
 
+# --- Rate limiting (2026-07-18 audit fix) ---
+slowapi              # Per-route rate limits on cost-sensitive endpoints.
+
 # --- LLM (Phase 3+) ---
 openai               # OpenAI API — field extraction, recommendations, RAG.
 langfuse>=2,<3       # LLM observability — v2 uses REST API (v3+ switched to OTEL, unstable).

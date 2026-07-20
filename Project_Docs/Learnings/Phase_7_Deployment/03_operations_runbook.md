@@ -302,6 +302,13 @@ Check for an orphaned `certbot` process holding the lock (see
 `CHALLENGES.md` C3): `ps aux | grep certbot`, `kill -9` any that
 shouldn't be there, retry.
 
+**"`/pipeline/runs/{id}/trigger` is returning 429."**
+Expected once 20 requests/minute have hit that route in total, not per
+`run_id` — see `apps/api/app/core/rate_limit.py` and `CHALLENGES.md` C12
+for why it's a shared bucket across every run rather than one per run.
+A real burst of legitimate triggers (e.g. batch-processing many queued
+runs at once) will hit this; there's no per-caller exemption today.
+
 **"A GitHub push isn't triggering a Vercel deploy."**
 Check Settings → Git shows `veera-vsn/EvidenceOS` as connected (not
 disconnected/expired). If a *new* repository ever needs connecting again,

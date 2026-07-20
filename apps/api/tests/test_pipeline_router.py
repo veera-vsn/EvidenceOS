@@ -25,6 +25,7 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
+from app.core.rate_limit import limiter
 from app.core.supabase import get_service_client
 from app.pipeline.validator import validate_fields
 
@@ -74,6 +75,7 @@ def test_trigger_nonexistent_run_returns_404_not_500(
     """Regression test for the .single()-vs-.maybe_single() bug fixed
     alongside the internal-auth change: .single() raised an unhandled
     postgrest APIError for zero rows instead of the intended 404."""
+    limiter.reset()  # isolate from other tests' call counts against /trigger
     response = client.post(f"/pipeline/runs/{uuid4()}/trigger", headers=auth_headers)
     assert response.status_code == 404
 
@@ -81,6 +83,7 @@ def test_trigger_nonexistent_run_returns_404_not_500(
 def test_trigger_non_queued_run_returns_409(
     client: TestClient, auth_headers: dict[str, str], test_pipeline_run: str
 ) -> None:
+    limiter.reset()
     get_service_client().table("pipeline_runs").update({"status": "running"}).eq(
         "id", test_pipeline_run
     ).execute()
@@ -92,6 +95,7 @@ def test_trigger_non_queued_run_returns_409(
 def test_trigger_queued_run_returns_202_and_schedules_worker(
     client: TestClient, auth_headers: dict[str, str], test_pipeline_run: str
 ) -> None:
+    limiter.reset()
     with patch("app.pipeline.router.run_ocr_for_pipeline") as mock_worker:
         response = client.post(f"/pipeline/runs/{test_pipeline_run}/trigger", headers=auth_headers)
 
@@ -100,6 +104,39 @@ def test_trigger_queued_run_returns_202_and_schedules_worker(
     assert body["run_id"] == test_pipeline_run
     assert body["status"] == "accepted"
     mock_worker.assert_called_once_with(test_pipeline_run)
+
+
+def test_trigger_is_rate_limited_after_20_requests_per_minute(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    """The one endpoint that triggers real, billed OpenAI calls should
+    not be callable without bound -- a runaway retry loop or a leaked
+    internal-auth secret shouldn't be able to run up an unbounded bill
+    (2026-07-18 audit, API finding A2). limiter.reset() first so this
+    test's count isn't polluted by the trigger tests above it, and isn't
+    itself left over to affect whatever runs after it.
+
+    This test is also what caught a real bug during implementation:
+    @limiter.limit()'s default scope is the raw URL path, which includes
+    this route's run_id, so every call had a distinct scope and the
+    limit never actually fired despite 100% of the *other* tests
+    passing. Switched to shared_limit(scope=...) in router.py -- this
+    test failing first (404 instead of 429 on the 21st call) is what
+    exposed that, so don't lose it as "redundant" coverage later."""
+    limiter.reset()
+    try:
+        statuses = [
+            client.post(f"/pipeline/runs/{uuid4()}/trigger", headers=auth_headers).status_code
+            for _ in range(21)
+        ]
+        # First 20 hit real route logic (404s, since these are random
+        # nonexistent run IDs -- the point here is the *count*, not what
+        # the route itself returns). The 21st must be rejected by the
+        # rate limiter before the route body ever runs.
+        assert statuses[:20] == [404] * 20
+        assert statuses[20] == 429
+    finally:
+        limiter.reset()
 
 
 # ---------------------------------------------------------------------------

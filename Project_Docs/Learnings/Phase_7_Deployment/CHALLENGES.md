@@ -372,6 +372,51 @@ silently until directly verified.
 
 ---
 
+## C12 — `@limiter.limit()`'s default rate-limit scope is the raw URL path, so a path with an ID in it silently never shares a bucket
+
+**Symptom:** added `slowapi` rate limiting to `POST
+/pipeline/runs/{run_id}/trigger` (20/minute — see
+`Project_Docs/AUDIT_2026-07-18.md`'s API finding A2, this route triggers
+real billed OpenAI calls with no other throttle). Every existing test
+still passed, and a first version of a dedicated test that hammered the
+endpoint 21 times also initially seemed like it should fail correctly —
+but it didn't: all 21 calls returned the route's normal 404 (nonexistent
+run_id), never the expected 429.
+
+**Root cause:** `slowapi.Limiter.limit()`'s default `key_style` is
+`"url"`, meaning the rate-limit bucket's scope is `request["path"]` —
+the *literal* request path, run_id and all. Every call in the test (and
+every real call in production, since a real run_id is different every
+time) used a distinct URL, so each one landed in its own independent
+20/minute bucket and the limit could never be reached no matter how many
+requests were sent to the "same" endpoint. The decorator, the
+`app.state.limiter` wiring, and the exception handler were all correct —
+the bug was entirely in which requests slowapi considers to be hitting
+the same limit.
+
+**Fix:** switched from `@limiter.limit("20/minute")` to
+`@limiter.shared_limit("20/minute", scope="pipeline-trigger")` in
+`apps/api/app/pipeline/router.py` — `shared_limit()` takes an explicit
+scope string instead of deriving one from the URL, so every call to this
+route now shares one bucket regardless of `run_id`. Verified by a debug
+script hitting the route 25 times directly: before the fix, 25/25 were
+404; after, the first 20 were 404 and the remaining 5 were 429.
+
+**Lesson:** a rate limiter passing all *existing* tests proves the app
+didn't break — it proves nothing about whether the limit itself fires,
+since nothing else in the test suite calls the same route with the same
+ID twice. A rate-limit change needs its own test that actually exhausts
+the quota and asserts a 429, not just a regression pass; that dedicated
+test is what caught this (see `test_pipeline_router.py`'s
+`test_trigger_is_rate_limited_after_20_requests_per_minute`). Also worth
+checking, for any route whose path contains a variable segment: does
+this rate-limiting library key on the URL by default, or on the
+endpoint/handler identity? The two give very different behaviour and
+the difference is invisible until you deliberately try to trip the
+limit.
+
+---
+
 ## What went right without incident
 
 Worth naming, not just the bumps: Python 3.13 was directly available via

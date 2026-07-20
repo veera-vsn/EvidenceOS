@@ -23,10 +23,11 @@ authentication boundary as of the 2026-07-18 production audit fix.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from app.core.internal_auth import require_internal_api_key
+from app.core.rate_limit import limiter
 from app.core.supabase import get_service_client
 from app.pipeline.export import build_export_zip
 from app.pipeline.ocr_worker import run_ocr_for_pipeline
@@ -53,7 +54,9 @@ class TriggerResponse(BaseModel):
     status_code=202,
     summary="Trigger OCR processing for a pipeline run",
 )
+@limiter.shared_limit("20/minute", scope="pipeline-trigger")
 async def trigger_pipeline_run(
+    request: Request,  # required by @limiter.shared_limit, unused otherwise
     run_id: str,
     background_tasks: BackgroundTasks,
 ) -> TriggerResponse:
@@ -65,6 +68,16 @@ async def trigger_pipeline_run(
     The run status transitions:
         queued → running (set by worker on start)
         running → completed | failed (set by worker on finish)
+
+    Rate-limited to 20/minute across all run_ids (see app/core/rate_limit.py)
+    -- this is the one route that triggers real, billed OpenAI calls; a
+    runaway retry loop or a leaked internal-auth secret shouldn't be able
+    to run up an unbounded bill. Uses shared_limit() with an explicit
+    scope, not plain limit(): slowapi's default scope is the raw request
+    URL path, which here includes the literal run_id, so plain limit()
+    would silently give every run_id its own independent 20/minute bucket
+    instead of rate-limiting the endpoint as a whole (caught by the
+    dedicated test below actually observing a 429, not just passing).
     """
     client = get_service_client()
 
