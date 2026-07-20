@@ -140,7 +140,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </form>
 
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs text-fg-3">No reset flow yet</span>
+            <span className="text-xs text-fg-3">
+              Forgot your password?{" "}
+              <a href="mailto:hello@evidenceos.eu" className="underline hover:text-fg">
+                Email us
+              </a>{" "}
+              and we&apos;ll help you back in.
+            </span>
           </div>
 
           <div className="my-[22px] h-px bg-border-2" />
