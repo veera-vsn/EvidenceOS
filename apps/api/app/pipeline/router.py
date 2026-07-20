@@ -19,14 +19,27 @@ Every route below requires the `X-Internal-Api-Key` shared-secret header
 (see app/core/internal_auth.py) -- this backend is reachable from the
 public internet, so that header, not network position, is the actual
 authentication boundary as of the 2026-07-18 production audit fix.
+
+Every route is declared `async def`, but the Supabase client (`supabase`-
+py) is synchronous -- calling it directly from a coroutine body blocks
+uvicorn's single event loop for the duration of that network call.
+Since this process runs as a single systemd unit with no `--workers`
+flag, serving staging and production simultaneously (see the ops
+runbook), one slow revalidate/export call would otherwise stall every
+other in-flight request on the box, including `/health` (2026-07-18
+audit finding B2). Each route below offloads its blocking work to a
+worker thread via `anyio.to_thread.run_sync` instead of calling it
+inline.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
+import anyio.to_thread
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from app.core.internal_auth import require_internal_api_key
+from app.core.rate_limit import limiter
 from app.core.supabase import get_service_client
 from app.pipeline.export import build_export_zip
 from app.pipeline.ocr_worker import run_ocr_for_pipeline
@@ -47,13 +60,37 @@ class TriggerResponse(BaseModel):
     message: str
 
 
+def _fetch_run_status(run_id: str) -> str | None:
+    """Blocking Supabase call, run off the event loop via run_sync.
+
+    maybe_single(), not single() -- single() raises a postgrest APIError
+    (PGRST116) for zero rows instead of returning data=None, which would
+    otherwise skip the not-found check entirely and surface as an
+    unhandled 500 instead of the intended 404 (same fix already applied
+    in export.py's build_export_zip -- found here via the same class of
+    bug, while testing the 2026-07-18 internal-auth fix against a
+    nonexistent run_id).
+    """
+    resp = (
+        get_service_client()
+        .table("pipeline_runs")
+        .select("id, status")
+        .eq("id", run_id)
+        .maybe_single()
+        .execute()
+    )
+    return resp.data["status"] if resp and resp.data else None
+
+
 @router.post(
     "/runs/{run_id}/trigger",
     response_model=TriggerResponse,
     status_code=202,
     summary="Trigger OCR processing for a pipeline run",
 )
+@limiter.shared_limit("20/minute", scope="pipeline-trigger")
 async def trigger_pipeline_run(
+    request: Request,  # required by @limiter.shared_limit, unused otherwise
     run_id: str,
     background_tasks: BackgroundTasks,
 ) -> TriggerResponse:
@@ -65,29 +102,22 @@ async def trigger_pipeline_run(
     The run status transitions:
         queued → running (set by worker on start)
         running → completed | failed (set by worker on finish)
+
+    Rate-limited to 20/minute across all run_ids (see app/core/rate_limit.py)
+    -- this is the one route that triggers real, billed OpenAI calls; a
+    runaway retry loop or a leaked internal-auth secret shouldn't be able
+    to run up an unbounded bill. Uses shared_limit() with an explicit
+    scope, not plain limit(): slowapi's default scope is the raw request
+    URL path, which here includes the literal run_id, so plain limit()
+    would silently give every run_id its own independent 20/minute bucket
+    instead of rate-limiting the endpoint as a whole (caught by the
+    dedicated test below actually observing a 429, not just passing).
     """
-    client = get_service_client()
+    current_status = await anyio.to_thread.run_sync(_fetch_run_status, run_id)
 
-    # Validate the run exists and is queued.
-    # maybe_single(), not single() -- single() raises a postgrest APIError
-    # (PGRST116) for zero rows instead of returning data=None, which would
-    # otherwise skip the not-found check below entirely and surface as an
-    # unhandled 500 instead of the intended 404 (same fix already applied
-    # in export.py's build_export_zip -- found here via the same class of
-    # bug, while testing the 2026-07-18 internal-auth fix against a
-    # nonexistent run_id).
-    resp = (
-        client.table("pipeline_runs")
-        .select("id, status")
-        .eq("id", run_id)
-        .maybe_single()
-        .execute()
-    )
-
-    if not resp or not resp.data:
+    if current_status is None:
         raise HTTPException(status_code=404, detail=f"Pipeline run {run_id!r} not found.")
 
-    current_status = resp.data["status"]
     if current_status != "queued":
         raise HTTPException(
             status_code=409,
@@ -124,7 +154,9 @@ async def revalidate_document(document_version_id: str) -> RevalidateResponse:
     caller has the updated validation_results before it revalidates the
     Next.js page cache.
     """
-    rules_evaluated = revalidate_document_version(document_version_id)
+    rules_evaluated = await anyio.to_thread.run_sync(
+        revalidate_document_version, document_version_id
+    )
     return RevalidateResponse(
         document_version_id=document_version_id,
         rules_evaluated=rules_evaluated,
@@ -145,7 +177,7 @@ async def export_workspace(workspace_id: str) -> Response:
     and fully reviewed are included (see export.determine_export_eligibility).
     """
     try:
-        zip_bytes = build_export_zip(workspace_id)
+        zip_bytes = await anyio.to_thread.run_sync(build_export_zip, workspace_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

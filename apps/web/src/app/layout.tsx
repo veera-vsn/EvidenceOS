@@ -29,17 +29,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const description =
+  "AI-powered evidence & validation copilot for EU financial entities preparing their DORA Register of Information.";
+
 export const metadata: Metadata = {
   title: {
     default: "EvidenceOS — DORA RoI Copilot",
     template: "%s · EvidenceOS",
   },
-  description:
-    "AI-powered evidence & validation copilot for EU financial entities preparing their DORA Register of Information.",
+  description,
   applicationName: "EvidenceOS",
   authors: [{ name: "EvidenceOS" }],
   // We do not want indexing on the marketing pages until we launch.
   robots: { index: false, follow: false },
+  // The og:image/twitter:image tags themselves are wired up automatically
+  // by opengraph-image.tsx (Next's file-convention API) -- title/
+  // description/type here are what's left for Metadata to fill in.
+  openGraph: {
+    title: "EvidenceOS — DORA RoI Copilot",
+    description,
+    siteName: "EvidenceOS",
+    locale: "en_IE",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EvidenceOS — DORA RoI Copilot",
+    description,
+  },
 };
 
 export default function RootLayout({

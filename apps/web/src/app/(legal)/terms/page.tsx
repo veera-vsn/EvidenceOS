@@ -8,7 +8,10 @@
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Terms of Service — EvidenceOS" };
+// Root layout's title template ("%s · EvidenceOS") already appends the
+// brand name -- including it here too rendered as "Terms of Service —
+// EvidenceOS · EvidenceOS" in the browser tab.
+export const metadata: Metadata = { title: "Terms of Service" };
 
 function H2({ children }: { children: React.ReactNode }) {
   return (

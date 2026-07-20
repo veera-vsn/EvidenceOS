@@ -372,6 +372,132 @@ silently until directly verified.
 
 ---
 
+## C12 — `@limiter.limit()`'s default rate-limit scope is the raw URL path, so a path with an ID in it silently never shares a bucket
+
+**Symptom:** added `slowapi` rate limiting to `POST
+/pipeline/runs/{run_id}/trigger` (20/minute — see
+`Project_Docs/AUDIT_2026-07-18.md`'s API finding A2, this route triggers
+real billed OpenAI calls with no other throttle). Every existing test
+still passed, and a first version of a dedicated test that hammered the
+endpoint 21 times also initially seemed like it should fail correctly —
+but it didn't: all 21 calls returned the route's normal 404 (nonexistent
+run_id), never the expected 429.
+
+**Root cause:** `slowapi.Limiter.limit()`'s default `key_style` is
+`"url"`, meaning the rate-limit bucket's scope is `request["path"]` —
+the *literal* request path, run_id and all. Every call in the test (and
+every real call in production, since a real run_id is different every
+time) used a distinct URL, so each one landed in its own independent
+20/minute bucket and the limit could never be reached no matter how many
+requests were sent to the "same" endpoint. The decorator, the
+`app.state.limiter` wiring, and the exception handler were all correct —
+the bug was entirely in which requests slowapi considers to be hitting
+the same limit.
+
+**Fix:** switched from `@limiter.limit("20/minute")` to
+`@limiter.shared_limit("20/minute", scope="pipeline-trigger")` in
+`apps/api/app/pipeline/router.py` — `shared_limit()` takes an explicit
+scope string instead of deriving one from the URL, so every call to this
+route now shares one bucket regardless of `run_id`. Verified by a debug
+script hitting the route 25 times directly: before the fix, 25/25 were
+404; after, the first 20 were 404 and the remaining 5 were 429.
+
+**Lesson:** a rate limiter passing all *existing* tests proves the app
+didn't break — it proves nothing about whether the limit itself fires,
+since nothing else in the test suite calls the same route with the same
+ID twice. A rate-limit change needs its own test that actually exhausts
+the quota and asserts a 429, not just a regression pass; that dedicated
+test is what caught this (see `test_pipeline_router.py`'s
+`test_trigger_is_rate_limited_after_20_requests_per_minute`). Also worth
+checking, for any route whose path contains a variable segment: does
+this rate-limiting library key on the URL by default, or on the
+endpoint/handler identity? The two give very different behaviour and
+the difference is invisible until you deliberately try to trip the
+limit.
+
+---
+
+## C13 — Pagination added to Documents and Pipeline (audit finding A5), scope deliberately limited
+
+**Not a bug, but a decision worth recording:** `Project_Docs/AUDIT_2026-07-18.md`'s
+A5 flagged `documents/page.tsx` and `pipeline/page.tsx` as fetching every
+row, unbounded, on every load. Both now paginate via a shared
+`PaginationNav` component (`_components/pagination-nav.tsx`) using plain
+`?page=N` links -- no client JS, matching this app's existing preference
+for server-rendered list views (see the Pipeline page's own `<details>`
+choice over a client-side accordion). Documents: 25/page. Pipeline runs:
+10/page (each run's query is far more expensive -- three joined levels
+deep per run).
+
+Deliberately **not** paginated: the Pipeline page's "Start a new run"
+document picker (`start-run-form.tsx`), which still receives the full,
+unbounded `documents` list for the workspace. A checkbox picker needs to
+show every selectable document at once -- paginating it would hide
+documents from selection rather than just slow their initial render, a
+different and worse problem. This list will eventually need its own
+scaling answer (search/filter, most likely, not pagination), but that's
+a distinct, unstarted piece of work, not an oversight in this change.
+
+Verified against real data, not just empty/small fixtures: seeded 30
+documents and 12 pipeline runs directly into the local dev database,
+confirmed page 1 shows exactly 25/10 rows with the correct "Page 1 of 2"
+count and a disabled Previous button, clicked through to page 2 and
+confirmed the remaining 5/2 rows render with Next disabled, then deleted
+the seeded rows again. Cheap to do locally and the only way to actually
+know the `.range()` math and total-count query are right, rather than
+just assuming a query that returns *something* is returning the *right*
+page of something.
+
+---
+
+## C14 — A first version of the event-loop-blocking test passed unconditionally, fixed or not
+
+**Symptom:** fixed audit finding B2 (`apps/api/app/pipeline/router.py`'s
+`async def` routes calling the synchronous Supabase client inline,
+blocking uvicorn's single event loop) by offloading each blocking call
+via `anyio.to_thread.run_sync`. Wrote a dedicated test
+(`test_event_loop_blocking.py`) that patches in an artificially slow
+`_fetch_run_status`, fires it concurrently with a `/health` request via
+`httpx.AsyncClient` + `ASGITransport`, and asserts `/health` isn't held
+up. It passed immediately. To sanity-check it the way C12 (rate-limit
+scope) demanded, I monkeypatched `anyio.to_thread.run_sync` itself back
+to calling the blocking function inline -- reproducing the exact bug
+this test exists to catch -- and reran the same test. It **still
+passed**, just as fast, bug reintroduced or not.
+
+**Root cause:** `asyncio.create_task(...)` only schedules a coroutine;
+it doesn't start running until something yields control back to the
+event loop. `httpx.AsyncClient` talking to the app in-process via
+`ASGITransport` (no real socket I/O) can run a simple request like
+`/health` start-to-finish in one scheduler turn, without ever ceding
+control -- so the "concurrent" trigger request never got a chance to
+run (and potentially block anything) *during* the health call at all;
+it only actually executed later, at the explicit `await trigger_task`,
+by which point health had already returned and nothing was being
+measured. The test's headline assertion was true regardless of whether
+the fix worked, because the two requests were never actually racing.
+
+**Fix:** added one explicit `await asyncio.sleep(0)` between creating
+the trigger task and awaiting `/health` -- a real scheduler handoff
+that forces the pending task to actually start running (and, if the
+bug were present, hang the whole loop) before the health call gets its
+turn. Reran the same monkeypatch-the-bug-back-in reproduction with this
+version: it correctly failed (~0.5s instead of the SLOW_CALL_SECONDS/2
+threshold). Only after seeing it fail for the right reason, then pass
+again with the patch removed, was the test considered done.
+
+**Lesson:** the same principle as C12, one level deeper -- it's not
+enough for a regression test to *look* like it exercises the bug it
+claims to guard against; concurrency/timing tests in particular can
+pass for structural reasons that have nothing to do with the behaviour
+under test (here, an async framework's scheduler simply never handing
+control to the "other" coroutine). Before trusting any test whose
+entire point is proving two things happened concurrently (or one didn't
+block another), deliberately reintroduce the bug it's meant to catch
+and confirm it actually fails. A test that can't fail isn't a test.
+
+---
+
 ## What went right without incident
 
 Worth naming, not just the bumps: Python 3.13 was directly available via

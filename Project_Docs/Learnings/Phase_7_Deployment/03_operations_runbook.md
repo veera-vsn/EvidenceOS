@@ -88,6 +88,20 @@ npx supabase start    # pulls Docker images (~5 min first time), applies
 403s for the app's `authenticated`/`anon` roles with "permission denied"
 even though RLS policies are correct. See `CHALLENGES.md` C10 for why.
 
+**`local-dev-test` workspace login:** `localdbtest@example.eu` — its
+password was reset (via the GoTrue admin API, not the UI) while
+verifying pagination against real data (`CHALLENGES.md` C13), since the
+password set when the account was first created wasn't written down
+anywhere recoverable. If it stops working again, reset it the same way
+rather than hunting for the original:
+```bash
+curl -X PUT "http://127.0.0.1:54321/auth/v1/admin/users/<user-id>" \
+  -H "apikey: <local anon or service key from `supabase status`>" \
+  -H "Authorization: Bearer <local service key>" \
+  -H "Content-Type: application/json" \
+  -d '{"password": "<new password, 8+ chars>"}'
+```
+
 ---
 
 ## Redeploying the frontend (Vercel)
@@ -301,6 +315,13 @@ commands above by hand.
 Check for an orphaned `certbot` process holding the lock (see
 `CHALLENGES.md` C3): `ps aux | grep certbot`, `kill -9` any that
 shouldn't be there, retry.
+
+**"`/pipeline/runs/{id}/trigger` is returning 429."**
+Expected once 20 requests/minute have hit that route in total, not per
+`run_id` — see `apps/api/app/core/rate_limit.py` and `CHALLENGES.md` C12
+for why it's a shared bucket across every run rather than one per run.
+A real burst of legitimate triggers (e.g. batch-processing many queued
+runs at once) will hit this; there's no per-caller exemption today.
 
 **"A GitHub push isn't triggering a Vercel deploy."**
 Check Settings → Git shows `veera-vsn/EvidenceOS` as connected (not

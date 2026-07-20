@@ -33,6 +33,27 @@ function requireField(form: FormData, name: string): string {
 }
 
 /**
+ * Minimum password length, re-enforced server-side (2026-07-18 audit,
+ * Security S2). The signup form's own `minLength={8}` is an HTML
+ * attribute — trivially bypassed by disabling JS or calling this action
+ * directly — and Supabase's own project-level policy is configured
+ * independently of this codebase, so neither can be trusted as the only
+ * gate. This number must match the UI copy in signup/page.tsx
+ * ("Minimum 8 characters") — deliberately not adding an undisclosed
+ * complexity rule (uppercase/digit/symbol) beyond what the UI actually
+ * promises, which would reject a password a user reasonably believed
+ * was acceptable.
+ */
+const MIN_PASSWORD_LENGTH = 8;
+
+function validatePassword(password: string): string | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+  }
+  return null;
+}
+
+/**
  * Compute the absolute URL to send in the confirmation email. Supabase
  * will append `?code=...` and the user's browser will land on
  * `/auth/callback`, where we exchange the code for a session.
@@ -57,6 +78,11 @@ export async function signup(formData: FormData) {
         "You must agree to the Terms of Service and Privacy Policy to create an account.",
       )}`,
     );
+  }
+
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    redirect(`/signup?error=${encodeURIComponent(passwordError)}`);
   }
 
   const supabase = await createClient();

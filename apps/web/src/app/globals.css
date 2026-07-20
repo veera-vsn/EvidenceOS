@@ -21,7 +21,13 @@
 
   --fg: #1c1a17;
   --fg-2: #6b6560;
-  --fg-3: #9c948c;
+  /* Was #9c948c (~2.84-2.99:1 against --bg/--surface) -- failed WCAG
+     AA's 4.5:1 for normal text despite being used for table headers,
+     timestamps, and field codes throughout the app. Same hue/
+     saturation, darkened just enough to clear 4.5:1 with a small
+     margin (~4.6:1) against both backgrounds (2026-07-18 audit,
+     Accessibility). */
+  --fg-3: #787067;
 
   --border: #e8e4dd;
   --border-2: #f0ede7;
@@ -49,7 +55,10 @@
 
     --fg: #eeebe6;
     --fg-2: #a39a91;
-    --fg-3: #6f665e;
+    /* Was #6f665e (~2.92-3.15:1) -- same WCAG AA failure as the light
+       theme's token, same fix: lightened just enough to clear 4.5:1
+       with a small margin (~4.6:1) against both backgrounds. */
+    --fg-3: #91867d;
 
     --border: #34302b;
     --border-2: #29251f;

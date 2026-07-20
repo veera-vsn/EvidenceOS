@@ -24,10 +24,14 @@ import type {
 } from "@/lib/supabase/database.types";
 
 import { ConfidencePip, ValidationBadges } from "../_components/field-badges";
+import { PaginationNav } from "../_components/pagination-nav";
 import { StartRunForm, type SelectableDocument } from "./start-run-form";
+
+const PAGE_SIZE = 10;
 
 interface PipelinePageProps {
   params: Promise<{ workspaceSlug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 const STAGES: { key: keyof PipelineRunDocumentRow; label: string }[] = [
@@ -45,8 +49,13 @@ const RUN_STATUS_STYLES: Record<string, string> = {
   failed: "text-danger",
 };
 
-export default async function PipelinePage({ params }: PipelinePageProps) {
+export default async function PipelinePage({ params, searchParams }: PipelinePageProps) {
   const { workspaceSlug } = await params;
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
 
   const { data: workspace } = await supabase
@@ -72,7 +81,17 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
     return { ...doc, latest_version: sorted[0] ?? null };
   });
 
-  // Fetch pipeline runs with document rows + extraction results.
+  // Fetch pipeline runs with document rows + extraction results, one page
+  // at a time -- the same unbounded-fetch scaling problem flagged for
+  // Documents (Project_Docs/AUDIT_2026-07-18.md's A5) applied here too,
+  // and this query is the more expensive one: it joins three levels deep
+  // per run (pipeline_run_documents -> document_versions ->
+  // extraction_results/validation_results).
+  const { count: totalRunsCount } = await supabase
+    .from("pipeline_runs")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspace.id);
+
   const { data: runs } = await supabase
     .from("pipeline_runs")
     .select(`
@@ -90,6 +109,7 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
     `)
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false })
+    .range(from, to)
     .returns<
       (PipelineRunRow & {
         pipeline_run_documents: (PipelineRunDocumentRow & {
@@ -101,6 +121,8 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
         })[];
       })[]
     >();
+
+  const totalRunPages = Math.max(1, Math.ceil((totalRunsCount ?? 0) / PAGE_SIZE));
 
   // extraction_results.extracted_value is encrypted at rest (see
   // app/core/encryption.py) -- decrypt before render.
@@ -148,7 +170,7 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
             {runs!.map((run, i) => (
               <details
                 key={run.id}
-                open={i === 0}
+                open={page === 1 && i === 0}
                 className={`overflow-hidden rounded-[13px] border bg-surface ${
                   run.status === "running" ? "border-accent-line" : "border-border"
                 }`}
@@ -254,6 +276,12 @@ export default async function PipelinePage({ params }: PipelinePageProps) {
               </details>
             ))}
           </div>
+
+          <PaginationNav
+            page={page}
+            totalPages={totalRunPages}
+            basePath={`/dashboard/${workspaceSlug}/pipeline`}
+          />
         </section>
       )}
     </div>
