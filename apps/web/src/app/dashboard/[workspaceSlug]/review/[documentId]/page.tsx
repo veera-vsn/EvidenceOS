@@ -139,15 +139,29 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
                 A approve · E edit · R reject · ↓ next
               </span>
             )}
-            <Link
-              href={`/dashboard/${workspaceSlug}/export`}
-              aria-disabled={!isComplete}
-              className={`rounded-lg bg-accent px-[15px] py-2.5 text-[13px] font-semibold text-accent-fg transition ${
-                isComplete ? "hover:opacity-90" : "pointer-events-none opacity-45"
-              }`}
-            >
-              Finish &amp; export →
-            </Link>
+            {isComplete ? (
+              <Link
+                href={`/dashboard/${workspaceSlug}/export`}
+                className="rounded-lg bg-accent px-[15px] py-2.5 text-[13px] font-semibold text-accent-fg transition hover:opacity-90"
+              >
+                Finish &amp; export →
+              </Link>
+            ) : (
+              // A real disabled <button>, not a styled <Link> with
+              // aria-disabled + pointer-events-none — that combination
+              // blocks mouse clicks but not keyboard Enter on a native
+              // anchor, letting a keyboard-only reviewer navigate to
+              // /export before review is actually complete (2026-07-18
+              // audit, Frontend finding). A disabled button is inert to
+              // both input methods and drops out of tab order correctly.
+              <button
+                type="button"
+                disabled
+                className="cursor-not-allowed rounded-lg bg-accent px-[15px] py-2.5 text-[13px] font-semibold text-accent-fg opacity-45"
+              >
+                Finish &amp; export →
+              </button>
+            )}
           </div>
         </div>
         <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-border-2">
