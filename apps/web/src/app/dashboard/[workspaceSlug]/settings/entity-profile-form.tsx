@@ -4,6 +4,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { EntityBranchRow, EntityProfileRow } from "@/lib/supabase/database.types";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { FieldLabel, Input, Select } from "@/components/ui/input";
 
 import { addBranch, removeBranch, saveEntityProfile } from "./actions";
 import { ENTITY_TYPES } from "./entity-types";
@@ -15,10 +18,6 @@ interface EntityProfileFormProps {
   branches: EntityBranchRow[];
   canEdit: boolean;
 }
-
-const INPUT =
-  "w-full rounded-[9px] border border-border bg-surface px-3.5 py-2.5 text-sm text-fg outline-none focus:border-accent disabled:opacity-60";
-const LABEL = "text-[13px] font-medium text-fg";
 
 export function EntityProfileForm({
   workspaceId,
@@ -82,9 +81,9 @@ export function EntityProfileForm({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5">
-            <span className={LABEL}>LEI</span>
-            <input
-              className={`${INPUT} font-mono`}
+            <FieldLabel>LEI</FieldLabel>
+            <Input
+              className="font-mono"
               value={lei}
               onChange={(e) => setLei(e.target.value)}
               disabled={!canEdit || isPending}
@@ -94,9 +93,8 @@ export function EntityProfileForm({
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className={LABEL}>Legal name</span>
-            <input
-              className={INPUT}
+            <FieldLabel>Legal name</FieldLabel>
+            <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={!canEdit || isPending}
@@ -105,9 +103,9 @@ export function EntityProfileForm({
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className={LABEL}>Country</span>
-            <input
-              className={`${INPUT} font-mono uppercase`}
+            <FieldLabel>Country</FieldLabel>
+            <Input
+              className="font-mono uppercase"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
               disabled={!canEdit || isPending}
@@ -117,9 +115,8 @@ export function EntityProfileForm({
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className={LABEL}>Entity type</span>
-            <select
-              className={INPUT}
+            <FieldLabel>Entity type</FieldLabel>
+            <Select
               value={entityType}
               onChange={(e) => setEntityType(e.target.value)}
               disabled={!canEdit || isPending}
@@ -132,13 +129,12 @@ export function EntityProfileForm({
                   {t}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
-            <span className={LABEL}>Competent authority</span>
-            <input
-              className={INPUT}
+            <FieldLabel>Competent authority</FieldLabel>
+            <Input
               value={competentAuthority}
               onChange={(e) => setCompetentAuthority(e.target.value)}
               disabled={!canEdit || isPending}
@@ -147,11 +143,10 @@ export function EntityProfileForm({
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className={LABEL}>
+            <FieldLabel>
               Total assets <span className="font-normal text-fg-3">(optional, for B_01.02)</span>
-            </span>
-            <input
-              className={INPUT}
+            </FieldLabel>
+            <Input
               value={totalAssets}
               onChange={(e) => setTotalAssets(e.target.value)}
               disabled={!canEdit || isPending}
@@ -161,9 +156,9 @@ export function EntityProfileForm({
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className={LABEL}>Currency</span>
-            <input
-              className={`${INPUT} font-mono uppercase`}
+            <FieldLabel>Currency</FieldLabel>
+            <Input
+              className="font-mono uppercase"
               value={totalAssetsCurrency}
               onChange={(e) => setTotalAssetsCurrency(e.target.value)}
               disabled={!canEdit || isPending}
@@ -174,23 +169,18 @@ export function EntityProfileForm({
         </div>
 
         {error && (
-          <p role="alert" className="mt-4 rounded border border-danger bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
+          <Alert variant="error" className="mt-4">
             {error}
-          </p>
+          </Alert>
         )}
         {saved && !error && (
           <p role="status" className="mt-4 text-[12.5px] text-success">✓ Saved</p>
         )}
 
         {canEdit && (
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isPending}
-            className="mt-4 rounded-[9px] bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition hover:opacity-90 disabled:opacity-50"
-          >
+          <Button type="button" onClick={handleSave} disabled={isPending} className="mt-4">
             {isPending ? "Saving…" : profile ? "Save changes" : "Create entity profile"}
-          </button>
+          </Button>
         )}
       </section>
 
@@ -277,14 +267,16 @@ function BranchList({
                 <span className="font-mono text-fg-3">{b.country}</span>
               </div>
               {canEdit && (
-                <button
+                <Button
                   type="button"
+                  variant="danger"
+                  size="sm"
                   onClick={() => handleRemove(b.id)}
                   disabled={isPending}
-                  className="flex-none rounded border border-border px-2 py-1 text-[11px] text-danger hover:bg-danger-soft disabled:opacity-50"
+                  className="flex-none"
                 >
                   Remove
-                </button>
+                </Button>
               )}
             </li>
           ))}
@@ -292,30 +284,28 @@ function BranchList({
       )}
 
       {error && (
-        <p role="alert" className="mb-3 rounded border border-danger bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
+        <Alert variant="error" className="mb-3">
           {error}
-        </p>
+        </Alert>
       )}
 
       {canEdit && hasProfile && (
         adding ? (
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[1fr_2fr_80px_auto]">
-            <input
-              className={INPUT}
+            <Input
               value={branchCode}
               onChange={(e) => setBranchCode(e.target.value)}
               placeholder="Branch code"
               disabled={isPending}
             />
-            <input
-              className={INPUT}
+            <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Branch name"
               disabled={isPending}
             />
-            <input
-              className={`${INPUT} font-mono uppercase`}
+            <Input
+              className="font-mono uppercase"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
               placeholder="GB"
@@ -323,32 +313,24 @@ function BranchList({
               disabled={isPending}
             />
             <span className="flex gap-1.5">
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={isPending}
-                className="rounded-md bg-accent px-2.5 py-1.5 text-[12.5px] font-medium text-accent-fg disabled:opacity-50"
-              >
+              <Button type="button" size="sm" onClick={handleAdd} disabled={isPending}>
                 Add
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => setAdding(false)}
                 disabled={isPending}
-                className="rounded-md border border-border px-2.5 py-1.5 text-[12.5px] text-fg"
               >
                 Cancel
-              </button>
+              </Button>
             </span>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="rounded-[9px] border border-border px-3.5 py-2 text-[13px] font-medium text-fg hover:bg-surface-2"
-          >
+          <Button type="button" variant="secondary" onClick={() => setAdding(true)}>
             + Add branch
-          </button>
+          </Button>
         )
       )}
     </section>

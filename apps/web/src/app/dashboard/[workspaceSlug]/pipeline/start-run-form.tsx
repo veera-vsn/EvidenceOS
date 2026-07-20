@@ -13,6 +13,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { DocumentRow, DocumentVersionRow } from "@/lib/supabase/database.types";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { startPipelineRun } from "./actions";
 
@@ -73,29 +76,21 @@ export function StartRunForm({
 
   if (uploadedDocs.length === 0) {
     return (
-      <div className="rounded-[13px] border border-border bg-surface p-5">
-        <p className="text-sm text-fg-3">
-          No uploaded documents yet.{" "}
-          <a
-            href={`/dashboard/${workspaceSlug}/documents`}
-            className="text-accent underline"
-          >
-            Upload documents first.
-          </a>
-        </p>
-      </div>
+      <EmptyState
+        icon="▷"
+        title="No uploaded documents yet"
+        description="Upload an ICT vendor contract first — it'll appear here once it's ready to process."
+        action={{ label: "Upload a document", href: `/dashboard/${workspaceSlug}/documents` }}
+      />
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="rounded-[13px] border border-border bg-surface p-5">
       {error && (
-        <p
-          role="alert"
-          className="mb-3.5 rounded-[9px] border border-danger bg-danger-soft px-3.5 py-2.5 text-sm text-fg"
-        >
+        <Alert variant="error" className="mb-3.5">
           {error}
-        </p>
+        </Alert>
       )}
 
       <div className="flex items-center justify-between">
@@ -107,13 +102,9 @@ export function StartRunForm({
             selected
           </div>
         </div>
-        <button
-          type="submit"
-          disabled={selected.size === 0 || isPending}
-          className="rounded-[9px] bg-accent px-[18px] py-2.5 text-[13.5px] font-semibold text-accent-fg transition hover:opacity-90 disabled:opacity-40"
-        >
+        <Button type="submit" disabled={selected.size === 0 || isPending}>
           {isPending ? "Starting…" : "Start pipeline run →"}
-        </button>
+        </Button>
       </div>
 
       <fieldset className="mt-3.5 flex flex-wrap gap-2">

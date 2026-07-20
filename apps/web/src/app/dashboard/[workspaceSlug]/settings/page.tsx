@@ -57,7 +57,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   ]);
 
   return (
-    <div className="mx-auto max-w-[760px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+    <div className="mx-auto max-w-[880px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-6">
         <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
           Workspace settings

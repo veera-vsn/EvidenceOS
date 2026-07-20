@@ -10,30 +10,26 @@
 
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
+
 export default function Home() {
   return (
-    <div className="min-h-screen bg-bg text-fg">
+    <div className="min-h-screen text-fg">
       {/* top bar */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 sm:px-8 py-[22px]">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-[26px] w-[26px] items-center justify-center rounded-md bg-accent">
-            <span className="h-2.5 w-2.5 rounded-sm border-2 border-accent-fg" />
-          </span>
-          <span className="text-base font-semibold tracking-tight">EvidenceOS</span>
-        </div>
+        <Logo />
         <nav className="flex items-center gap-4 sm:gap-7">
           <span className="hidden items-center gap-7 md:flex">
             <a href="#problem" className="text-sm text-fg-2">The problem</a>
             <a href="#how" className="text-sm text-fg-2">How it works</a>
             <a href="#trust" className="text-sm text-fg-2">Evidence</a>
+            <Link href="/blog" className="text-sm text-fg-2">Blog</Link>
           </span>
           <Link href="/login" className="text-sm font-medium text-fg">Sign in</Link>
-          <Link
-            href="/signup"
-            className="rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-fg sm:px-4"
-          >
+          <Button href="/signup" size="sm">
             Get started
-          </Link>
+          </Button>
         </nav>
       </header>
 
@@ -64,18 +60,12 @@ export default function Home() {
             <span>Export</span>
           </div>
           <div className="mt-[34px] flex gap-3">
-            <Link
-              href="/signup"
-              className="rounded-[9px] bg-accent px-[22px] py-3.5 text-[15px] font-medium text-accent-fg"
-            >
+            <Button href="/signup" size="lg">
               Create your account
-            </Link>
-            <a
-              href="#how"
-              className="rounded-[9px] border border-border bg-surface px-[22px] py-3.5 text-[15px] font-medium text-fg"
-            >
+            </Button>
+            <Button href="#how" size="lg" variant="secondary">
               See how it works
-            </a>
+            </Button>
           </div>
         </div>
 
@@ -271,12 +261,12 @@ export default function Home() {
             through the pipeline in minutes — no sales call required.
           </p>
           <div className="flex justify-center gap-3">
-            <Link href="/signup" className="rounded-[9px] bg-accent px-6 py-3.5 text-[15px] font-medium text-accent-fg">
+            <Button href="/signup" size="lg">
               Create your account
-            </Link>
-            <Link href="/login" className="rounded-[9px] border border-border px-6 py-3.5 text-[15px] font-medium text-fg">
+            </Button>
+            <Button href="/login" size="lg" variant="secondary">
               Sign in
-            </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -294,6 +284,7 @@ export default function Home() {
             subprocessor breakdown in our Privacy Policy.
           </div>
           <div className="flex gap-5 text-[12.5px] text-fg-2">
+            <Link href="/blog" className="hover:text-fg">Blog</Link>
             <Link href="/privacy" className="hover:text-fg">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-fg">Terms of Service</Link>
           </div>

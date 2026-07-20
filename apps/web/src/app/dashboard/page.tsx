@@ -15,6 +15,10 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/(auth)/actions";
 import type { WorkspaceRow } from "@/lib/supabase/database.types";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Logo } from "@/components/ui/logo";
 
 import { createWorkspace } from "./actions";
 
@@ -45,15 +49,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const userInitials = userLabel.slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-bg text-fg">
+    <div className="min-h-screen text-fg">
       <header className="border-b border-border-2 bg-surface">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-8 py-4">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent">
-              <span className="h-[9px] w-[9px] rounded-sm border-2 border-accent-fg" />
-            </span>
-            <span className="text-[15px] font-semibold">EvidenceOS</span>
-          </div>
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-4">
+          <Logo href={null} />
           <div className="flex items-center gap-3.5">
             <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent">
               {userInitials}
@@ -70,11 +69,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-8 py-12">
+      <main className="mx-auto max-w-5xl px-8 py-12">
         {error && (
-          <p role="alert" className="mb-6 rounded-lg border border-danger bg-danger-soft px-3.5 py-2.5 text-sm text-fg">
+          <Alert variant="error" className="mb-6">
             {error}
-          </p>
+          </Alert>
         )}
 
         {hasWorkspaces ? (
@@ -123,19 +122,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 <span className="text-base leading-none">+</span> Create another workspace
               </summary>
               <form action={createWorkspace} className="flex flex-col gap-3 px-[18px] pb-[18px]">
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  placeholder="e.g. Meridian Payments Ltd"
-                  className="w-full rounded-[9px] border border-border bg-surface-2 px-3.5 py-2.5 text-sm text-fg outline-none focus:border-accent"
-                />
-                <button
-                  type="submit"
-                  className="self-start rounded-[9px] bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition hover:opacity-90"
-                >
+                <Input type="text" name="name" required placeholder="e.g. Meridian Payments Ltd" />
+                <Button type="submit" className="self-start">
                   Create workspace
-                </button>
+                </Button>
               </form>
             </details>
           </div>
@@ -158,24 +148,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <form action={createWorkspace} className="flex flex-col gap-2">
                 <label className="flex flex-col gap-2">
                   <span className="text-[13px] font-medium text-fg">Organisation name</span>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    placeholder="e.g. Meridian Payments Ltd"
-                    className="w-full rounded-[9px] border border-border bg-surface-2 px-3.5 py-3 text-[15px] text-fg outline-none focus:border-accent"
-                  />
+                  <Input type="text" name="name" required placeholder="e.g. Meridian Payments Ltd" />
                   <span className="text-[11.5px] text-fg-3">
                     We&apos;ll generate a machine-readable slug from this —
                     e.g. <span className="font-mono text-fg-2">meridian-payments</span>
                   </span>
                 </label>
-                <button
-                  type="submit"
-                  className="mt-5 w-full rounded-[9px] bg-accent px-3 py-3.5 text-sm font-semibold text-accent-fg transition hover:opacity-90"
-                >
+                <Button type="submit" size="lg" className="mt-5 w-full">
                   Create workspace &amp; continue
-                </button>
+                </Button>
               </form>
             </div>
             <div className="mt-[26px] flex items-center justify-center gap-[26px] text-[12.5px] text-fg-3">

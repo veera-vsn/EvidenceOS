@@ -77,6 +77,7 @@ Upload  →  OCR  →  AI Extraction  →  Validation  →  Recommend  →  Huma
 | 11 | **Full RoI Stage 2B** — entity profile, closes all 14 real EBA RoI tables | ✅ |
 | — | **Data-integrity fix** — stale extraction/validation rows on re-run | ✅ |
 | 12 | **Application-layer encryption** — AES-256-GCM on document text + extracted fields, on top of Supabase's disk-level encryption | ✅ |
+| 13 | **Design system consolidation + public blog** — shared `components/ui` primitives, a reusable frontend-design skill, and a public MDX blog with launch articles | ✅ |
 | 7 (RAG) | Retrieval-augmented evidence for Review | 🗺️ planned, not started |
 
 77 backend tests passing, `ruff` clean, `mypy`-strict TypeScript (`npx tsc --noEmit` clean). Every phase above shipped with a real end-to-end verification pass (not just unit tests) against the live Supabase project — see [Engineering deep dives](#engineering-deep-dives) for what that caught.
@@ -102,7 +103,7 @@ Full detail on every phase, including everything that went wrong and how it got 
                                                                              │ not just the API layer
 ```
 
-**Frontend — Next.js 16 App Router, React 19, TypeScript strict, Tailwind v4.** Server Components by default (auth-gated dashboards resolve on the server, no flash of unauthenticated content); the only Client Components are the ones that genuinely need browser state (the upload zone, the field-review card's approve/edit/reject controls, the mobile sidebar drawer). No component library — hand-rolled, accessible primitives on a small warm-neutral design-token system (`globals.css`), styled to read as calm/enterprise rather than "modern SaaS," deliberately modelled on claude.ai's own product interface.
+**Frontend — Next.js 16 App Router, React 19, TypeScript strict, Tailwind v4.** Server Components by default (auth-gated dashboards resolve on the server, no flash of unauthenticated content); the only Client Components are the ones that genuinely need browser state (the upload zone, the field-review card's approve/edit/reject controls, the mobile sidebar drawer). A small shared `components/ui/` layer (`Logo`, `Button`, `Input`, `Alert`, `Badge`, `Card`, `EmptyState`, `Skeleton`) on a warm-neutral design-token system (`globals.css`), styled to read as calm/enterprise rather than "modern SaaS," deliberately modelled on claude.ai's own product interface — see [`Phase_13_Design_System_and_Blog/`](./Project_Docs/Learnings/Phase_13_Design_System_and_Blog/) for why that layer was consolidated and the reusable design skill it was built from.
 
 **Backend — FastAPI, Python 3.13, Pydantic v2.** A modular monolith, not microservices — one deploy target, one process to debug, module boundaries enforced by folder structure (`app/pipeline/`) rather than network calls. Long-running work (OCR, extraction, validation) runs in a `BackgroundTasks` job so the trigger endpoint returns instantly; no Celery/Redis yet — a Postgres-backed job table (`pipeline_runs`/`pipeline_run_documents`) gives at-least-once semantics with retry/status tracking, which is most of what a real queue gives you at this volume.
 
@@ -216,6 +217,7 @@ The last stage in the canonical pipeline (`Recommend`, between `Validate` and `R
 EvidenceOS/
 ├── apps/
 │   ├── web/         # Next.js 16 frontend (App Router + TS + Tailwind v4)
+│   │   └── content/blog/  # MDX source for the public blog (apps/web/src/app/(blog)/)
 │   └── api/          # FastAPI backend (Python 3.13); deploy.sh redeploys it to EC2
 ├── workers/         # Reserved for future standalone workers — empty; MVP
 │                       background jobs run in-process (FastAPI BackgroundTasks)

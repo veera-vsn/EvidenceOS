@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import type { DocumentRow } from "@/lib/supabase/database.types";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface ExportPageProps {
   params: Promise<{ workspaceSlug: string }>;
@@ -112,7 +113,7 @@ export default async function ExportPage({ params }: ExportPageProps) {
   const zipFilename = `${workspaceSlug}-roi-draft_${new Date().toISOString().slice(0, 10)}.zip`;
 
   return (
-    <div className="mx-auto max-w-[940px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+    <div className="mx-auto max-w-[1100px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-[22px]">
         <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
           Finish line
@@ -123,13 +124,12 @@ export default async function ExportPage({ params }: ExportPageProps) {
       </div>
 
       {documents.length === 0 ? (
-        <p className="text-sm text-fg-3">
-          No documents yet —{" "}
-          <Link href={`/dashboard/${workspaceSlug}/documents`} className="text-accent">
-            upload one
-          </Link>{" "}
-          to get started.
-        </p>
+        <EmptyState
+          icon="↧"
+          title="Nothing to export yet"
+          description="Upload and process a document first — it'll appear here once it's ready to review."
+          action={{ label: "Upload a document", href: `/dashboard/${workspaceSlug}/documents` }}
+        />
       ) : (
         <>
           <div

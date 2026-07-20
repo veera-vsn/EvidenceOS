@@ -23,6 +23,7 @@ import type {
   FieldReviewRow,
   ValidationResultRow,
 } from "@/lib/supabase/database.types";
+import { Button } from "@/components/ui/button";
 
 import { DORA_FIELD_GROUPS, OTHER_GROUP, groupForFieldCode } from "../dora-field-groups";
 import { computeReviewProgress } from "../review-utils";
@@ -118,7 +119,7 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
   const orderedFieldCodes = version.extraction_results.map((f) => f.field_code);
 
   return (
-    <div className="mx-auto max-w-[920px]">
+    <div className="mx-auto max-w-[1040px]">
       {canReview && <ReviewKeyboardShortcuts fieldCodes={orderedFieldCodes} />}
 
       <div className="sticky top-0 z-10 border-b border-border-2 bg-bg px-5 pt-4 pb-4 sm:px-10 sm:pt-[22px]">
@@ -139,29 +140,17 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
                 A approve · E edit · R reject · ↓ next
               </span>
             )}
-            {isComplete ? (
-              <Link
-                href={`/dashboard/${workspaceSlug}/export`}
-                className="rounded-lg bg-accent px-[15px] py-2.5 text-[13px] font-semibold text-accent-fg transition hover:opacity-90"
-              >
-                Finish &amp; export →
-              </Link>
-            ) : (
-              // A real disabled <button>, not a styled <Link> with
-              // aria-disabled + pointer-events-none — that combination
-              // blocks mouse clicks but not keyboard Enter on a native
-              // anchor, letting a keyboard-only reviewer navigate to
-              // /export before review is actually complete (2026-07-18
-              // audit, Frontend finding). A disabled button is inert to
-              // both input methods and drops out of tab order correctly.
-              <button
-                type="button"
-                disabled
-                className="cursor-not-allowed rounded-lg bg-accent px-[15px] py-2.5 text-[13px] font-semibold text-accent-fg opacity-45"
-              >
-                Finish &amp; export →
-              </button>
-            )}
+            {/* Button renders a real disabled <button> (not a styled
+                <Link> with aria-disabled + pointer-events-none) whenever
+                `disabled` is set -- that combination blocks mouse clicks
+                but not keyboard Enter on a native anchor, letting a
+                keyboard-only reviewer navigate to /export before review
+                is actually complete (2026-07-18 audit, Frontend finding).
+                See components/ui/button.tsx's own docstring for why this
+                is baked into the shared component now, not just this page. */}
+            <Button href={`/dashboard/${workspaceSlug}/export`} disabled={!isComplete}>
+              Finish &amp; export →
+            </Button>
           </div>
         </div>
         <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-border-2">

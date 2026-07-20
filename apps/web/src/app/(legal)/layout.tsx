@@ -9,16 +9,13 @@
 
 import Link from "next/link";
 
+import { Logo } from "@/components/ui/logo";
+
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-bg text-fg">
+    <div className="min-h-screen text-fg">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-5 sm:px-8 py-[22px]">
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="flex h-[26px] w-[26px] items-center justify-center rounded-md bg-accent">
-            <span className="h-2.5 w-2.5 rounded-sm border-2 border-accent-fg" />
-          </span>
-          <span className="text-base font-semibold tracking-tight">EvidenceOS</span>
-        </Link>
+        <Logo />
         <Link href="/" className="text-sm text-fg-2">
           ← Back to EvidenceOS
         </Link>

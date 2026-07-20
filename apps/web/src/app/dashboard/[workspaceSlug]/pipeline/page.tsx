@@ -137,7 +137,7 @@ export default async function PipelinePage({ params, searchParams }: PipelinePag
   }
 
   return (
-    <div className="mx-auto max-w-[1120px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+    <div className="mx-auto max-w-[1320px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-6">
         <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
           Processing

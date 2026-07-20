@@ -8,26 +8,12 @@
 
 import type { Metadata } from "next";
 
+import { LegalH2 as H2, LegalLi as Li, LegalP as P } from "@/components/ui/legal-prose";
+
 // Root layout's title template ("%s · EvidenceOS") already appends the
 // brand name -- including it here too rendered as "Terms of Service —
 // EvidenceOS · EvidenceOS" in the browser tab.
 export const metadata: Metadata = { title: "Terms of Service" };
-
-function H2({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="mt-10 mb-3 text-lg font-semibold tracking-tight text-fg first:mt-0">
-      {children}
-    </h2>
-  );
-}
-
-function P({ children }: { children: React.ReactNode }) {
-  return <p className="mb-4 text-[14.5px] leading-[1.65] text-fg-2">{children}</p>;
-}
-
-function Li({ children }: { children: React.ReactNode }) {
-  return <li className="mb-2 text-[14.5px] leading-[1.65] text-fg-2">{children}</li>;
-}
 
 export default function TermsOfServicePage() {
   return (

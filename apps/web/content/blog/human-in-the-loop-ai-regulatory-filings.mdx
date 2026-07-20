@@ -1,0 +1,38 @@
+---
+title: "Human-in-the-loop AI for regulatory filings: why full automation is the wrong goal"
+description: "Why EvidenceOS deliberately doesn't auto-submit anything to a regulator — and why a human approving every extracted field, not a smarter model, is the actual solution to a compliance-grade data problem."
+date: "2026-06-30"
+author: "The EvidenceOS Team"
+tags: ["Product Philosophy", "AI", "Compliance"]
+excerpt: "It's tempting to sell 'fully automated DORA filings' as the dream product. It's also the wrong product for this problem — and understanding why tells you what a genuinely trustworthy compliance tool should look like instead."
+---
+
+Every time we describe EvidenceOS to someone new, there's a predictable moment in the conversation. We explain that AI extracts fields from a contract, deterministic rules validate them, and then — critically — a human has to approve, correct, or reject every single field before anything can be exported. And the question that follows, almost every time, is some version of: *"Why not just have the AI do the whole thing? Isn't that the point of AI?"*
+
+It's a reasonable question, and the honest answer is that full automation would be a worse product for this specific job — not a more ambitious version of the same product. Here's why.
+
+## The job isn't "extract data." It's "produce something a regulator can rely on."
+
+A Large Language Model reading a 40-page ICT vendor contract and pulling out the counterparty's name, the contract's effective date, or a service description is a genuinely good use of the technology. LLMs are strong at exactly this kind of unstructured-to-structured extraction task, and doing it by hand — an analyst manually re-typing fields out of hundreds of contracts — is slow, tedious, and itself a significant source of the transcription errors that drove the DORA dry run's 93.5% failure rate.
+
+But extraction accuracy, even very high extraction accuracy, isn't the same claim as "this filing is something a regulator can rely on." A model that's right 97% of the time is still wrong on roughly 3 fields out of every 100 — and in a filing with 61 fields per contract across hundreds of contracts, that's not a rounding error, it's dozens of wrong values in a document that a national competent authority may use to assess systemic ICT concentration risk across the entire EU financial sector. The cost of a wrong value in this context isn't "the user notices and fixes it later." It's "a regulator makes a judgment about systemic risk based on a number that was quietly wrong."
+
+That asymmetry — the cost of an undetected error is much higher than the cost of a human spending thirty seconds confirming a correct extraction — is the entire argument for keeping a human in the loop. It isn't a hedge against AI being bad. It's a recognition that even very good AI, applied to a task with this error cost profile, needs a check.
+
+## What the human actually adds
+
+It's worth being precise about what the review step is actually for, because "human in the loop" can sound like a vague compliance platitude if you don't say what the human is doing differently from the model.
+
+**The model reads. The human decides.** EvidenceOS's extraction step attaches a confidence score to every field, and the deterministic validation engine flags anything that fails one of the DORA data quality rules before a reviewer ever sees it — so the reviewer isn't scanning 61 fields hunting for problems, they're looking at a shortlist of exactly the fields that need a decision, with the AI's proposed value already sitting there as a starting point. That's a fundamentally different cognitive task than manual transcription. It's closer to "editor reviewing a draft" than "typist copying a source."
+
+**Every decision is a permanent record, not a silent overwrite.** When a reviewer approves a field, that's recorded. When they correct one, the AI's original value and the reviewer's correction are both preserved — nothing is silently replaced. When they reject one, they have to write down why, because a rejection without a reason isn't useful to whoever reads this filing's audit trail six months later, possibly during an actual DORA incident investigation. This isn't extra bureaucracy for its own sake; it's the difference between "we believe this number is right" and "we can show you exactly why we believe this number is right, and who signed off."
+
+**The system never auto-submits.** This is the one non-negotiable design decision underneath everything else. However confident the model is, however clean the validation results look, EvidenceOS stops at "here is a filing-ready draft with a full evidence trail" — a named person on your compliance team makes the actual decision to file. That's not a technical limitation we intend to remove later. It's the correct allocation of responsibility for a decision that carries real regulatory and reputational weight, and no model confidence score changes who should be accountable for it.
+
+## Why this is also just a better product, not only a more responsible one
+
+There's a version of this argument that's purely about risk management, and that version is true but incomplete. The human-in-the-loop design is also better for the mundane reason that **compliance teams don't actually want a black box making filing decisions for them, even if it were reliable** — because when a regulator asks a hard question about a specific figure six months from now, "the AI said so" is not an answer anyone wants to give. "Here's the source document, here's the exact clause, here's who reviewed it and when" is an answer a compliance officer can actually stand behind.
+
+Full automation optimizes for the wrong metric here: minimizing human time spent, when the thing that actually matters is defensibility of the final filing. A tool that produces a filing nobody had to think about is a liability wearing an efficiency argument. A tool that makes the necessary human review fast, well-informed, and fully documented is doing the actual job.
+
+That's the product decision underneath everything else EvidenceOS does: use AI for what it's genuinely good at — reading documents fast and flagging what needs attention — and never let it be the thing that decides what gets filed with a regulator.

@@ -10,6 +10,8 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import type { DocumentRow, DocumentVersionRow } from "@/lib/supabase/database.types";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { PaginationNav } from "../_components/pagination-nav";
 import { DeleteDocumentButton } from "./delete-document-button";
@@ -83,7 +85,7 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
   });
 
   return (
-    <div className="mx-auto max-w-[1040px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+    <div className="mx-auto max-w-[1280px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-2 sm:mb-6">
         <div>
           <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
@@ -145,13 +147,21 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
           />
         </div>
       ) : (
-        <p className="mt-8 text-sm text-fg-3">
-          No documents yet — upload one above to get started.
-        </p>
+        <EmptyState
+          icon="▤"
+          title="No documents yet"
+          description="Upload an ICT vendor contract above to get started."
+        />
       )}
     </div>
   );
 }
+
+const VERSION_STATUS_TONE: Record<string, BadgeTone> = {
+  uploaded: "success",
+  uploading: "accent",
+  failed: "danger",
+};
 
 function VersionBadge({
   status,
@@ -159,18 +169,10 @@ function VersionBadge({
   status: DocumentVersionRow["upload_status"] | null;
 }) {
   if (!status) return <span />;
-  const styles: Record<string, string> = {
-    uploaded: "bg-success-soft text-success",
-    uploading: "bg-accent-soft text-accent",
-    failed: "bg-danger-soft text-danger",
-  };
   return (
-    <span
-      className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold capitalize ${styles[status] ?? ""}`}
-    >
-      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+    <Badge tone={VERSION_STATUS_TONE[status] ?? "neutral"} dot>
       {status}
-    </span>
+    </Badge>
   );
 }
 

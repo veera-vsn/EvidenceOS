@@ -33,6 +33,12 @@ const description =
   "AI-powered evidence & validation copilot for EU financial entities preparing their DORA Register of Information.";
 
 export const metadata: Metadata = {
+  // Needed so relative OG image URLs (opengraph-image.tsx's file-convention
+  // routes) and canonical links resolve to an absolute URL. Matches the
+  // domain already named in the Privacy Policy/Terms -- see
+  // (legal)/privacy/page.tsx -- not yet purchased at time of writing, but
+  // this only affects URL construction, not whether the domain is live.
+  metadataBase: new URL("https://evidenceos.eu"),
   title: {
     default: "EvidenceOS — DORA RoI Copilot",
     template: "%s · EvidenceOS",
