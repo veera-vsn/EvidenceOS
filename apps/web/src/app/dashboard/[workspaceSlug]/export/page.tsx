@@ -113,7 +113,7 @@ export default async function ExportPage({ params }: ExportPageProps) {
   const zipFilename = `${workspaceSlug}-roi-draft_${new Date().toISOString().slice(0, 10)}.zip`;
 
   return (
-    <div className="mx-auto max-w-[940px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+    <div className="mx-auto max-w-[1100px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-[22px]">
         <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
           Finish line

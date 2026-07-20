@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PipelineLoading() {
   return (
-    <div className="mx-auto max-w-[1120px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+    <div className="mx-auto max-w-[1320px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-6">
         <Skeleton className="h-3 w-24" />
         <Skeleton className="mt-2 h-6 w-24" />

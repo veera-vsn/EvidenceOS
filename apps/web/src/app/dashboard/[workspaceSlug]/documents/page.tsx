@@ -85,7 +85,7 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
   });
 
   return (
-    <div className="mx-auto max-w-[1040px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+    <div className="mx-auto max-w-[1280px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-2 sm:mb-6">
         <div>
           <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">

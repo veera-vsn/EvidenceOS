@@ -45,6 +45,13 @@
   --danger-soft: #f6e8e8;
 
   --shadow: 0 1px 2px rgba(20, 30, 40, 0.04);
+
+  /* Background dot-grid dot colour -- deliberately its own token, not
+     --border/--border-2. Those are tuned to be nearly invisible at rest
+     (correct for a component edge you shouldn't consciously notice);
+     this one is meant to actually read as a texture from across the
+     room, so it needs real, higher alpha than either. */
+  --grid-dot: rgba(28, 26, 23, 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -76,6 +83,8 @@
     --danger-soft: #2a1717;
 
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+    --grid-dot: rgba(238, 235, 230, 0.09);
   }
 }
 
@@ -112,4 +121,37 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/*
+ * Full-page dot-grid texture, 2026-07-20 redesign follow-up. Every page
+ * used a fixed pixel max-width for its content column (correct for
+ * readability -- unbroken prose/table rows shouldn't stretch edge to
+ * edge on a wide monitor), but the margin *outside* that column was a
+ * single flat, textureless colour -- on anything wider than ~1400px
+ * that reads as dead space rather than a considered layout, and is one
+ * of the more common "this was AI-generated" tells. A faint dot grid
+ * fills that margin with texture instead of void, without competing
+ * with content sitting on top of it -- cards/sidebars have their own
+ * solid --surface background, so the grid only ever shows through in
+ * genuinely empty space.
+ *
+ * Uses its own --grid-dot token (defined per-theme above), not
+ * --border/--border-2 -- those are tuned to be nearly invisible at rest
+ * (correct for a component edge you shouldn't consciously notice), so
+ * borrowing one for a texture that's supposed to actually read from
+ * across the room produced nothing visible at all on the first attempt.
+ *
+ * Also required removing the redundant `bg-bg` background-colour that
+ * several top-level page wrapper divs set on themselves (landing,
+ * blog/legal layouts, the dashboard workspace list) -- body already
+ * supplies that colour, and a child div repainting the same flat colour
+ * (with no image of its own) sits in front of body's background-image
+ * in the stacking order and fully occludes it. The computed style
+ * showed the correct gradient the whole time; it was simply painted
+ * over. See Phase_13's CHALLENGES.md for the full diagnosis.
+ */
+body {
+  background-image: radial-gradient(circle, var(--grid-dot) 2px, transparent 2px);
+  background-size: 24px 24px;
 }

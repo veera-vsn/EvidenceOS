@@ -49,9 +49,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const userInitials = userLabel.slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-bg text-fg">
+    <div className="min-h-screen text-fg">
       <header className="border-b border-border-2 bg-surface">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-8 py-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-4">
           <Logo href={null} />
           <div className="flex items-center gap-3.5">
             <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent">
@@ -69,7 +69,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-8 py-12">
+      <main className="mx-auto max-w-5xl px-8 py-12">
         {error && (
           <Alert variant="error" className="mb-6">
             {error}

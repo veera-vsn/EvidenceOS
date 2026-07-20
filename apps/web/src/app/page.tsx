@@ -15,7 +15,7 @@ import { Logo } from "@/components/ui/logo";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-bg text-fg">
+    <div className="min-h-screen text-fg">
       {/* top bar */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 sm:px-8 py-[22px]">
         <Logo />

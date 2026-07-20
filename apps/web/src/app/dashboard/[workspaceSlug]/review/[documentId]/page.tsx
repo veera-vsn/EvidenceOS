@@ -119,7 +119,7 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
   const orderedFieldCodes = version.extraction_results.map((f) => f.field_code);
 
   return (
-    <div className="mx-auto max-w-[920px]">
+    <div className="mx-auto max-w-[1040px]">
       {canReview && <ReviewKeyboardShortcuts fieldCodes={orderedFieldCodes} />}
 
       <div className="sticky top-0 z-10 border-b border-border-2 bg-bg px-5 pt-4 pb-4 sm:px-10 sm:pt-[22px]">

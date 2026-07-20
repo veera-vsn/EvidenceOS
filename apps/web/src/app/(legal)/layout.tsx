@@ -13,7 +13,7 @@ import { Logo } from "@/components/ui/logo";
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-bg text-fg">
+    <div className="min-h-screen text-fg">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-5 sm:px-8 py-[22px]">
         <Logo />
         <Link href="/" className="text-sm text-fg-2">

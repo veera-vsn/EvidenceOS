@@ -59,6 +59,21 @@ list pages — nothing in this app had a loading state of any kind before
 this phase; every async page just awaited server-side with a blank
 screen in between.
 
+**Follow-up after first real user feedback**: the initial pass still
+read as too narrow on a real wide monitor -- every page centred its
+content under a fixed pixel max-width chosen without reference to actual
+viewport width (documents at 1040px, the blog shell at 1024px, etc.),
+leaving large flat margins on anything wider than ~1400px. Widened every
+page's content column (roughly +150-200px each across the dashboard app;
+the blog shell to 1280px, with the article body's actual prose re-capped
+separately at 720px so long-form text didn't just stretch to match --
+a wider *page* and a wider *paragraph* are different goals). Also added
+a full-page dot-grid background texture so the margin that remains
+reads as a deliberate layout choice rather than dead space -- see
+`CHALLENGES.md` C3 for why that texture was invisible on the first two
+attempts despite `getComputedStyle` confirming it was correctly applied
+the whole time.
+
 ## Why no third-party newsletter ESP
 
 The newsletter signup writes to a plain Supabase table

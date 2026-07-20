@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DocumentsLoading() {
   return (
-    <div className="mx-auto max-w-[1040px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+    <div className="mx-auto max-w-[1280px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-5 flex items-end justify-between sm:mb-6">
         <div>
           <Skeleton className="h-3 w-20" />

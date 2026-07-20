@@ -63,7 +63,13 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
       <BlogMobileTopBar tags={tags} />
 
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
-        <article className="min-w-0 flex-1">
+        {/* Capped at a readable measure (~720px) independent of the
+            wider page shell -- the shell width is right for balancing
+            article + sidebar on a large screen, but continuous prose
+            itself reads worse the wider it stretches. `flex-1` still
+            lets the column claim its share of the row; the cap just
+            stops the text within it from over-stretching. */}
+        <article className="min-w-0 max-w-[720px] flex-1">
           <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] text-fg-3">
             <time dateTime={post.frontmatter.date}>
               {new Date(post.frontmatter.date).toLocaleDateString("en-IE", {

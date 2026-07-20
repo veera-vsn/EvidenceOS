@@ -81,6 +81,63 @@ value distinguishes the two.
 
 ---
 
+## C3 — Every page hardcoded a narrow fixed max-width, and the background texture meant to fill the margin was invisible for two unrelated reasons
+
+**Symptom:** user feedback after the redesign shipped: pages only used
+the centre of the browser, with large flat empty margins on a real
+1536px+ monitor, and the overall look read as generic/"AI-generated."
+
+**Root cause, part 1 (layout):** every page's content column used a
+fixed pixel `max-w-[...]` chosen without reference to real viewport
+width -- `documents/page.tsx` at 1040px, `pipeline/page.tsx` at 1120px,
+the blog shell at `max-w-5xl` (1024px), and so on. Centering content
+under a max-width is correct practice for readability, but these widths
+were noticeably narrower than they needed to be, so the empty margin on
+a wide screen was much larger than intended.
+
+**Root cause, part 2 (the fix for part 1's margin looked broken too):**
+added a subtle dot-grid `background-image` on `body` to give that
+margin texture instead of flat dead space. The computed style (checked
+via `getComputedStyle(document.body).backgroundImage`) confirmed the
+gradient was correctly applied from the very first attempt -- and it
+was still completely invisible on screen, through three different alpha
+values and a full dev-server restart (initially suspected a stale-CSS
+caching issue, since this environment has a documented history of
+serving stale code after a restart -- see `Phase_7_Deployment/CHALLENGES.md`
+C9 and this phase's own C2). The actual cause: several top-level page
+wrapper divs (`app/page.tsx`, `(blog)/layout.tsx`, `(legal)/layout.tsx`,
+`dashboard/page.tsx`) set their *own* `bg-bg` background-colour on a
+`min-h-screen` div sitting directly inside `<body>`. `body` already
+supplies that same colour -- but because that child div paints a solid
+colour with no image of its own, it sits in front of `body`'s
+background-image in the paint order and fully occludes it. The gradient
+was real and correctly computed the entire time; it was simply painted
+over by a redundant, unnecessary duplicate background one level down in
+the DOM.
+
+**Fix:** widened every page's content max-width meaningfully (roughly
++150-200px each across the dashboard app pages; the blog shell from
+1024px to 1280px, with the *article body's* prose specifically re-capped
+at 720px in its own inner wrapper so long-form text didn't just stretch
+to fill the wider shell -- a wider page and a wider paragraph are not
+the same goal). Removed the redundant `bg-bg` from the four wrapper divs
+so `body`'s background-image can actually reach the screen. Gave the dot
+pattern its own dedicated `--grid-dot` token (rather than reusing
+`--border`/`--border-2`, which are deliberately tuned to be nearly
+invisible at rest) so it has real, chosen contrast instead of borrowed
+contrast that happened to be wrong for this different purpose.
+
+**Lesson:** two independent bugs can hide behind the same symptom.
+`getComputedStyle` proving a rule is *applied* is not the same claim as
+proving it's *visible* -- paint order and sibling/ancestor backgrounds
+can silently occlude a correctly-computed style, and that's a different
+failure mode from "the CSS never took effect" (which a dev-server
+restart would actually fix, and this one didn't). When a style change
+is invisible despite the computed value looking right, check what's
+painted on top of it before concluding the value itself is wrong.
+
+---
+
 ## What went right without incident
 
 Every one of the ~15 existing pages touched by the `components/ui`

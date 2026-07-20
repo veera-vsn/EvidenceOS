@@ -107,7 +107,7 @@ export default async function ReviewListPage({ params }: ReviewListPageProps) {
   const fullyReviewedCount = reviewable.filter((d) => d.reviewedCount >= d.totalCount).length;
 
   return (
-    <div className="mx-auto max-w-[1000px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
+    <div className="mx-auto max-w-[1160px] px-5 py-6 pb-20 sm:px-10 sm:py-[34px]">
       <div className="mb-2">
         <div className="font-mono text-[11px] tracking-[0.14em] text-fg-3 uppercase">
           Human-in-the-loop
