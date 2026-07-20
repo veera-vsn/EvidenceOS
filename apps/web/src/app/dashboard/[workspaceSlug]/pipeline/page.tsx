@@ -34,12 +34,19 @@ interface PipelinePageProps {
   searchParams: Promise<{ page?: string }>;
 }
 
+// Normalise and Recommend are deliberately not shown here: their
+// pipeline_run_documents columns exist for the originally-planned
+// 5-stage shape, but ocr_worker.py never updates either one -- there is
+// no normalisation step, and Recommend is explicit "not yet built"
+// future work (RAG-based, see README's Future work section). Both
+// columns default to and stay 'pending' forever, which rendered as an
+// ambiguous blank/black box next to the three stages that actually run
+// and complete -- confusing rather than informative. Add them back here
+// once real code sets either status to something other than 'pending'.
 const STAGES: { key: keyof PipelineRunDocumentRow; label: string }[] = [
   { key: "ocr_status", label: "OCR" },
   { key: "extraction_status", label: "Extract" },
-  { key: "normalisation_status", label: "Normalise" },
   { key: "validation_status", label: "Validate" },
-  { key: "recommendation_status", label: "Recommend" },
 ];
 
 const RUN_STATUS_STYLES: Record<string, string> = {
