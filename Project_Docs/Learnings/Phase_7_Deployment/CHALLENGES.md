@@ -417,6 +417,39 @@ limit.
 
 ---
 
+## C13 — Pagination added to Documents and Pipeline (audit finding A5), scope deliberately limited
+
+**Not a bug, but a decision worth recording:** `Project_Docs/AUDIT_2026-07-18.md`'s
+A5 flagged `documents/page.tsx` and `pipeline/page.tsx` as fetching every
+row, unbounded, on every load. Both now paginate via a shared
+`PaginationNav` component (`_components/pagination-nav.tsx`) using plain
+`?page=N` links -- no client JS, matching this app's existing preference
+for server-rendered list views (see the Pipeline page's own `<details>`
+choice over a client-side accordion). Documents: 25/page. Pipeline runs:
+10/page (each run's query is far more expensive -- three joined levels
+deep per run).
+
+Deliberately **not** paginated: the Pipeline page's "Start a new run"
+document picker (`start-run-form.tsx`), which still receives the full,
+unbounded `documents` list for the workspace. A checkbox picker needs to
+show every selectable document at once -- paginating it would hide
+documents from selection rather than just slow their initial render, a
+different and worse problem. This list will eventually need its own
+scaling answer (search/filter, most likely, not pagination), but that's
+a distinct, unstarted piece of work, not an oversight in this change.
+
+Verified against real data, not just empty/small fixtures: seeded 30
+documents and 12 pipeline runs directly into the local dev database,
+confirmed page 1 shows exactly 25/10 rows with the correct "Page 1 of 2"
+count and a disabled Previous button, clicked through to page 2 and
+confirmed the remaining 5/2 rows render with Next disabled, then deleted
+the seeded rows again. Cheap to do locally and the only way to actually
+know the `.range()` math and total-count query are right, rather than
+just assuming a query that returns *something* is returning the *right*
+page of something.
+
+---
+
 ## What went right without incident
 
 Worth naming, not just the bumps: Python 3.13 was directly available via

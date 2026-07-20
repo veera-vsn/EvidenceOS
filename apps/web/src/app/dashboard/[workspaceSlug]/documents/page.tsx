@@ -11,11 +11,15 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { DocumentRow, DocumentVersionRow } from "@/lib/supabase/database.types";
 
+import { PaginationNav } from "../_components/pagination-nav";
 import { DeleteDocumentButton } from "./delete-document-button";
 import { UploadZone } from "./upload-zone";
 
+const PAGE_SIZE = 25;
+
 interface DocumentsPageProps {
   params: Promise<{ workspaceSlug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 /** Document row joined with its latest version for display. */
@@ -26,8 +30,13 @@ type DocumentWithVersion = DocumentRow & {
   > | null;
 };
 
-export default async function DocumentsPage({ params }: DocumentsPageProps) {
+export default async function DocumentsPage({ params, searchParams }: DocumentsPageProps) {
   const { workspaceSlug } = await params;
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
 
   // Fetch the workspace id for the upload zone (needs workspaceId, not slug).
@@ -39,7 +48,15 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
 
   if (!workspace) redirect("/dashboard");
 
-  // Fetch documents with their most recent version metadata.
+  // Fetch documents with their most recent version metadata, one page at a
+  // time -- an unbounded fetch here is exactly the scaling problem flagged
+  // in Project_Docs/AUDIT_2026-07-18.md's A5 (a product designed to
+  // accumulate evidence over time was fetching every row on every load).
+  const { count: totalCount } = await supabase
+    .from("documents")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspace.id);
+
   const { data: documents } = await supabase
     .from("documents")
     .select(
@@ -52,7 +69,10 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
     )
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false })
+    .range(from, to)
     .returns<(DocumentRow & { document_versions: DocumentVersionRow[] })[]>();
+
+  const totalPages = Math.max(1, Math.ceil((totalCount ?? 0) / PAGE_SIZE));
 
   // Attach only the latest version per document.
   const docs: DocumentWithVersion[] = (documents ?? []).map((doc) => {
@@ -74,8 +94,8 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
           </h1>
         </div>
         <div className="text-[13px] text-fg-2">
-          <strong className="font-semibold text-fg">{docs.length}</strong> ICT
-          vendor contract{docs.length !== 1 ? "s" : ""}
+          <strong className="font-semibold text-fg">{totalCount ?? 0}</strong> ICT
+          vendor contract{(totalCount ?? 0) !== 1 ? "s" : ""}
         </div>
       </div>
 
@@ -117,6 +137,12 @@ export default async function DocumentsPage({ params }: DocumentsPageProps) {
               </div>
             </div>
           ))}
+
+          <PaginationNav
+            page={page}
+            totalPages={totalPages}
+            basePath={`/dashboard/${workspaceSlug}/documents`}
+          />
         </div>
       ) : (
         <p className="mt-8 text-sm text-fg-3">
