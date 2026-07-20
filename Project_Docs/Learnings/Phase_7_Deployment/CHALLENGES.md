@@ -450,6 +450,54 @@ page of something.
 
 ---
 
+## C14 — A first version of the event-loop-blocking test passed unconditionally, fixed or not
+
+**Symptom:** fixed audit finding B2 (`apps/api/app/pipeline/router.py`'s
+`async def` routes calling the synchronous Supabase client inline,
+blocking uvicorn's single event loop) by offloading each blocking call
+via `anyio.to_thread.run_sync`. Wrote a dedicated test
+(`test_event_loop_blocking.py`) that patches in an artificially slow
+`_fetch_run_status`, fires it concurrently with a `/health` request via
+`httpx.AsyncClient` + `ASGITransport`, and asserts `/health` isn't held
+up. It passed immediately. To sanity-check it the way C12 (rate-limit
+scope) demanded, I monkeypatched `anyio.to_thread.run_sync` itself back
+to calling the blocking function inline -- reproducing the exact bug
+this test exists to catch -- and reran the same test. It **still
+passed**, just as fast, bug reintroduced or not.
+
+**Root cause:** `asyncio.create_task(...)` only schedules a coroutine;
+it doesn't start running until something yields control back to the
+event loop. `httpx.AsyncClient` talking to the app in-process via
+`ASGITransport` (no real socket I/O) can run a simple request like
+`/health` start-to-finish in one scheduler turn, without ever ceding
+control -- so the "concurrent" trigger request never got a chance to
+run (and potentially block anything) *during* the health call at all;
+it only actually executed later, at the explicit `await trigger_task`,
+by which point health had already returned and nothing was being
+measured. The test's headline assertion was true regardless of whether
+the fix worked, because the two requests were never actually racing.
+
+**Fix:** added one explicit `await asyncio.sleep(0)` between creating
+the trigger task and awaiting `/health` -- a real scheduler handoff
+that forces the pending task to actually start running (and, if the
+bug were present, hang the whole loop) before the health call gets its
+turn. Reran the same monkeypatch-the-bug-back-in reproduction with this
+version: it correctly failed (~0.5s instead of the SLOW_CALL_SECONDS/2
+threshold). Only after seeing it fail for the right reason, then pass
+again with the patch removed, was the test considered done.
+
+**Lesson:** the same principle as C12, one level deeper -- it's not
+enough for a regression test to *look* like it exercises the bug it
+claims to guard against; concurrency/timing tests in particular can
+pass for structural reasons that have nothing to do with the behaviour
+under test (here, an async framework's scheduler simply never handing
+control to the "other" coroutine). Before trusting any test whose
+entire point is proving two things happened concurrently (or one didn't
+block another), deliberately reintroduce the bug it's meant to catch
+and confirm it actually fails. A test that can't fail isn't a test.
+
+---
+
 ## What went right without incident
 
 Worth naming, not just the bumps: Python 3.13 was directly available via
